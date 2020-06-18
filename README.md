@@ -1,4 +1,4 @@
-# Amazon Rekognition Plugin
+# Spell Checker Plugin
 
 This Dataiku DSS plugin provides a recipe to perform spell checks and automatically correct typos in text data.
 
