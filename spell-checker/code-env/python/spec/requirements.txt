@@ -1,0 +1,9 @@
+symspellpy==6.5.2
+spacy>=2.2.2
+nltk==3.4.5
+langid==1.1.6
+
+
+
+
+

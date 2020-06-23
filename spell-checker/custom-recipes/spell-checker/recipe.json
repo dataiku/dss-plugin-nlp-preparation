@@ -1,0 +1,263 @@
+// This file is the descriptor for the Custom code recipe typo-and-lemma
+{
+    // Meta data for display purposes
+    "meta": {
+        // label: name of the recipe as displayed, should be short
+        "label": "SpellChecker",
+        // description: longer string to help end users understand what this recipe does
+        "description": "Recipe to correct misspelled words in text. <br> Language is either given or detected.",
+        // icon: must be one of the FontAwesome 3.2.1 icons, complete list here at https://fontawesome.com/v3.2.1/icons/
+        "icon": "icon-file-text-alt"
+    },
+    "selectableFromDataset": "input_dataset",
+    "kind": "PYTHON",
+    
+
+    // Inputs and outputs are defined by roles. In the recipe's I/O tab, the user can associate one
+    // or more dataset to each input and output role.
+
+    // The "arity" field indicates whether the user can associate several datasets to the role ('NARY')
+    // or at most one ('UNARY'). The "required" field indicates whether the user is allowed to
+    // associate no dataset with the role.
+
+    "inputRoles": [
+        {
+            "name": "input_dataset",
+            "label": "Input dataset",
+            "description": "The input dataset from which you want to correct misspelled words.",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true,
+            "acceptsManagedFolder": false
+        },
+        {
+            "name": "not_to_be_corrected_dataset",
+            "label": "Optional: Words not to be corrected",
+            "description": "Dataset with a single column of words that will not be corrected.",
+            "arity": "UNARY",
+            "required": false,
+            "acceptsDataset": true,
+            "acceptsManagedFolder": false
+        }
+    ],
+
+    "outputRoles": [
+        {
+            "name": "output_dataset",
+            "label": "Output dataset",
+            "description": "The output dataset with clean text column.",
+            "arity": "UNARY",
+            "required": false,
+            "acceptsDataset": true
+        }
+    ],
+
+    /* The field "params" holds a list of all the params
+       for wich the user will be prompted for values in the Settings tab of the recipe.
+
+       The available parameter types include:
+       STRING, STRINGS, INT, DOUBLE, BOOLEAN, SELECT, MULTISELECT, MAP, TEXTAREA, PRESET, COLUMN, COLUMN
+
+       For the full list and for more details, see the documentation: https://doc.dataiku.com/dss/latest/plugins/reference/params.html
+    */
+    "paramsPythonSetup": "compute_available_time_slots.py",
+
+    "params": [
+        {
+            "name": "separator_input",
+            "label": "Input Parameters",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "text_col_list",
+            "label": "Text columns",
+            "type": "COLUMNS",
+            "description": "",
+            "mandatory": true,
+            "columnRole": "input_dataset"
+        },
+        {
+            "name": "suffix",
+            "label": "Suffix of output columns",
+            "type": "STRING",
+            "description": "",
+            "mandatory": true,
+            "defaultValue": "no_typos"
+        },
+        {
+        "type": "SELECT",
+        "name": "language",
+        "label": "Language",
+        "selectChoices": [{'label': 'Arabic', 'value': 'ar'},
+             {'label': 'Bulgarian', 'value': 'bg'},
+             {'label': 'Bosnian', 'value': 'bs'},
+             {'label': 'Catalan', 'value': 'ca'},
+             {'label': 'Czech', 'value': 'cs'},
+             {'label': 'Danish', 'value': 'da'},
+             {'label': 'German', 'value': 'de'},
+             {'label': 'Greek', 'value': 'el'},
+             {'label': 'English', 'value': 'en'},
+             {'label': 'Esperanto', 'value': 'eo'},
+             {'label': 'Spanish', 'value': 'es'},
+             {'label': 'Estonian', 'value': 'et'},
+             {'label': 'Basque', 'value': 'eu'},
+             {'label': 'Persian', 'value': 'fa'},
+             {'label': 'Finnish', 'value': 'fi'},
+             {'label': 'French', 'value': 'fr'},
+             {'label': 'Galician', 'value': 'gl'},
+             {'label': 'Hebrew', 'value': 'he'},
+             {'label': 'Croatian', 'value': 'hr'},
+             {'label': 'Hungarian', 'value': 'hu'},
+             {'label': 'Indonesian', 'value': 'id'},
+             {'label': 'Icelandic', 'value': 'is'},
+             {'label': 'Italian', 'value': 'it'},
+             {'label': 'Japanese', 'value': 'ja'},
+             {'label': 'Georgian', 'value': 'ka'},
+             {'label': 'Korean', 'value': 'ko'},
+             {'label': 'Lithuanian', 'value': 'lt'},
+             {'label': 'Latvian', 'value': 'lv'},
+             {'label': 'Macedonian', 'value': 'mk'},
+             {'label': 'Malay', 'value': 'ms'},
+             {'label': 'Dutch', 'value': 'nl'},
+             {'label': 'Norwegian', 'value': 'no'},
+             {'label': 'Polish', 'value': 'pl'},
+             {'label': 'Portuguese', 'value': 'pt'},
+             {'label': 'Romanian', 'value': 'ro'},
+             {'label': 'Russian', 'value': 'ru'},
+             {'label': 'Slovak', 'value': 'sk'},
+             {'label': 'Slovenian', 'value': 'sl'},
+             {'label': 'Albanian', 'value': 'sq'},
+             {'label': 'Serbian', 'value': 'sr'},
+             {'label': 'Swedish', 'value': 'sv'},
+             {'label': 'Thai', 'value': 'th'},
+             {'label': 'Turkish', 'value': 'tr'},
+             {'label': 'Ukrainian', 'value': 'uk'},
+             {'label': 'Vietnamese', 'value': 'vi'},
+             {'label': 'Chinese', 'value': 'zh'}],
+        "defaultValue": "en",
+        "visibilityCondition": "!model.detect_language"
+        },
+        
+        {
+        "type": "SELECT",
+        "name": "language_detected",
+        "label": "Language",
+            "selectChoices": [{'label': "Detected", 'value': "detected_value"}],
+        "defaultValue": "detected_value",
+        "visibilityCondition": "model.detect_language"
+        },
+        {
+            "name": "separator_language",
+            "label": "Language detection",
+            "type": "SEPARATOR"
+
+          },
+        {
+        "type": "BOOLEAN",
+        "name": "detect_language",
+        "label": "Detect language",
+        "defaultValue": false
+        },
+        
+        {
+        "type": "BOOLEAN",
+        "name": "single_language_per_column",
+        "label": "Single language per column",
+        "defaultValue": true,
+        "visibilityCondition": "model.detect_language == true",
+        "description":"Whether the language should be unique inside a text column."
+        },
+        {
+        "type": "MULTISELECT",
+        "name": "constrain_languages",
+        "label": "Set of languages to detect form (optional)",
+        "selectChoices": [{'label': 'Arabic', 'value': 'ar'},
+             {'label': 'Bulgarian', 'value': 'bg'},
+             {'label': 'Bosnian', 'value': 'bs'},
+             {'label': 'Catalan', 'value': 'ca'},
+             {'label': 'Czech', 'value': 'cs'},
+             {'label': 'Danish', 'value': 'da'},
+             {'label': 'German', 'value': 'de'},
+             {'label': 'Greek', 'value': 'el'},
+             {'label': 'English', 'value': 'en'},
+             {'label': 'Esperanto', 'value': 'eo'},
+             {'label': 'Spanish', 'value': 'es'},
+             {'label': 'Estonian', 'value': 'et'},
+             {'label': 'Basque', 'value': 'eu'},
+             {'label': 'Persian', 'value': 'fa'},
+             {'label': 'Finnish', 'value': 'fi'},
+             {'label': 'French', 'value': 'fr'},
+             {'label': 'Galician', 'value': 'gl'},
+             {'label': 'Hebrew', 'value': 'he'},
+             {'label': 'Croatian', 'value': 'hr'},
+             {'label': 'Hungarian', 'value': 'hu'},
+             {'label': 'Indonesian', 'value': 'id'},
+             {'label': 'Icelandic', 'value': 'is'},
+             {'label': 'Italian', 'value': 'it'},
+             {'label': 'Japanese', 'value': 'ja'},
+             {'label': 'Georgian', 'value': 'ka'},
+             {'label': 'Korean', 'value': 'ko'},
+             {'label': 'Lithuanian', 'value': 'lt'},
+             {'label': 'Latvian', 'value': 'lv'},
+             {'label': 'Macedonian', 'value': 'mk'},
+             {'label': 'Malay', 'value': 'ms'},
+             {'label': 'Dutch', 'value': 'nl'},
+             {'label': 'Norwegian', 'value': 'no'},
+             {'label': 'Polish', 'value': 'pl'},
+             {'label': 'Portuguese', 'value': 'pt'},
+             {'label': 'Romanian', 'value': 'ro'},
+             {'label': 'Russian', 'value': 'ru'},
+             {'label': 'Slovak', 'value': 'sk'},
+             {'label': 'Slovenian', 'value': 'sl'},
+             {'label': 'Albanian', 'value': 'sq'},
+             {'label': 'Serbian', 'value': 'sr'},
+             {'label': 'Swedish', 'value': 'sv'},
+             {'label': 'Thai', 'value': 'th'},
+             {'label': 'Turkish', 'value': 'tr'},
+             {'label': 'Ukrainian', 'value': 'uk'},
+             {'label': 'Vietnamese', 'value': 'vi'},
+             {'label': 'Chinese', 'value': 'zh'}],
+        "visibilityCondition": "model.detect_language == true",
+            "description":"Language detection is more accurate on very short text (less that 5 words) or very noisy text if we constrain the set of languages to detect from."
+        },
+        {
+        "name": "separator_advanced",
+        "label": "Advanced",
+        "type": "SEPARATOR"
+
+          },
+        {
+            "name": "expert",
+            "label": "Expert mode",
+            "type": "BOOLEAN",
+            "defaultValue": false
+        },
+        
+        {
+        "type": "BOOLEAN",
+        "name": "word_segmentation",
+        "label": "Word Segmentation",
+        "defaultValue": false,
+        "description": "Insert missing spaces at the appropriate positions and correct misspelled words. Slower.",
+        "visibilityCondition": "model.expert == true"
+        },
+        {
+        "type": "STRING",
+        "name": "ignore_token",
+        "label": "Ignore token",        
+        "defaultValue": "",
+        "description": "A regex pattern describing what words/phrases to ignore and leave unchanged. Ex: r\"\\w+\\d\" leaves unchanged \"member1\".",
+        "visibilityCondition": "model.expert == true"
+        }
+
+    ],
+
+    // The field "resourceKeys" holds a list of keys that allows to limit the number
+    // of concurrent executions and activities triggered by this recipe.
+    //
+    // Administrators can configure the limit per resource key in the Administration > Settings > Flow build
+    // screen.
+
+    "resourceKeys": []
+
+}
