@@ -17,6 +17,13 @@ class SpellChecker:
         self.distance = 2
         self.suggestion_verbosity = Verbosity.TOP
         self.transfer_casing = True # the original casing (lowercase and uppercase) is carried over the text. Note that if a word is all uppercase, symspellpy returns the lowercased word.    
+        
+    def _get_all_languages(self, df):
+        all_languages = set()
+        for col_lang in self.col_txt_lang_dict.values():
+            all_languages = all_languages.union(set(df[col_lang].unique()))
+            
+        return all_languages
                             
     def _create_sym_spell_objects(self, df):
         """
@@ -28,11 +35,7 @@ class SpellChecker:
         
         sym_spells = {}
 
-        all_languages = set()
-        for col_lang in self.col_txt_lang_dict.values():
-            all_languages = all_languages.union(set(df[col_lang].unique()))
-
-        for language in all_languages:
+        for language in self.all_languages:
             freq_dict_path = self.resource_path + '/' + language + '_50k.txt'
             sym_spells[language] = SymSpell(max_dictionary_edit_distance=2)
             sym_spells[language].load_dictionary(freq_dict_path, 0 , 1)
@@ -79,21 +82,22 @@ class SpellChecker:
     
         # new column names and matching dict
         self.df_all_columns, self.col_txt_lang_dict, self.col_txt_preprocessed_dict, self.col_txt_spellchecked_dict = create_all_new_column_names(df.columns, self.params['text_col_list'])
-                        
+                    
         # Language detection
         for col_txt, col_lang in self.col_txt_lang_dict.items():
             df[col_lang] = get_language_from_column(df[col_txt], 
                                                     df.shape[0], 
                                                     self.params)
+            
+        # Get all languages of the corpus
+        self.all_languages = self._get_all_languages(df)
+        
+        # Preprocessint the text
+        preprocessing = PreprocessText(self.all_languages, self.params)
+        df = preprocessing.compute(df, self.col_txt_preprocessed_dict, self.col_txt_lang_dict)
         
         # Create sym_spell objects
         self.sym_spells = self._create_sym_spell_objects(df)
-
-
-        # Pre processing of the text
-        print('Pre-processing text ...')
-        for col_txt, col_preprocessed in self.col_txt_preprocessed_dict.items():
-            df[col_preprocessed] = df[col_txt].apply(lambda x:preprocess(x, self.params['word_segmentation']))
         
         # Fix typos
         print('Fixing typos ...')
