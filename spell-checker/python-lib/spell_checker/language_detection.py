@@ -1,11 +1,9 @@
-import langid
+import cld3
 
 def get_language_of_text(txt):
-    return langid.classify(str(txt))[0]
+    return cld3.get_language(str(txt))[0][:2]
 
 def get_language_from_column(df_col_txt, nb_rows, recipe_params):  
-    if len(recipe_params["constrain_languages"]) > 0:
-        langid.set_languages(recipe_params["constrain_languages"])  
     # the df[col_lang] if filled with the language name
     if recipe_params["detect_language"]:
         if recipe_params["single_language_per_column"]:
