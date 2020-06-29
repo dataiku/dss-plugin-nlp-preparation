@@ -5,7 +5,7 @@ from spell_checker.input_output_params import *
 from spell_checker.spell_checker import *
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='timeseries-preparation plugin %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="timeseries-preparation plugin %(levelname)s - %(message)s")
 
 # --- Setup
 input_dataset, not_to_be_corrected_dataset, output_dataset = get_input_output()

@@ -18,8 +18,8 @@ def create_new_column_name(col_name, suffix, dataset_columns):
         return col_new_name
     else:
         return col_name + "_" + suffix
-    
-    
+
+
 def create_all_new_column_names(df_columns, text_col_list):
     """
     All new column names creation are stored in the three following dictionaries 
