@@ -1,5 +1,5 @@
 {
-    "id": "spell-checker",
+    "id": "nlp-spell-checker",
     "version": "1.0.0",
     "meta": {
         "label": "Spell Checker",
