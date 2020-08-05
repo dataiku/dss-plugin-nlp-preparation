@@ -16,9 +16,13 @@ class TextPreprocessor:
     
     def __init__(self):
         self.tokenizers = {}
-        self.supported_lang_code = SUPPORTED_LANGUAGES.keys()
+        self.SUPPORTED_LANG_CODE = SUPPORTED_LANGUAGES.keys()
         
     def _add_tokenizers(self, lang_code_new_list: List[AnyStr]):
+        """
+        Adds tokenizers. 
+        The tokenizers from languages given in chunks are added only if they were not already present in previous chunks.
+        """
         
         language_modules = {}
         nlps = {}
@@ -26,11 +30,11 @@ class TextPreprocessor:
         for lang_code in lang_code_new_list:
             
             if lang_code != lang_code: # check for NaNs
-                logging.info("Missing language code")
+                logging.warning("Missing language code")
                 continue
                 
-            if lang_code not in self.supported_lang_code:
-                logging.info("Unsupported language code {}".format(lang_code))
+            if lang_code not in self.SUPPORTED_LANG_CODE:
+                logging.warning("Unsupported language code {}".format(lang_code))
                 continue
                 
             if lang_code in self.tokenizers.keys():
@@ -54,12 +58,18 @@ class TextPreprocessor:
                 nlps[lang_code] = getattr(language_modules[lang_code], lang_name)()
                 self.tokenizers[lang_code] = nlps[lang_code].Defaults.create_tokenizer(nlps[lang_code])
                 
-    def _first_preprocessing(self, doc: AnyStr,
+    def _normalize_text(self, doc: AnyStr,
                              lang: AnyStr,
                              lowercase: bool,
                              remove_punctuation: bool) -> AnyStr:
+        """
+        - remove edge case: language not supported and empty string
+        - lowercase: if a word is all lowercase, symspell returns a mix of capital and lowercase letter in a word
+        - remove punctuation: tokenizers often keep punctutation in seperates tokens. symspell corrects punctuation into a word
+        """
+        
         # remove edge cases
-        if lang not in self.supported_lang_code:
+        if lang not in self.SUPPORTED_LANG_CODE:
             return []
         if doc != doc: # check for NaNs
             return []
@@ -108,24 +118,27 @@ class TextPreprocessor:
         Empty list is returned if the document is NaN, empty or if the language is not supported.
         """
         
-        # add tokenizers
+        # add tokenizers        
+        # As we process data by chunk of 10K rows, 
+        # the class TextPreprocessor is instantiated before the chunk processing. 
+        # Hence, the tokenizers from languages given in chunks are added only if they were not already present in previous chunks.
         self._add_tokenizers(list(df[lang_col].unique()))
         
         # remove edge cases, lowercase, remove punctuation
         existing_column_names = list(df.columns)
-        first_preprocessing_col = generate_unique(txt_col, existing_column_names, 'edge_case')
+        normalized_text_column = generate_unique(txt_col, existing_column_names, 'normalized')
         
-        df[first_preprocessing_col] = df.apply(lambda x:self._first_preprocessing(x[txt_col],
+        df[normalized_text_column] = df.apply(lambda x:self._normalize_text(x[txt_col],
                                                                                   x[lang_col],
                                                                                   lowercase,
                                                                                   remove_puncutation),
                                                axis=1)
 
         # tokenize
-        df[preprocess_col] = df.apply(lambda x:self._tokenize(x[first_preprocessing_col],
+        df[preprocess_col] = df.apply(lambda x:self._tokenize(x[normalized_text_column],
                                                               x[lang_col]),
                                       axis=1)
         
-        del df[first_preprocessing_col]
+        del df[normalized_text_column]
 
         return df

@@ -17,10 +17,10 @@ def load_plugin_config(recipe_config: Dict, custom_vocabulary_set: List) -> Dict
     params['folder_of_dictionaries'] = dataiku.customrecipe.get_recipe_resource()
     
     # List of text columns
-    params["text_column_list"] = recipe_config.get("text_column_list")
-
-    assert params["text_column_list"] is not None and params["text_column_list"] != [], "Empty text column selection"
-    logging.info("List of text column: {}".format(params["text_column_list"]))
+    params["text_column"] = recipe_config.get("text_column")
+    
+    logging.info("Text column: {}".format(params["text_column"]))
+    assert params["text_column"] != "", "Empty text column selection"
     
     # custom_vocabulary_list
     params['custom_vocabulary_set'] = custom_vocabulary_set
@@ -44,27 +44,26 @@ def load_plugin_config(recipe_config: Dict, custom_vocabulary_set: List) -> Dict
     # Expert mode
     if recipe_config.get("expert"):
         logging.info("Expert mode is enabled")
-        
-        # ignore token
-        if len(recipe_config.get("ignore_token")) == 0:
-            logging.info("No token to be ignored")
-            params["ignore_token"] = None # symspellpy wants None
-        else:
-            params["ignore_token"] = recipe_config.get("ignore_token")
-            # Check for valid regex
-            try:
-                ignore_token_compiled = re.compile(params["ignore_token"])
-            except re.error:
-                assert False, "Invalid regex"
-            params["ignore_token"] = ignore_token_compiled.pattern
-            logging.info("Token pattern to be ignored {}".format(params["ignore_token"]))
-
     else:
         logging.info("Expert mode is disabled")
+        
+    # distance
+    params['distance'] = recipe_config.get("distance")
+    logging.info("Maximum edit distance {}".format(params["distance"]))
 
-        params["ignore_token"] = None
-                     
+    # ignore token
+    if len(recipe_config.get("ignore_token")) == 0:
         logging.info("No token to be ignored")
+        params["ignore_token"] = None # symspellpy wants None
+    else:
+        params["ignore_token"] = recipe_config.get("ignore_token")
+        # Check for valid regex
+        try:
+            ignore_token_compiled = re.compile(params["ignore_token"])
+        except re.error:
+            assert False, "Invalid regex"
+        params["ignore_token"] = ignore_token_compiled.pattern
+        logging.info("Token pattern to be ignored {}".format(params["ignore_token"]))
                              
     return params
 

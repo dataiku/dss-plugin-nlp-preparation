@@ -14,23 +14,20 @@ custom_vocabulary_set = custom_vocabulary_checker(custom_vocabulary)
 params = load_plugin_config(get_recipe_config(), custom_vocabulary_set)
 
 # --- Run
-df = input_dataset.get_dataframe()
 spell_checker_object = SpellChecker(
-                text_column_list = params['text_column_list'],
+                text_column = params['text_column'],
                 language_selection = params['language_selection'],
                 language_column = params['language_column'],
                 language = params['language'],
                 ignore_token = params['ignore_token'],
+                distance = params['distance'],
                 custom_vocabulary_set = params['custom_vocabulary_set'],
                 folder_of_dictionaries = params['folder_of_dictionaries']
                 )
 
-output_df = spell_checker_object.compute(df)
-
 # --- Write output
-
 process_dataset_chunks(
     input_dataset=input_dataset,
     output_dataset=output_dataset,
-    func=spell_checker_object.compute
+    func=spell_checker_object.fix_typos_in_df
 )
