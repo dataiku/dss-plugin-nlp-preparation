@@ -16,6 +16,7 @@ class TextPreprocessor:
     
     def __init__(self):
         self.tokenizers = {}
+        self.nlps = {}
         self.SUPPORTED_LANG_CODE = SUPPORTED_LANGUAGES.keys()
         
     def _add_tokenizers(self, lang_code_new_list: List[AnyStr]):
@@ -24,8 +25,8 @@ class TextPreprocessor:
         The tokenizers from languages given in chunks are added only if they were not already present in previous chunks.
         """
         
-        language_modules = {}
-        nlps = {}
+#        language_modules = {}
+#        nlps = {}
         
         for lang_code in lang_code_new_list:
             
@@ -51,12 +52,12 @@ class TextPreprocessor:
 
                 # module import
                 logging.info("Loading tokenizer object for language {}".format(lang_code))
-                __import__("spacy.lang." + lang_code)
-                language_modules[lang_code] = getattr(spacy.lang, lang_code)
+                #__import__("spacy.lang." + lang_code)
+                #language_modules[lang_code] = getattr(spacy.lang, lang_code)
 
                 # tokenizer creation
-                nlps[lang_code] = getattr(language_modules[lang_code], lang_name)()
-                self.tokenizers[lang_code] = nlps[lang_code].Defaults.create_tokenizer(nlps[lang_code])
+                self.nlps[lang_code] = spacy.blank(lang_code)#getattr(language_modules[lang_code], lang_name)()
+                #self.tokenizers[lang_code] = nlps[lang_code].Defaults.create_tokenizer(nlps[lang_code])
                 
     def _normalize_text(self, doc: AnyStr,
                              lang: AnyStr,
@@ -70,11 +71,11 @@ class TextPreprocessor:
         
         # remove edge cases
         if lang not in self.SUPPORTED_LANG_CODE:
-            return []
+            return ''
         if doc != doc: # check for NaNs
-            return []
+            return ''
         if len(str(doc)) == 0:
-            return []
+            return ''
         
         # lowercase
         if lowercase:
@@ -91,7 +92,7 @@ class TextPreprocessor:
         doc = ' '.join(str(doc).split())
         
         if len(str(doc)) == 0:
-            return []
+            return ''
         else:
             return doc
 
@@ -118,11 +119,12 @@ class TextPreprocessor:
         Empty list is returned if the document is NaN, empty or if the language is not supported.
         """
         
-        # add tokenizers        
+        # Add tokenizers        
         # As we process data by chunk of 10K rows, 
         # the class TextPreprocessor is instantiated before the chunk processing. 
         # Hence, the tokenizers from languages given in chunks are added only if they were not already present in previous chunks.
-        self._add_tokenizers(list(df[lang_col].unique()))
+        lang_list = list(df[lang_col].unique())
+        self._add_tokenizers(lang_list)
         
         # remove edge cases, lowercase, remove punctuation
         existing_column_names = list(df.columns)
@@ -135,9 +137,17 @@ class TextPreprocessor:
                                                axis=1)
 
         # tokenize
-        df[preprocess_col] = df.apply(lambda x:self._tokenize(x[normalized_text_column],
-                                                              x[lang_col]),
-                                      axis=1)
+        token_series = pd.Series()
+        for lang in lang_list:
+            # slice df with language
+            df_sliced = df[df[lang_col]==lang]
+            # tokenize with nlp objets
+            token_list = list(self.nlps[lang].pipe(df_sliced[normalized_text_column].tolist()))
+            # append token_list and keep same index
+            token_series_sliced = pd.Series(token_list, index=df_sliced.index)
+            token_series = token_series.append(token_series_sliced)
+            
+        df[preprocess_col] = token_series
         
         del df[normalized_text_column]
 

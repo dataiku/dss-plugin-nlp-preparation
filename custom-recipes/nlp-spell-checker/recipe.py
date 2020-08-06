@@ -2,7 +2,7 @@ import dataiku
 from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role, get_recipe_config
 from plugin_config_loading import load_plugin_config, custom_vocabulary_checker
 from spell_checker import SpellChecker
-from dku_io_utils import process_dataset_chunks
+from dku_io_utils import process_dataset_chunks, set_column_description
 
 # --- Setup
 input_dataset = dataiku.Dataset(get_input_names_for_role("input_dataset")[0])
@@ -30,4 +30,8 @@ process_dataset_chunks(
     input_dataset=input_dataset,
     output_dataset=output_dataset,
     func=spell_checker_object.fix_typos_in_df
+)
+
+set_column_description(
+    input_dataset=input_dataset, output_dataset=output_dataset, column_description_dict=spell_checker_object.column_description_dict
 )

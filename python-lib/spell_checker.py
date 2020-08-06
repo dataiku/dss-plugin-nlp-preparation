@@ -8,6 +8,8 @@ from text_preprocessing import TextPreprocessor
 from plugin_io_utils import generate_unique
 from typing import List, AnyStr
 import logging
+from concurrent.futures import ThreadPoolExecutor
+from collections import OrderedDict
 
 
 from language_dict import SUPPORTED_LANGUAGES
@@ -20,6 +22,15 @@ class SpellChecker:
     # See https://symspellpy.readthedocs.io/en/latest/api/symspellpy.html#symspellpy
     SUGGESTION_VERBOSITY = Verbosity.TOP # returns only the closest word
     TRANSFER_CASING = False # the original casing (lowercase and uppercase) is not carried over the text. Symspellpy returns errors for some words. Note that if a word is all uppercase, symspellpy returns the lowercased word. 
+    NUM_THREADS = 4
+    
+    COLUMN_DESCRIPTION_DICT = OrderedDict(
+        [
+            ("corrected_text", "Text with misspellings corrected"),
+            ("spelling_mistakes", "Spelling mistakes"),
+            ("misspelling_count", "Number of spelling mistakes"),
+        ]
+    )
     
     def __init__(self, 
                 text_column: AnyStr = "",
@@ -103,13 +114,14 @@ class SpellChecker:
             
         return (corrected_word, misspell, misspell_count)
     
-    def _fix_typos_in_document(self, token_list: List, lang: AnyStr) -> (AnyStr, List, int):
+    def _fix_typos_in_document(self, token_lang) -> (AnyStr, List, int):
 
         """
         we did not consider word_segmentation as it is much slower. 
             https://symspellpy.readthedocs.io/en/latest/examples/word_segmentation.html
         """
-
+        
+        token_list, lang = [token_lang[0], token_lang[1]]
         if lang not in self.SUPPORTED_LANG_CODE:
             logging.warning("Unsupported language code {}".format(lang))
             return ('', '', '')
@@ -122,6 +134,9 @@ class SpellChecker:
         misspelling_count = 0
 
         for word in token_list:
+            
+            # spacy.tokens.token.Token to str
+            word = str(word)
 
             if word not in self.custom_vocabulary_set and not word.isdigit():
                 (corrected_word, misspell, misspell_count) = self._fix_typos_in_word(word, lang)
@@ -148,52 +163,58 @@ class SpellChecker:
             
         else:
             lang_col = self.language_column
+                    
+        ### Name creation of new columns ###
         
-        # Fix typos
-        logging.info("Fixing typos ...")
-            
-        # Name creation of new columns
+        # column of preprocessed text
         preprocess_col = generate_unique(self.text_column, existing_column_names, 'preprocess')
         existing_column_names.append(preprocess_col)
+                
+        # the three output column name creation is based on self.COLUMN_DESCRIPTION_DICT
+        self.column_description_dict = OrderedDict()
 
-        spellcheck_col = generate_unique(self.text_column, existing_column_names, 'spell_check')
-        existing_column_names.append(spellcheck_col)
+        for k, v in self.COLUMN_DESCRIPTION_DICT.items():
+            new_col_name = generate_unique(k, existing_column_names, self.text_column)
+            self.column_description_dict[new_col_name] = v
+            existing_column_names.append(new_col_name)
 
-        misspell_col = generate_unique(self.text_column, existing_column_names, 'misspell')
-        existing_column_names.append(misspell_col)
-
-        misspell_count_col = generate_unique(self.text_column, existing_column_names, 'misspell_count')
-        existing_column_names.append(misspell_count_col)
-
-        # column containing a tuple (corrected doc, misspells, count)
-        spellcheck_output_temp = generate_unique(self.text_column, existing_column_names, 'spellcheck_output_temp')
-        existing_column_names.append(spellcheck_output_temp)
-
-        # Preprocessing of the text
+        ### Preprocessing of the text ###
+        
+        logging.info("Text preprocessing ...")
         output_df = self.text_preprocessor.compute(df, 
                                                    self.text_column, 
                                                    preprocess_col, 
                                                    lang_col)
 
-        # Add new sym_spell objects
+        ### Add new sym_spell objects ###
+        
         # As we process data by chunk of 10K rows, 
         # the class SymSpell is instantiated before the chunk processing. 
         # Hence, the dictionaries from languages given in chunks are added only if they were not already present in previous chunks.
         new_lang_code_list = list(df[lang_col].unique())
         self._add_sym_spell_objects(new_lang_code_list)
+        
+        ### parallel processing for the method _fix_typos_in_document ###
+        
+        logging.info("Fixing typos ...")
 
-        output_df[spellcheck_output_temp] = output_df.apply(lambda x:self._fix_typos_in_document(x[preprocess_col],
-                                                                                                 x[lang_col]),
-                                      axis=1)
-
-        output_df[[spellcheck_col, misspell_col, misspell_count_col]] = pd.DataFrame(output_df[spellcheck_output_temp].tolist(), index=output_df.index)    
-
+        # iterator creation over the tuple (tokenized document, laguage) 
+        doc_iterator = ((token, lang) for (token, lang) in zip(df[preprocess_col], df[lang_col].astype(str)))
+        # Parallel computing 
+        # lang_output_tuple_list contains the columns as list for ("corrected_text", "spelling_mistakes", "misspelling_count")
+        with ThreadPoolExecutor(max_workers=self.NUM_THREADS) as executor:
+            lang_output_tuple_list = list(executor.map(self._fix_typos_in_document, doc_iterator))
+            
+        # copy of output column in the output dataframe
+        for i, col in enumerate(self.column_description_dict.keys()):
+            output_df[col] = [t[i] for t in lang_output_tuple_list]
+            
         # remove unecessary columns
-        del output_df[spellcheck_output_temp]
         del output_df[preprocess_col]
-        existing_column_names = [k for k in existing_column_names if k not in [spellcheck_output_temp, preprocess_col]]
+        existing_column_names = [k for k in existing_column_names if k != preprocess_col]
         
         if self.language != "":
             del output_df[lang_col]
+            
 
         return output_df
