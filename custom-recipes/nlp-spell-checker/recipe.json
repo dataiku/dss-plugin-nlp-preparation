@@ -1,7 +1,7 @@
 {
    "meta":{
       "label":"Misspelling Correction",
-      "description":"Identify and correct misspellings in text columns for 38 languages.",
+      "description":"Identify and correct misspellings in text columns for 36 languages.",
       "icon":"icon-strikethrough"
    },
    "selectableFromDataset":"input_dataset",
@@ -159,10 +159,6 @@
                "value":"ja"
             },
             {
-               "label":"Korean",
-               "value":"ko"
-            },
-            {
                "label":"Latvian",
                "value":"lv"
             },
@@ -217,10 +213,6 @@
             {
                "label":"Turkish",
                "value":"tr"
-            },
-            {
-               "label":"Ukrainian",
-               "value":"uk"
             },
             {
                "label":"Vietnamese",

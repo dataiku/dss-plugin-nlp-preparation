@@ -4,7 +4,7 @@ import re
 import pandas as pd
 import symspellpy
 from symspellpy.symspellpy import SymSpell, Verbosity
-from text_preprocessing import TextPreprocessor
+from text_preprocessing import TextPreprocessor, is_email, is_url, is_mention, is_hashtag
 from plugin_io_utils import generate_unique
 from typing import List, AnyStr
 import logging
@@ -114,7 +114,7 @@ class SpellChecker:
             
         return (corrected_word, misspell, misspell_count)
     
-    def _fix_typos_in_document(self, token_lang) -> (AnyStr, List, int):
+    def _fix_typos_in_document(self, token_lang: List) -> (AnyStr, List, int):
 
         """
         we did not consider word_segmentation as it is much slower. 
@@ -126,6 +126,9 @@ class SpellChecker:
             logging.warning("Unsupported language code {}".format(lang))
             return ('', '', '')
         
+        if token_list != token_list:
+                return ('', '', '')
+            
         if len(token_list) == 0:
             return ('', '', '')
 
@@ -133,12 +136,20 @@ class SpellChecker:
         misspellings = []
         misspelling_count = 0
 
-        for word in token_list:
+        for token in token_list:
             
-            # spacy.tokens.token.Token to str
-            word = str(word)
+            # word without . and / (intentionally left to check emails and urls)
+            word = str(token).replace('.', '').replace('/', '')
+            
+            # check for url and emails
+            if is_url(token) or is_email(token):
+                corrected_sentence.append(str(token))
+                
+            # check for mentions and hashtags
+            elif is_hashtag(token) or is_mention(token):
+                corrected_sentence.append(str(token))
 
-            if word not in self.custom_vocabulary_set and not word.isdigit():
+            elif word not in self.custom_vocabulary_set and not word.isdigit():
                 (corrected_word, misspell, misspell_count) = self._fix_typos_in_word(word, lang)
                 corrected_sentence.append(corrected_word)
                 if len(misspell) > 0:
@@ -210,8 +221,8 @@ class SpellChecker:
             output_df[col] = [t[i] for t in lang_output_tuple_list]
             
         # remove unecessary columns
-        del output_df[preprocess_col]
-        existing_column_names = [k for k in existing_column_names if k != preprocess_col]
+        #del output_df[preprocess_col]
+        #existing_column_names = [k for k in existing_column_names if k != preprocess_col]
         
         if self.language != "":
             del output_df[lang_col]

@@ -1,23 +1,43 @@
 # -*- coding: utf-8 -*-
 from typing import List, AnyStr
 import re
+from spacy.tokens.token import Token
 import spacy.lang
 import pandas as pd
 import logging
 import string
 from plugin_io_utils import generate_unique
-
+from spacy.tokenizer import Tokenizer
 
 from language_dict import SUPPORTED_LANGUAGES
 
+def is_url(token: Token) -> bool:
+    return token.like_url
+
+def is_email(token: Token) -> bool:
+    return token.like_email
+    
+def is_mention(token: Token) -> bool:
+    return str(token)[0] == '@'
+    
+def is_hashtag(token: Token) -> bool:
+    return str(token)[0] == '#'
+
 class TextPreprocessor:
     
-    PUNCTUATION = "!\"#$%&()*+,-./:;<=>?@[\\]^_`{|}~_！？｡。＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏."
+    PUNCTUATION = "!\"$%&()*+,:;<=>?[\\]^_`{|}~_！？｡。＂＄％＆＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏"
+    # special case for hashtags.
+    # mentions are already taken into account by SpaCy
+    PREFIX_TOKEN = re.compile(r'''#(\w+)''')
     
     def __init__(self):
         self.tokenizers = {}
         self.nlps = {}
         self.SUPPORTED_LANG_CODE = SUPPORTED_LANGUAGES.keys()
+        
+    def _custom_tokenizer(self, nlp):
+        # Tokenizer that preserves hashtags and mentions
+        return Tokenizer(nlp.vocab, prefix_search=self.PREFIX_TOKEN.search)
         
     def _add_tokenizers(self, lang_code_new_list: List[AnyStr]):
         """
@@ -41,23 +61,16 @@ class TextPreprocessor:
             if lang_code in self.tokenizers.keys():
                 # new tokenizer is added only if not already present
                 continue
-            
-            # Special treatment for Korean as Spacy korean tokenizer has dependecies
-            if lang_code == 'ko':
-                from konlpy.tag import Hannanum
-                self.tokenizers[lang_code] = Hannanum()
                 
             else:
                 lang_name = SUPPORTED_LANGUAGES[lang_code]
 
                 # module import
                 logging.info("Loading tokenizer object for language {}".format(lang_code))
-                #__import__("spacy.lang." + lang_code)
-                #language_modules[lang_code] = getattr(spacy.lang, lang_code)
 
                 # tokenizer creation
-                self.nlps[lang_code] = spacy.blank(lang_code)#getattr(language_modules[lang_code], lang_name)()
-                #self.tokenizers[lang_code] = nlps[lang_code].Defaults.create_tokenizer(nlps[lang_code])
+                self.nlps[lang_code] = spacy.blank(lang_code)
+                self.nlps[lang_code].tokenizer = self._custom_tokenizer(self.nlps[lang_code])
                 
     def _normalize_text(self, doc: AnyStr,
                              lang: AnyStr,
@@ -85,7 +98,8 @@ class TextPreprocessor:
             
         # remove_punctuation
         if remove_punctuation:
-            # Remove punctuation with regex. Remove hyphens with replace. Hyphens are generally not escaped in regex
+            # Remove punctuation with regex. Remove hyphens with replace. 
+            # For some reasons, if hyphen is in self.PUNCTUATION, it removes also the dot "."
             doc = re.sub(r"[%s]+" %self.PUNCTUATION, " ", doc).replace('-', ' ') 
             
         # Remove leading spaces and multiple spaces (often created by removing punctuation and causing bad tokenized doc)
@@ -95,16 +109,16 @@ class TextPreprocessor:
             return ''
         else:
             return doc
+        
 
-    def _tokenize(self, doc: AnyStr, lang: AnyStr) -> List:
-        if doc != []:
-            if lang == 'ko':
-                tokens = [str(k) for k in self.tokenizers[lang].morphs(doc)]
-            else:
-                tokens = [str(k) for k in self.tokenizers[lang](doc)]
-            return tokens
-        else:
-            return []
+    def _tokenize_sliced_series(self, sliced_series: pd.DataFrame, index: pd.core.indexes.range.RangeIndex, lang: AnyStr) -> List:
+                    
+        # tokenize with nlp objets
+        token_list = list(self.nlps[lang].pipe(sliced_series.tolist()))
+        # append token_list and keep same index
+        token_series_sliced = pd.Series(token_list, index=index)
+            
+        return token_series_sliced
         
     def compute(self, 
                 df: pd.DataFrame, 
@@ -131,24 +145,20 @@ class TextPreprocessor:
         normalized_text_column = generate_unique(txt_col, existing_column_names, 'normalized')
         
         df[normalized_text_column] = df.apply(lambda x:self._normalize_text(x[txt_col],
-                                                                                  x[lang_col],
-                                                                                  lowercase,
-                                                                                  remove_puncutation),
-                                               axis=1)
+                                                                            x[lang_col],
+                                                                            lowercase,
+                                                                            remove_puncutation),
+                                              axis=1)
 
         # tokenize
         token_series = pd.Series()
-        for lang in lang_list:
+        for lang in self.nlps.keys():
             # slice df with language
             df_sliced = df[df[lang_col]==lang]
-            # tokenize with nlp objets
-            token_list = list(self.nlps[lang].pipe(df_sliced[normalized_text_column].tolist()))
-            # append token_list and keep same index
-            token_series_sliced = pd.Series(token_list, index=df_sliced.index)
-            token_series = token_series.append(token_series_sliced)
+            token_series = token_series.append(self._tokenize_sliced_series(df_sliced[normalized_text_column], df_sliced.index, lang))
             
         df[preprocess_col] = token_series
         
-        del df[normalized_text_column]
+        #del df[normalized_text_column]
 
         return df
