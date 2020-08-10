@@ -23,11 +23,19 @@ def is_mention(token: Token) -> bool:
 def is_hashtag(token: Token) -> bool:
     return str(token)[0] == '#'
 
+def remove_url_email_punct(word: AnyStr) -> AnyStr:
+    # Remove '.' and '/' from a word
+    return word.replace('.', '').replace('/', '')
+    
+
 class TextPreprocessor:
     
+    # All punctutation except '.' and '/' that are intentionally left for emails and url. 
+    # '.' and '/' will need to be futher removed in token if needed. Otherwise, "hello." and "hello" will be two differen tokens.
+    # Use the function remove_url_email_punct.
     PUNCTUATION = "!\"$%&()*+,:;<=>?[\\]^_`{|}~_！？｡。＂＄％＆＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏"
-    # special case for hashtags.
-    # mentions are already taken into account by SpaCy
+    
+    # Special case for hashtags. mentions are already taken into account by SpaCy
     PREFIX_TOKEN = re.compile(r'''#(\w+)''')
     
     def __init__(self):
@@ -78,8 +86,8 @@ class TextPreprocessor:
                              remove_punctuation: bool) -> AnyStr:
         """
         - remove edge case: language not supported and empty string
-        - lowercase: if a word is all lowercase, symspell returns a mix of capital and lowercase letter in a word
-        - remove punctuation: tokenizers often keep punctutation in seperates tokens. symspell corrects punctuation into a word
+        - lowercase
+        - remove punctuation of self.PUNCTUATION. Note that further process is needed to remove '.' and '/'. Use remove_url_email_punct for that.
         """
         
         # remove edge cases
@@ -129,7 +137,13 @@ class TextPreprocessor:
                 remove_puncutation: bool = True,
                 lowercase: bool = True) -> pd.DataFrame:
         """
-        Returns either a token list or an empty list.
+        Returns the df with a new column containing spacy.tokens.doc.Doc 
+        spacy.tokens.doc.Doc can be further processed as follow (https://spacy.io/api/token):
+            
+            for token in doc:
+                print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
+                      token.shape_, token.is_alpha, token.is_stop)
+                      
         Empty list is returned if the document is NaN, empty or if the language is not supported.
         """
         
@@ -159,6 +173,6 @@ class TextPreprocessor:
             
         df[preprocess_col] = token_series
         
-        #del df[normalized_text_column]
+        del df[normalized_text_column]
 
         return df

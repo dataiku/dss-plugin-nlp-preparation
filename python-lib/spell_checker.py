@@ -4,7 +4,7 @@ import re
 import pandas as pd
 import symspellpy
 from symspellpy.symspellpy import SymSpell, Verbosity
-from text_preprocessing import TextPreprocessor, is_email, is_url, is_mention, is_hashtag
+from text_preprocessing import TextPreprocessor, is_email, is_url, is_mention, is_hashtag, remove_url_email_punct
 from plugin_io_utils import generate_unique
 from typing import List, AnyStr
 import logging
@@ -139,7 +139,7 @@ class SpellChecker:
         for token in token_list:
             
             # word without . and / (intentionally left to check emails and urls)
-            word = str(token).replace('.', '').replace('/', '')
+            word = remove_url_email_punct(str(token))
             
             # check for url and emails
             if is_url(token) or is_email(token):
@@ -221,8 +221,8 @@ class SpellChecker:
             output_df[col] = [t[i] for t in lang_output_tuple_list]
             
         # remove unecessary columns
-        #del output_df[preprocess_col]
-        #existing_column_names = [k for k in existing_column_names if k != preprocess_col]
+        del output_df[preprocess_col]
+        existing_column_names = [k for k in existing_column_names if k != preprocess_col]
         
         if self.language != "":
             del output_df[lang_col]
