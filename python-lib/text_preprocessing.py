@@ -143,8 +143,6 @@ class TextPreprocessor:
             for token in doc:
                 print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
                       token.shape_, token.is_alpha, token.is_stop)
-                      
-        Empty list is returned if the document is NaN, empty or if the language is not supported.
         """
         
         # Add tokenizers        
