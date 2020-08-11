@@ -35,7 +35,7 @@ def count_records(dataset: dataiku.Dataset) -> int:
 
 
 def process_dataset_chunks(
-    input_dataset: dataiku.Dataset, output_dataset: dataiku.Dataset, func: Callable, chunksize: float = 100000, **kwargs
+    input_dataset: dataiku.Dataset, output_dataset: dataiku.Dataset, func: Callable, chunksize: float = 10000, **kwargs
 ) -> None:
     """
     Read a dataset by chunks, process each dataframe chunk with a function and write back to another dataset.

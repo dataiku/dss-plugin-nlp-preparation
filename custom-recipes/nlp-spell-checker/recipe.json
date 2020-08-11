@@ -1,269 +1,267 @@
 {
-   "meta":{
-      "label":"Misspelling Correction",
-      "description":"Identify and correct misspellings in text columns for 36 languages.",
-      "icon":"icon-strikethrough"
-   },
-   "selectableFromDataset":"input_dataset",
-   "kind":"PYTHON",
-   "inputRoles":[
-      {
-         "name":"input_dataset",
-         "label":"Input dataset",
-         "description":"Dataset with text columns containing misspelled words",
-         "arity":"UNARY",
-         "required":true,
-         "acceptsDataset":true,
-         "acceptsManagedFolder":false
-      },
-      {
-         "name":"custom_vocabulary",
-         "label":"Custom vocabulary (optional)",
-         "description":"Dataset with a single column of words that should not be corrected",
-         "arity":"UNARY",
-         "required":false,
-         "acceptsDataset":true,
-         "acceptsManagedFolder":false
-      }
-   ],
-   "outputRoles":[
-      {
-         "name":"output_dataset",
-         "label":"Output dataset",
-         "description":"Output dataset with identified misspellings and corrected text",
-         "arity":"UNARY",
-         "required":false,
-         "acceptsDataset":true
-      }
-   ],
-   "params":[
-      {
-         "name":"separator_input",
-         "label":"Input Parameters",
-         "type":"SEPARATOR"
-      },
-      {
-         "name":"text_column",
-         "label":"Text column",
-         "type":"COLUMN",
-         "description":"",
-         "mandatory":true,
-         "columnRole":"input_dataset",
-         "allowedColumnTypes":[
-            "string"
-         ]
-      },
-      {
-         "type":"SELECT",
-         "name":"language_selection",
-         "label":"Language selection",
-         "selectChoices":[
-            {
-               "label":"From list",
-               "value":"from_list"
-            },
-            {
-               "label":"From column",
-               "value":"from_column"
-            }
-         ],
-         "defaultValue":"from_list"
-      },
-      {
-         "type":"SELECT",
-         "name":"language_from_list",
-         "label":"Language",
-         "selectChoices":[
-            {
-               "label":"Albanian",
-               "value":"sq"
-            },
-            {
-               "label":"Arabic",
-               "value":"ar"
-            },
-            {
-               "label":"Bulgarian",
-               "value":"bg"
-            },
-            {
-               "label":"Catalan",
-               "value":"ca"
-            },
-            {
-               "label":"Chinese",
-               "value":"zh"
-            },
-            {
-               "label":"Croatian",
-               "value":"hr"
-            },
-            {
-               "label":"Czech",
-               "value":"cs"
-            },
-            {
-               "label":"Danish",
-               "value":"da"
-            },
-            {
-               "label":"Dutch",
-               "value":"nl"
-            },
-            {
-               "label":"English",
-               "value":"en"
-            },
-            {
-               "label":"Estonian",
-               "value":"et"
-            },
-            {
-               "label":"Finnish",
-               "value":"fi"
-            },
-            {
-               "label":"French",
-               "value":"fr"
-            },
-            {
-               "label":"German",
-               "value":"de"
-            },
-            {
-               "label":"Greek",
-               "value":"el"
-            },
-            {
-               "label":"Hebrew",
-               "value":"he"
-            },
-            {
-               "label":"Hungarian",
-               "value":"hu"
-            },
-            {
-               "label":"Icelandic",
-               "value":"is"
-            },
-            {
-               "label":"Indonesian",
-               "value":"id"
-            },
-            {
-               "label":"Italian",
-               "value":"it"
-            },
-            {
-               "label":"Japanese",
-               "value":"ja"
-            },
-            {
-               "label":"Latvian",
-               "value":"lv"
-            },
-            {
-               "label":"Lithuanian",
-               "value":"lt"
-            },
-            {
-               "label":"Persian",
-               "value":"fa"
-            },
-            {
-               "label":"Polish",
-               "value":"pl"
-            },
-            {
-               "label":"Portuguese",
-               "value":"pt"
-            },
-            {
-               "label":"Romanian",
-               "value":"ro"
-            },
-            {
-               "label":"Russian",
-               "value":"ru"
-            },
-            {
-               "label":"Serbian",
-               "value":"sr"
-            },
-            {
-               "label":"Slovak",
-               "value":"sk"
-            },
-            {
-               "label":"Slovenian",
-               "value":"sl"
-            },
-            {
-               "label":"Spanish",
-               "value":"es"
-            },
-            {
-               "label":"Swedish",
-               "value":"sv"
-            },
-            {
-               "label":"Thai",
-               "value":"th"
-            },
-            {
-               "label":"Turkish",
-               "value":"tr"
-            },
-            {
-               "label":"Vietnamese",
-               "value":"vi"
-            }
-         ],
-         "defaultValue":"en",
-         "visibilityCondition":"model.language_selection == 'from_list'"
-      },
-      {
-         "name":"language_from_column",
-         "label":"Language column",
-         "type":"COLUMN",
-         "description":"Column containing language ISO 639-1 codes",
-         "columnRole":"input_dataset",
-         "allowedColumnTypes":[
-            "string"
-         ],
-         "visibilityCondition":"model.language_selection == 'from_column'"
-      },
-      {
-         "name":"separator_advanced",
-         "label":"Advanced",
-         "type":"SEPARATOR"
-      },
-      {
-         "name":"expert",
-         "label":"Expert mode",
-         "type":"BOOLEAN",
-         "defaultValue":false
-      },
-      {
-         "type":"INT",
-         "name":"distance",
-         "label":"Maximum edit distance",
-         "defaultValue":2,
-         "minI":0,
-         "maxI":100,
-         "description":"Controls up to which distance to the dictionary the words should be corrected",
-         "visibilityCondition":"model.expert == true"
-      },
-      {
-         "type":"STRING",
-         "name":"ignore_token",
-         "label":"Ignore token",
-         "defaultValue":"",
-         "description":"Regular expression pattern for words/phrases not to be corrected. Ex: \\w+\\d will preserve \"home1\" ",
-         "visibilityCondition":"model.expert == true"
-      }
-   ],
-   "resourceKeys":[
-
-   ]
+    "meta": {
+        "label": "Misspelling Correction",
+        "description": "Identify and correct misspellings in a text column",
+        "icon": "icon-strikethrough"
+    },
+    "selectableFromDataset": "input_dataset",
+    "kind": "PYTHON",
+    "inputRoles": [
+        {
+            "name": "input_dataset",
+            "label": "Input dataset",
+            "description": "Dataset with text columns containing misspelled words",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true,
+            "acceptsManagedFolder": false
+        },
+        {
+            "name": "custom_vocabulary",
+            "label": "Custom vocabulary (optional)",
+            "description": "Dataset with a single column of words that should not be corrected",
+            "arity": "UNARY",
+            "required": false,
+            "acceptsDataset": true,
+            "acceptsManagedFolder": false
+        }
+    ],
+    "outputRoles": [
+        {
+            "name": "output_dataset",
+            "label": "Output dataset",
+            "description": "Output dataset with identified misspellings and corrected text",
+            "arity": "UNARY",
+            "required": false,
+            "acceptsDataset": true
+        }
+    ],
+    "params": [
+        {
+            "name": "separator_input",
+            "label": "Input Parameters",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "text_column",
+            "label": "Text column",
+            "type": "COLUMN",
+            "description": "",
+            "mandatory": true,
+            "columnRole": "input_dataset",
+            "allowedColumnTypes": [
+                "string"
+            ]
+        },
+        {
+            "type": "SELECT",
+            "name": "language_selection",
+            "label": "Language selection",
+            "selectChoices": [
+                {
+                    "label": "From list",
+                    "value": "from_list"
+                },
+                {
+                    "label": "From column",
+                    "value": "from_column"
+                }
+            ],
+            "defaultValue": "from_list"
+        },
+        {
+            "type": "SELECT",
+            "name": "language_from_list",
+            "label": "Language",
+            "selectChoices": [
+                {
+                    "label": "Albanian",
+                    "value": "sq"
+                },
+                {
+                    "label": "Arabic",
+                    "value": "ar"
+                },
+                {
+                    "label": "Bulgarian",
+                    "value": "bg"
+                },
+                {
+                    "label": "Catalan",
+                    "value": "ca"
+                },
+                {
+                    "label": "Chinese",
+                    "value": "zh"
+                },
+                {
+                    "label": "Croatian",
+                    "value": "hr"
+                },
+                {
+                    "label": "Czech",
+                    "value": "cs"
+                },
+                {
+                    "label": "Danish",
+                    "value": "da"
+                },
+                {
+                    "label": "Dutch",
+                    "value": "nl"
+                },
+                {
+                    "label": "English",
+                    "value": "en"
+                },
+                {
+                    "label": "Estonian",
+                    "value": "et"
+                },
+                {
+                    "label": "Finnish",
+                    "value": "fi"
+                },
+                {
+                    "label": "French",
+                    "value": "fr"
+                },
+                {
+                    "label": "German",
+                    "value": "de"
+                },
+                {
+                    "label": "Greek",
+                    "value": "el"
+                },
+                {
+                    "label": "Hebrew",
+                    "value": "he"
+                },
+                {
+                    "label": "Hungarian",
+                    "value": "hu"
+                },
+                {
+                    "label": "Icelandic",
+                    "value": "is"
+                },
+                {
+                    "label": "Indonesian",
+                    "value": "id"
+                },
+                {
+                    "label": "Italian",
+                    "value": "it"
+                },
+                {
+                    "label": "Japanese",
+                    "value": "ja"
+                },
+                {
+                    "label": "Latvian",
+                    "value": "lv"
+                },
+                {
+                    "label": "Lithuanian",
+                    "value": "lt"
+                },
+                {
+                    "label": "Persian",
+                    "value": "fa"
+                },
+                {
+                    "label": "Polish",
+                    "value": "pl"
+                },
+                {
+                    "label": "Portuguese",
+                    "value": "pt"
+                },
+                {
+                    "label": "Romanian",
+                    "value": "ro"
+                },
+                {
+                    "label": "Russian",
+                    "value": "ru"
+                },
+                {
+                    "label": "Serbian",
+                    "value": "sr"
+                },
+                {
+                    "label": "Slovak",
+                    "value": "sk"
+                },
+                {
+                    "label": "Slovenian",
+                    "value": "sl"
+                },
+                {
+                    "label": "Spanish",
+                    "value": "es"
+                },
+                {
+                    "label": "Swedish",
+                    "value": "sv"
+                },
+                {
+                    "label": "Thai",
+                    "value": "th"
+                },
+                {
+                    "label": "Turkish",
+                    "value": "tr"
+                },
+                {
+                    "label": "Vietnamese",
+                    "value": "vi"
+                }
+            ],
+            "defaultValue": "en",
+            "visibilityCondition": "model.language_selection == 'from_list'"
+        },
+        {
+            "name": "language_from_column",
+            "label": "Language column",
+            "type": "COLUMN",
+            "description": "Column containing language ISO 639-1 codes",
+            "columnRole": "input_dataset",
+            "allowedColumnTypes": [
+                "string"
+            ],
+            "visibilityCondition": "model.language_selection == 'from_column'"
+        },
+        {
+            "name": "separator_advanced",
+            "label": "Advanced",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "expert",
+            "label": "Expert mode",
+            "type": "BOOLEAN",
+            "defaultValue": false
+        },
+        {
+            "type": "INT",
+            "name": "distance",
+            "label": "Maximum edit distance",
+            "defaultValue": 2,
+            "minI": 0,
+            "maxI": 100,
+            "description": "Controls up to which distance to the dictionary the words should be corrected",
+            "visibilityCondition": "model.expert == true"
+        },
+        {
+            "type": "STRING",
+            "name": "ignore_token",
+            "label": "Ignore token",
+            "defaultValue": "",
+            "description": "Regular expression pattern for words/phrases not to be corrected. Ex: \\w+\\d will preserve \"home1\" ",
+            "visibilityCondition": "model.expert == true"
+        }
+    ],
+    "resourceKeys": []
 }

@@ -4,10 +4,12 @@
     "meta": {
         "label": "Spell Checker",
         "category": "Natural Language Processing",
-        "description": "Identify and correct misspelled words in text",
+        "description": "Identify and correct misspelled words in text data for 36 languages",
         "author": "Dataiku (Damien JACQUEMART and Alex COMBESSIE)",
         "icon": "icon-strikethrough",
-        "tags": ["NLP"],
+        "tags": [
+            "NLP"
+        ],
         "url": "https://www.dataiku.com/product/plugins/nlp-spell-checker/",
         "licenseInfo": "Apache Software License",
         "supportLevel": "TIER2_SUPPORT"
