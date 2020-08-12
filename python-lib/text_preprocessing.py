@@ -108,12 +108,6 @@ class TextPreprocessor:
         else:
             doc = str(doc)
 
-        """ # remove_punctuation
-        if remove_punctuation:
-            # Remove punctuation with regex. Remove hyphens with replace.
-            # For some reasons, if hyphen is in self.PUNCTUATION, it removes also the dot "."
-            doc = re.sub(r"[%s]+" % PUNCTUATION, " ", doc).replace("-", " ")"""
-
         # Remove leading spaces and multiple spaces
         # often created by removing punctuation and causing bad tokenized doc
         doc = " ".join(str(doc).split())
