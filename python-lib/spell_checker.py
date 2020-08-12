@@ -229,7 +229,6 @@ class SpellChecker:
 
         # remove unecessary columns
         del output_df[preprocess_col]
-        existing_column_names = [k for k in existing_column_names if k != preprocess_col]
 
         if self.language != "":
             del output_df[lang_col]

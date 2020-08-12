@@ -12,6 +12,7 @@ from spacymoji import Emoji
 from language_dict import SUPPORTED_LANGUAGES
 from punctuation import PUNCTUATION
 
+
 def is_url(token: Token) -> bool:
     return token.like_url
 
@@ -82,7 +83,6 @@ class TextPreprocessor:
                     # add emoji
                     emoji = Emoji(self.nlps[lang_code])
                     self.nlps[lang_code].add_pipe(emoji, first=True)
-                    logging.warning('ok for language {}'.format(lang_code))
                 except AttributeError:
                     pass
 
