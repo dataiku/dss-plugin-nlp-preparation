@@ -6,10 +6,11 @@ import spacy.lang
 import pandas as pd
 import logging
 from plugin_io_utils import generate_unique
-from spacy.tokenizer import Tokenizer
+from spacy.tokenizer import _get_regex_pattern
+from spacymoji import Emoji
 
 from language_dict import SUPPORTED_LANGUAGES
-
+from punctuation import PUNCTUATION
 
 def is_url(token: Token) -> bool:
     return token.like_url
@@ -27,23 +28,13 @@ def is_hashtag(token: Token) -> bool:
     return str(token)[0] == "#"
 
 
-def remove_url_email_punct(word: AnyStr) -> AnyStr:
-    # Remove '.' and '/' from a word
-    return word.replace(".", "").replace("/", "")
-
-
 class TextPreprocessor:
 
     # All punctutation except '.' and '/' that are intentionally left for emails and url.
     # '.' and '/' will need to be futher removed in token if needed.
     # Otherwise, "hello." and "hello" will be two differen tokens.
     # Use the function remove_url_email_punct.
-    PUNCTUATION = (
-        '!"$%&()*+,:;<=>?[\\]^_`{|}~_！？｡。＂＄％＆＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏'
-    )
-
-    # Special case for hashtags. mentions are already taken into account by SpaCy
-    PREFIX_TOKEN = re.compile(r"""#(\w+)""")
+   
 
     def __init__(self):
         self.tokenizers = {}
@@ -60,9 +51,6 @@ class TextPreprocessor:
         The tokenizers from languages given in chunks are added
         only if they were not already present in previous chunks.
         """
-
-        #        language_modules = {}
-        #        nlps = {}
 
         for lang_code in lang_code_new_list:
 
@@ -84,7 +72,19 @@ class TextPreprocessor:
 
                 # tokenizer creation
                 self.nlps[lang_code] = spacy.blank(lang_code)
-                self.nlps[lang_code].tokenizer = self._custom_tokenizer(self.nlps[lang_code])
+                # get default pattern for tokens that don't get split
+                re_token_match = _get_regex_pattern(self.nlps[lang_code].Defaults.token_match)
+                # add hashtags and in-word hyphens
+                re_token_match = r"""({re_token_match}|#\w+|\w+-\w+)"""
+                # overwrite token_match function of the tokenizer
+                self.nlps[lang_code].tokenizer.token_match = re.compile(re_token_match).match
+                try: # ugly try except for zh, th, ja
+                    # add emoji
+                    emoji = Emoji(self.nlps[lang_code])
+                    self.nlps[lang_code].add_pipe(emoji, first=True)
+                    logging.warning('ok for language {}'.format(lang_code))
+                except AttributeError:
+                    pass
 
     def _normalize_text(self, doc: AnyStr, lang: AnyStr, lowercase: bool, remove_punctuation: bool) -> AnyStr:
         """
@@ -108,11 +108,11 @@ class TextPreprocessor:
         else:
             doc = str(doc)
 
-        # remove_punctuation
+        """ # remove_punctuation
         if remove_punctuation:
             # Remove punctuation with regex. Remove hyphens with replace.
             # For some reasons, if hyphen is in self.PUNCTUATION, it removes also the dot "."
-            doc = re.sub(r"[%s]+" % self.PUNCTUATION, " ", doc).replace("-", " ")
+            doc = re.sub(r"[%s]+" % PUNCTUATION, " ", doc).replace("-", " ")"""
 
         # Remove leading spaces and multiple spaces
         # often created by removing punctuation and causing bad tokenized doc
@@ -128,7 +128,7 @@ class TextPreprocessor:
     ) -> List:
 
         # tokenize with nlp objets
-        token_list = list(self.nlps[lang].pipe(sliced_series.tolist()))
+        token_list = list(self.nlps[lang].pipe(sliced_series.tolist(), disable=["tagger", "parser"]))
         # append token_list and keep same index
         token_series_sliced = pd.Series(token_list, index=index)
 

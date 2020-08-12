@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 from symspellpy.symspellpy import SymSpell, Verbosity
-from text_preprocessing import TextPreprocessor, is_email, is_url, is_mention, is_hashtag, remove_url_email_punct
+from text_preprocessing import TextPreprocessor, is_email, is_url, is_mention, is_hashtag
 from plugin_io_utils import generate_unique
 from typing import List, AnyStr
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from collections import OrderedDict
-
+import re
 
 from language_dict import SUPPORTED_LANGUAGES
+from punctuation import PUNCTUATION
 
 
 class SpellChecker:
@@ -136,16 +137,25 @@ class SpellChecker:
 
         for token in token_list:
 
-            # word without . and / (intentionally left to check emails and urls)
-            word = remove_url_email_punct(str(token))
-
+            # token to text
+            word = token.text
+            
             # check for url and emails
-            if is_url(token) or is_email(token):
-                corrected_sentence.append(str(token))
+            if token.like_url or token.like_email:
+                corrected_sentence.append(word)
+            
+            # check if emoji
+            elif lang not in ['zh', 'ja', 'th'] and token._.is_emoji:
+                corrected_sentence.append(word)
+                
+            # check if it is punctuation
+            # if removing all punctuation leads to empty string, the token was only punct, and we keep it
+            elif re.sub(r"[%s]+" % PUNCTUATION, "", word).replace('-', '') == '': 
+                corrected_sentence.append(word)
 
             # check for mentions and hashtags
             elif is_hashtag(token) or is_mention(token):
-                corrected_sentence.append(str(token))
+                corrected_sentence.append(word)
 
             elif word.lower() not in self.custom_vocabulary_set and not word.isdigit():
                 (corrected_word, misspell, misspell_count) = self._fix_typos_in_word(word, lang)
