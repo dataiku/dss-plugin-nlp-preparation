@@ -12,11 +12,10 @@ params = load_plugin_config(get_recipe_config())
 # Run
 spell_checker = SpellChecker(
     text_column=params["text_column"],
-    language_selection=params["language_selection"],
     language_column=params["language_column"],
     language=params["language"],
-    ignore_token=params["ignore_token"],
-    distance=params["distance"],
+    ignore_token=params["ignore_word_regex"],
+    edit_distance=params["edit_distance"],
     custom_vocabulary_set=params["custom_vocabulary_set"],
     folder_of_dictionaries=params["folder_of_dictionaries"],
 )

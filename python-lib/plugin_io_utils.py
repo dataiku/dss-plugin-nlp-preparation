@@ -11,4 +11,4 @@ def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr =
         if new_name not in existing_names:
             return new_name
         new_name = "{}_{}_{}".format(prefix, name, i)
-    raise Exception("Failed to generated a unique name")
+    raise RuntimeError("Failed to generated a unique name")

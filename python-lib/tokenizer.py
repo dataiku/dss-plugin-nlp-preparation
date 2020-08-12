@@ -10,41 +10,43 @@ from spacy.tokenizer import _get_regex_pattern
 from spacymoji import Emoji
 
 from language_dict import SUPPORTED_LANGUAGES
-from punctuation import PUNCTUATION
 
 
-def is_url(token: Token) -> bool:
-    return token.like_url
-
-
-def is_email(token: Token) -> bool:
-    return token.like_email
-
-
-def is_mention(token: Token) -> bool:
-    return str(token)[0] == "@"
-
-
-def is_hashtag(token: Token) -> bool:
-    return str(token)[0] == "#"
-
-
-class TextPreprocessor:
+class MultilingualTokenizer:
 
     # All punctutation except '.' and '/' that are intentionally left for emails and url.
     # '.' and '/' will need to be futher removed in token if needed.
     # Otherwise, "hello." and "hello" will be two differen tokens.
     # Use the function remove_url_email_punct.
-   
+
+    # All punctuation, hyphen exluded
+    PUNCTUATION = (
+        "'" + '!"$%&()*+,:;<=>?[\\]/^_.`{|}~_！？｡。＂＄％＆＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏'
+    )
 
     def __init__(self):
         self.tokenizers = {}
         self.nlps = {}
-        self.SUPPORTED_LANG_CODE = SUPPORTED_LANGUAGES.keys()
 
-    def _custom_tokenizer(self, nlp):
-        # Tokenizer that preserves hashtags and mentions
-        return Tokenizer(nlp.vocab, prefix_search=self.PREFIX_TOKEN.search)
+    # def _custom_tokenizer(self, nlp):
+    #    # Tokenizer that preserves hashtags and mentions
+    #    return Tokenizer(nlp.vocab, prefix_search=self.PREFIX_TOKEN.search)
+
+    @staticmethod
+    def is_url(token: Token) -> bool:
+        return token.like_url
+
+    @staticmethod
+    def is_email(token: Token) -> bool:
+        return token.like_email
+
+    @staticmethod
+    def is_mention(token: Token) -> bool:
+        return str(token)[0] == "@"
+
+    @staticmethod
+    def is_hashtag(token: Token) -> bool:
+        return str(token)[0] == "#"
 
     def _add_tokenizers(self, lang_code_new_list: List[AnyStr]):
         """
@@ -59,8 +61,8 @@ class TextPreprocessor:
                 logging.warning("Missing language code")
                 continue
 
-            if lang_code not in self.SUPPORTED_LANG_CODE:
-                logging.warning("Unsupported language code {}".format(lang_code))
+            if lang_code not in SUPPORTED_LANGUAGES.keys():
+                logging.warning("Unsupported language code: {}".format(lang_code))
                 continue
 
             if lang_code in self.tokenizers.keys():
@@ -69,7 +71,7 @@ class TextPreprocessor:
 
             else:
                 # module import
-                logging.info("Loading tokenizer object for language {}".format(lang_code))
+                logging.info("Loading spaCy tokenizer for language: {}".format(lang_code))
 
                 # tokenizer creation
                 self.nlps[lang_code] = spacy.blank(lang_code)
@@ -79,7 +81,7 @@ class TextPreprocessor:
                 re_token_match = r"""({re_token_match}|#\w+|\w+-\w+)"""
                 # overwrite token_match function of the tokenizer
                 self.nlps[lang_code].tokenizer.token_match = re.compile(re_token_match).match
-                try: # ugly try except for zh, th, ja
+                try:  # ugly try except for zh, th, ja
                     # add emoji
                     emoji = Emoji(self.nlps[lang_code])
                     self.nlps[lang_code].add_pipe(emoji, first=True)
@@ -95,7 +97,7 @@ class TextPreprocessor:
         """
 
         # remove edge cases
-        if lang not in self.SUPPORTED_LANG_CODE:
+        if lang not in SUPPORTED_LANGUAGES.keys():
             return ""
         if doc != doc:  # check for NaNs
             return ""
@@ -122,7 +124,7 @@ class TextPreprocessor:
     ) -> List:
 
         # tokenize with nlp objets
-        token_list = list(self.nlps[lang].pipe(sliced_series.tolist(), disable=["tagger", "parser"]))
+        token_list = list(self.nlps[lang].pipe(sliced_series.tolist(), disable=["ner"]))
         # append token_list and keep same index
         token_series_sliced = pd.Series(token_list, index=index)
 
