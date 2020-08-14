@@ -8,6 +8,8 @@ from typing import List, AnyStr
 import pandas as pd
 
 import spacy
+from spacy.language import Language
+from spacy.tokens import Doc
 from spacymoji import Emoji
 
 from language_dict import SUPPORTED_LANGUAGES_SPACY
@@ -18,6 +20,16 @@ class MultilingualTokenizer:
     """Wrapper class to handle tokenization with spaCy for multiple languages"""
 
     DEFAULT_BATCH_SIZE = 1000
+    DEFAULT_FILTER_TOKEN_ATTRIBUTES = [
+        "is_space",
+        "is_punct",
+        "is_digit",
+        "is_currency",
+        "is_stop",
+        "like_url",
+        "like_email",
+        "like_num",
+    ]
 
     def __init__(
         self,
@@ -38,9 +50,7 @@ class MultilingualTokenizer:
         self.tokenized_column = None
 
     @staticmethod
-    def create_spacy_tokenizer(
-        language: AnyStr, hashtags_as_token: bool = True, tag_emoji: bool = True
-    ) -> spacy.language.Language:
+    def create_spacy_tokenizer(language: AnyStr, hashtags_as_token: bool = True, tag_emoji: bool = True) -> Language:
         """Static utility method to create a custom spaCy tokenizer for a given language
 
         Args:
@@ -95,7 +105,7 @@ class MultilingualTokenizer:
             added_tokenizer = True
         return added_tokenizer
 
-    def tokenize_list(self, text_list: List[AnyStr], language: AnyStr) -> List[spacy.tokens.Doc]:
+    def tokenize_list(self, text_list: List[AnyStr], language: AnyStr) -> List[Doc]:
         """Public method to tokenize a list of strings for a given language
 
         This method calls `_add_spacy_tokenizer` in case the requested language has not already been added.
@@ -149,25 +159,17 @@ class MultilingualTokenizer:
         logging.info(message + ": Done!")
         return df
 
-    @staticmethod
     def convert_spacy_doc_to_list(
-        document: spacy.tokens.Doc,
-        filter_token_attributes: List[AnyStr] = [
-            "is_space",
-            "is_punct",
-            "is_digit",
-            "is_stop",
-            "like_url",
-            "like_email",
-            "like_num",
-        ],
+        self,
+        document: Doc,
+        filter_token_attributes: List[AnyStr] = DEFAULT_FILTER_TOKEN_ATTRIBUTES,
         to_lower: bool = False,
     ) -> List[AnyStr]:
         """Static utility method to convert a spaCy document into a list of strings
 
         Args:
             document: A spaCy document returned by `tokenize_list` or `tokenized_df`
-            filter_token_attributes: List of spaCy token attributes to filter out https://spacy.io/api/token#attributes
+            filter_token_attributes: List of spaCy token attributes to filter, cf. https://spacy.io/api/token#attributes
             to_lower: If True, convert all strings to lowercase
 
         Returns:
