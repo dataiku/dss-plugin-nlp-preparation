@@ -85,9 +85,9 @@ class MultilingualTokenizer:
         """
         added_tokenizer = False
         if pd.isnull(language) or language == "":
-            raise ValueError("Missing language code for tokenization")
+            raise ValueError("Missing language code")
         if language not in SUPPORTED_LANGUAGES_SPACY.keys():
-            raise ValueError("Unsupported language code for tokenization: {}".format(language))
+            raise ValueError("Unsupported language code: {}".format(language))
         if language not in self.spacy_nlp_dict.keys():
             self.spacy_nlp_dict[language] = self.create_spacy_tokenizer(
                 language, self.hashtags_as_token, self.tag_emoji
