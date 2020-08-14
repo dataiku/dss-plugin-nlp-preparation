@@ -8,7 +8,7 @@ params = load_plugin_config()
 
 # Run
 spellchecker = SpellChecker(
-    tokenizer=MultilingualTokenizer(),
+    tokenizer=MultilingualTokenizer(batch_size=params["batch_size"]),
     dictionary_folder_path=params["dictionary_folder_path"],
     ignore_token=params["ignore_word_regex"],
     edit_distance=params["edit_distance"],
