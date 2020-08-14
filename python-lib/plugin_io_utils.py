@@ -4,6 +4,11 @@ from typing import List, AnyStr
 import pandas as pd
 
 
+def unique_list(sequence: List) -> List:
+    seen = set()
+    return [x for x in sequence if not (x in seen or seen.add(x))]
+
+
 def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr = None) -> AnyStr:
     """
     Generate a unique name among existing ones by suffixing a number. Can also add a prefix.

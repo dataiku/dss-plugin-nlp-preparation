@@ -11,7 +11,7 @@ from spacy.tokens import Token, Doc
 from spacy.vocab import Vocab
 from symspellpy.symspellpy import SymSpell, Verbosity
 
-from plugin_io_utils import generate_unique, move_columns_after
+from plugin_io_utils import unique_list, generate_unique, move_columns_after
 from spacy_tokenizer import MultilingualTokenizer
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
@@ -24,11 +24,11 @@ class SpellChecker:
 
     DEFAULT_EDIT_DISTANCE = 2
     SUGGESTION_VERBOSITY = Verbosity.TOP  # returns only the closest word
-    NUM_THREADS = 4
+    NUM_THREADS = 1  # use a single thread to avoid loading dictionary multiple times
     COLUMN_DESCRIPTION_DICT = OrderedDict(
         [
             ("corrected_text", "Text with misspellings corrected"),
-            ("spelling_mistakes", "Spelling mistakes"),
+            ("spelling_mistakes", "List of spelling mistakes"),
             ("misspelling_count", "Number of spelling mistakes"),
         ]
     )
@@ -116,6 +116,7 @@ class SpellChecker:
             corrected_document = Doc(vocab=document.vocab, words=corrected_word_list, spaces=whitespace_list)
         except ValueError as e:
             logging.warning("Spell checking error: {} for document: {}".format(e, document.text))
+        spelling_mistakes = unique_list(spelling_mistakes)
         return (corrected_document.text, spelling_mistakes, len(spelling_mistakes))
 
     def check_df(
