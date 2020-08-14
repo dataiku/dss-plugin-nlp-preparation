@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from collections import OrderedDict
 import re
 
-from language_dict import SUPPORTED_LANGUAGES
+from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
 
 class SpellChecker:
@@ -65,7 +65,7 @@ class SpellChecker:
 
         for lang_code in new_lang_code_list:
 
-            if lang_code not in SUPPORTED_LANGUAGES.keys():
+            if lang_code not in SUPPORTED_LANGUAGES_SYMSPELL.keys():
                 logging.warning("Unsupported language code: {}".format(lang_code))
                 continue
 
@@ -112,7 +112,7 @@ class SpellChecker:
         """
 
         token_list, lang = [token_lang[0], token_lang[1]]
-        if lang not in SUPPORTED_LANGUAGES.keys():
+        if lang not in SUPPORTED_LANGUAGES_SYMSPELL.keys():
             logging.warning("Unsupported language code: {}".format(lang))
             return ("", "", "")
 
