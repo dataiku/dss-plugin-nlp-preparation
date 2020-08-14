@@ -11,7 +11,7 @@ from spacy.tokens import Token, Doc
 from spacy.vocab import Vocab
 from symspellpy.symspellpy import SymSpell, Verbosity
 
-from plugin_io_utils import generate_unique
+from plugin_io_utils import generate_unique, move_columns_after
 from spacy_tokenizer import MultilingualTokenizer
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
@@ -49,6 +49,7 @@ class SpellChecker:
         self.ignore_token = ignore_token
         self.transfer_casing = transfer_casing
         self.symspell_checker_dict = {}
+        self.column_description_dict = self.COLUMN_DESCRIPTION_DICT  # may be changed by check_df
         Token.set_extension("is_misspelled", default=False, force=True)
         Token.set_extension("correction", default="", force=True)
 
@@ -116,3 +117,37 @@ class SpellChecker:
         except ValueError as e:
             logging.warning("Spell checking error: {} for document: {}".format(e, document.text))
         return (corrected_document.text, spelling_mistakes, len(spelling_mistakes))
+
+    def check_df(
+        self,
+        df: pd.DataFrame,
+        text_column: AnyStr,
+        language_column: AnyStr = None,
+        language: AnyStr = "language_column",
+    ) -> pd.DataFrame:
+        # Validate language inputs
+        if language != "language_column":
+            language_column = generate_unique(text_column, df.keys(), "language")
+            df[language_column] = [language] * df.shape[0]
+        # Tokenize DataFrame to obtain a new column with spaCy documents
+        self.tokenizer.tokenize_df(df, text_column, language_column)
+        # Apply check_document on all documents within the column
+        message = "Spellchecking column '{}' in dataframe of {:d} rows".format(text_column, len(df.index))
+        logging.info(message + "...")
+        doc_lang_iterator = (
+            (getattr(row, self.tokenizer.tokenized_column), getattr(row, language_column)) for row in df.itertuples()
+        )
+        with ThreadPoolExecutor(max_workers=self.NUM_THREADS) as executor:
+            output_tuple_list = list(executor.map(lambda x: self.check_document(*x), doc_lang_iterator))
+        logging.info(message + ": Done!")
+        # Format DataFrame: assign and reorder columns
+        self.column_description_dict = OrderedDict()
+        for k, v in self.COLUMN_DESCRIPTION_DICT.items():
+            self.column_description_dict[generate_unique(k, df.keys(), text_column)] = v
+        for i, column in enumerate(self.column_description_dict.keys()):
+            df[column] = [t[i] for t in output_tuple_list]
+            if i == 1:  # post-processing for spelling mistakes
+                df[column] = df[column].apply(lambda x: "" if len(x) == 0 else x)
+        del df[self.tokenizer.tokenized_column]
+        move_columns_after(df, columns_to_move=list(self.column_description_dict.keys()), after_column=language_column)
+        return df

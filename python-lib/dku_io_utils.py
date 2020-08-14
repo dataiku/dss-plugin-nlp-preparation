@@ -16,6 +16,7 @@ def count_records(dataset: dataiku.Dataset) -> int:
     partitions = dataset.read_partitions
     client = dataiku.api_client()
     project = client.get_project(dataiku.default_project_key())
+    record_count = 0
     logging.info("Counting records of dataset: {}".format(dataset_name))
     if partitions is None or len(partitions) == 0:
         project.get_dataset(dataset_name).compute_metrics(metric_ids=[metric_id])
@@ -23,7 +24,6 @@ def count_records(dataset: dataiku.Dataset) -> int:
         record_count = dataiku.ComputedMetrics.get_value_from_data(metric.get_global_data(metric_id=metric_id))
         logging.info("Dataset contains {:d} records and is not partitioned".format(record_count))
     else:
-        record_count = 0
         for partition in partitions:
             project.get_dataset(dataset_name).compute_metrics(partition=partition, metric_ids=[metric_id])
             metric = dataset.get_last_metric_values()
@@ -41,10 +41,12 @@ def process_dataset_chunks(
     Read a dataset by chunks, process each dataframe chunk with a function and write back to another dataset.
     Automatically adds a tqdm progress bar and generic logging.
     """
+    input_count_records = count_records(input_dataset)
+    assert input_count_records != 0, "Input dataset has no records"
     logging.info("Processing dataframe chunks of size {:d})...".format(chunksize))
     with output_dataset.get_writer() as writer:
         df_iterator = input_dataset.iter_dataframes(chunksize=chunksize, infer_with_pandas=False)
-        len_iterator = math.ceil(count_records(input_dataset) / chunksize)
+        len_iterator = math.ceil(input_count_records / chunksize)
         for i, df in tqdm(enumerate(df_iterator), total=len_iterator):
             output_df = func(df=df, **kwargs)
             if i == 0:

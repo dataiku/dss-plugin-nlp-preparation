@@ -5,6 +5,14 @@ import os
 from typing import Dict, Set
 
 import dataiku
+from dataiku.customrecipe import (
+    get_recipe_config,
+    get_input_names_for_role,
+    get_output_names_for_role,
+    get_recipe_resource,
+)
+
+from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
 
 def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set:
@@ -23,28 +31,39 @@ def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set
     return custom_vocabulary_set
 
 
-def load_plugin_config(recipe_config: Dict) -> Dict:
+def load_plugin_config() -> Dict:
     """
     Helper function to load plugin recipe config into a clean parameter dictionary.
     Applies assertion checks for correct input config.
     """
     params = {}
+    recipe_config = get_recipe_config()
+
+    # input dataset
+    input_dataset_names = get_input_names_for_role("input_dataset")
+    assert len(input_dataset_names) != 0, "Please specify input dataset"
+    params["input_dataset"] = dataiku.Dataset(input_dataset_names[0])
+
+    # output dataset
+    output_dataset_names = get_output_names_for_role("output_dataset")
+    assert len(output_dataset_names) != 0, "Please specify output dataset"
+    params["output_dataset"] = dataiku.Dataset(output_dataset_names[0])
+
+    # custom_vocabulary (optional input dataset)
+    params["custom_vocabulary_set"] = set()
+    custom_vocabulary_input = get_input_names_for_role("custom_vocabulary")
+    if len(custom_vocabulary_input) != 0:
+        custom_vocabulary_dataset = dataiku.Dataset(custom_vocabulary_input[0])
+        params["custom_vocabulary_set"] = custom_vocabulary_checker(custom_vocabulary_dataset)
+    logging.info("Custom vocabulary set: {}".format(params["custom_vocabulary_set"]))
 
     # path to the folder of dictionaries
-    params["dictionary_folder_path"] = os.path.join(dataiku.customrecipe.get_recipe_resource(), "dictionaries")
+    params["dictionary_folder_path"] = os.path.join(get_recipe_resource(), "dictionaries")
 
     # List of text columns
     params["text_column"] = recipe_config.get("text_column")
     logging.info("Text column: {}".format(params["text_column"]))
     assert params["text_column"] != "", "Empty text column selection"
-
-    # custom_vocabulary
-    params["custom_vocabulary_set"] = set()
-    custom_vocabulary_input = dataiku.customrecipe.get_input_names_for_role("custom_vocabulary")
-    if len(custom_vocabulary_input) == 1:
-        custom_vocabulary_dataset = dataiku.Dataset(custom_vocabulary_input[0])
-        params["custom_vocabulary_set"] = custom_vocabulary_checker(custom_vocabulary_dataset)
-    logging.info("Custom vocabulary set: {}".format(params["custom_vocabulary_set"]))
 
     # Language selection
     params["language"] = recipe_config.get("language")
@@ -56,6 +75,9 @@ def load_plugin_config(recipe_config: Dict) -> Dict:
         logging.info("Language column: {}".format(params["language_column"]))
     else:
         assert params["language"] is not None and params["language"] != "", "Empty language selection"
+        assert params["language"] in SUPPORTED_LANGUAGES_SYMSPELL.keys(), "Unsupported language code: {}".format(
+            params["language"]
+        )
         params["language_column"] = ""
         logging.info("Language: {}".format(params["language"]))
 
@@ -65,8 +87,14 @@ def load_plugin_config(recipe_config: Dict) -> Dict:
     else:
         logging.info("Expert mode is disabled")
 
-    # distance
+    # batch size
+    params["batch_size"] = int(recipe_config.get("batch_size"))
+    assert params["batch_size"] >= 1 and params["batch_size"] <= 1000000
+    logging.info("Batch size: {}".format(params["batch_size"]))
+
+    # edit distance
     params["edit_distance"] = recipe_config.get("edit_distance")
+    assert params["edit_distance"] >= 2 and params["edit_distance"] <= 100
     logging.info("Maximum edit distance: {}".format(params["edit_distance"]))
 
     # ignore token
@@ -79,7 +107,7 @@ def load_plugin_config(recipe_config: Dict) -> Dict:
         try:
             ignore_token_compiled = re.compile(params["ignore_word_regex"])
         except re.error:
-            assert False, "Invalid regex"
+            assert False, "Ignore pattern parameter: Invalid regex"
         params["ignore_word_regex"] = ignore_token_compiled.pattern
         logging.info("Regular expression for words not to be corrected: {}".format(params["ignore_word_regex"]))
 

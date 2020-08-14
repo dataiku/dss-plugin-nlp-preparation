@@ -10,6 +10,7 @@ import pandas as pd
 import spacy
 from spacy.language import Language
 from spacy.tokens import Doc
+from spacy.vocab import Vocab
 from spacymoji import Emoji
 
 from language_dict import SUPPORTED_LANGUAGES_SPACY
@@ -47,7 +48,7 @@ class MultilingualTokenizer:
                 default_language, hashtags_as_token, tag_emoji
             )
         self.batch_size = int(batch_size)
-        self.tokenized_column = None
+        self.tokenized_column = None  # may be changed by tokenize_df
 
     @staticmethod
     def create_spacy_tokenizer(language: AnyStr, hashtags_as_token: bool = True, tag_emoji: bool = True) -> Language:
@@ -123,8 +124,9 @@ class MultilingualTokenizer:
             self._add_spacy_tokenizer(language)
             tokenized = self.spacy_nlp_dict[language].pipe(text_list, batch_size=self.batch_size)
         except ValueError as e:
-            logging.warning("Tokenization error: {} for text list: {}".format(e, text_list))
-            logging.info("Fallback to default spaCy tokenizer for language: {}".format(self.default_language))
+            logging.warning(
+                "Tokenization error: {} for text list: {}, defaulting to fallback tokenizer".format(e, text_list)
+            )
             tokenized = self.spacy_nlp_dict[self.default_language].pipe(text_list, batch_size=self.batch_size)
         return list(tokenized)
 
@@ -145,9 +147,7 @@ class MultilingualTokenizer:
         logging.info(message + "...")
         self.tokenized_column = generate_unique("tokenized", df.keys(), text_column)
         # Initialize the tokenized column to empty documents
-        df[self.tokenized_column] = pd.Series(
-            [self.spacy_nlp_dict[self.default_language]("")] * len(df.index), dtype="object"
-        )
+        df[self.tokenized_column] = pd.Series([Doc(Vocab())] * len(df.index), dtype="object")
         language_list = df[language_column].unique()
         for language in language_list:  # iterate over languages
             language_indices = df[language_column] == language
