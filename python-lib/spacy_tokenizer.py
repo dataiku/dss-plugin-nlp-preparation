@@ -49,7 +49,7 @@ class MultilingualTokenizer:
             tag_emoji: If True, use spacymoji extension to add a tag on emojis
 
         Returns:
-            Instanciated spacy Language object with the tokenizer
+            Instanciated spaCy Language object with the tokenizer
         """
         logging.info("Loading spaCy tokenizer for language: {}".format(language))
         nlp = spacy.blank(language)
@@ -66,7 +66,7 @@ class MultilingualTokenizer:
                 emoji = Emoji(nlp)
                 nlp.add_pipe(emoji, first=True)
             except AttributeError as e:
-                # As of spacy 2.3.3 we know this will not work for Chinese, Thai and Japanese
+                # As of spacy 2.3.2 we know this will not work for Chinese, Thai and Japanese
                 logging.warning("Could not load spacymoji for language: {} because of error: {}".format(language, e))
         return nlp
 
