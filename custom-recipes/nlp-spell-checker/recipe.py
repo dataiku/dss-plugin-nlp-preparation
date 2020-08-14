@@ -1,8 +1,8 @@
 import dataiku
 from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role, get_recipe_config
 from plugin_config_loading import load_plugin_config
-from tokenizer import MultilingualTokenizer
-from spell_checker import SpellChecker
+from spacy_tokenizer import MultilingualTokenizer
+from symspell_checker import SpellChecker
 from dku_io_utils import process_dataset_chunks, set_column_description
 
 # Setup
