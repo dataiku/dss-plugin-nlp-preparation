@@ -1,6 +1,7 @@
 import dataiku
 from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role, get_recipe_config
 from plugin_config_loading import load_plugin_config
+from tokenizer import MultilingualTokenizer
 from spell_checker import SpellChecker
 from dku_io_utils import process_dataset_chunks, set_column_description
 
@@ -10,18 +11,24 @@ output_dataset = dataiku.Dataset(get_output_names_for_role("output_dataset")[0])
 params = load_plugin_config(get_recipe_config())
 
 # Run
+tokenizer = MultilingualTokenizer()
 spell_checker = SpellChecker(
-    text_column=params["text_column"],
-    language_column=params["language_column"],
-    language=params["language"],
+    tokenizer=tokenizer,
+    dictionary_folder_path=params["dictionary_folder_path"],
     ignore_token=params["ignore_word_regex"],
     edit_distance=params["edit_distance"],
     custom_vocabulary_set=params["custom_vocabulary_set"],
-    folder_of_dictionaries=params["folder_of_dictionaries"],
 )
 
 # Write output
-process_dataset_chunks(input_dataset=input_dataset, output_dataset=output_dataset, func=spell_checker.fix_typos_in_df)
+process_dataset_chunks(
+    input_dataset=input_dataset,
+    output_dataset=output_dataset,
+    func=spell_checker.fix_typos_in_df,
+    text_column=params["text_column"],
+    language=params["language"],
+    language_column=params["language_column"],
+)
 set_column_description(
     input_dataset=input_dataset,
     output_dataset=output_dataset,

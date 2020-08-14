@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
-from symspellpy.symspellpy import SymSpell, Verbosity
-from tokenizer import MultilingualTokenizer
-from plugin_io_utils import generate_unique
-from typing import List, AnyStr
+"""Use this module to check and correct misspellings"""
+
+import re
+import os
 import logging
+from typing import List, AnyStr
 from concurrent.futures import ThreadPoolExecutor
 from collections import OrderedDict
-import re
 
+import pandas as pd
+import spacy
+from symspellpy.symspellpy import SymSpell, Verbosity
+
+from plugin_io_utils import generate_unique
+from tokenizer import MultilingualTokenizer
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
 
@@ -18,11 +23,9 @@ class SpellChecker:
     See https://symspellpy.readthedocs.io/en/latest/api/symspellpy.html#symspellpy
     """
 
+    DEFAULT_EDIT_DISTANCE = 2
     SUGGESTION_VERBOSITY = Verbosity.TOP  # returns only the closest word
-    # Symspellpy returns errors for some words: if a word is all uppercase, symspellpy returns the lowercased word
-    TRANSFER_CASING = False  # the original casing (lowercase and uppercase) is not carried over the text
     NUM_THREADS = 4
-
     COLUMN_DESCRIPTION_DICT = OrderedDict(
         [
             ("corrected_text", "Text with misspellings corrected"),
@@ -33,78 +36,61 @@ class SpellChecker:
 
     def __init__(
         self,
-        text_column: AnyStr = "",
-        language_column: AnyStr = "",
-        language: AnyStr = "",
+        tokenizer: MultilingualTokenizer,
+        dictionary_folder_path: AnyStr,
+        custom_vocabulary_set: List[AnyStr] = [],
+        edit_distance: int = DEFAULT_EDIT_DISTANCE,
         ignore_token: AnyStr = None,
-        edit_distance: int = 2,
-        custom_vocabulary_set: List = [],
-        folder_of_dictionaries: AnyStr = "",
+        transfer_casing: bool = False,
     ):
-
-        self.language_column = language_column
-        self.language = language
-        self.text_column = text_column
-        self.tokenizer = MultilingualTokenizer()
+        self.tokenizer = tokenizer
         self.custom_vocabulary_set = custom_vocabulary_set
-
-        # symspell ##
         self.edit_distance = edit_distance
-        self.folder_of_dictionaries = folder_of_dictionaries
         self.ignore_token = ignore_token
+        self.symspell_checker_dict = {}
 
-        # sym spell objects as dictionary lang_id: sym_spell_object
-        self.sym_spells = {}
+    def create_symspell_checker(self, language: AnyStr, edit_distance: int) -> SymSpell:
+        logging.info("Loading SymSpell checker for language: {}".format(language))
+        symspell_checker = SymSpell(max_dictionary_edit_distance=edit_distance)
+        freq_dict_path = self.dictionary_folder_path + "/" + language + ".txt"
+        symspell_checker.load_dictionary(freq_dict_path, 0, 1)
+        return symspell_checker
 
-    def _add_sym_spell_objects(self, new_lang_code_list: List[AnyStr]):
-        """
-        set_of_languages: set of language codes in ISO 639-1 format
-        The symspell objects from languages given in chunks are added
-        only if they were not already present in previous chunks.
-        """
+    def _add_symspell_checker(self, language: AnyStr) -> bool:
+        added_checker = False
+        if pd.isnull(language) or language == "":
+            raise ValueError("Missing language code for tokenization")
+        if language not in SUPPORTED_LANGUAGES_SYMSPELL.keys():
+            raise ValueError("Unsupported language code for spell checker: {}".format(language))
+        if language not in self.symspell_checker_dict.keys():
+            self.symspell_checker_dict[language] = self.create_symspell_checker(
+                language=language, edit_distance=self.edit_distance
+            )
+            added_checker = True
+        return added_checker
 
-        for lang_code in new_lang_code_list:
-
-            if lang_code not in SUPPORTED_LANGUAGES_SYMSPELL.keys():
-                logging.warning("Unsupported language code: {}".format(lang_code))
-                continue
-
-            if lang_code in self.sym_spells.keys():
-                # new SymSpell object is added only if not already present
-                continue
-            logging.info("Loading SymSpell dictionary for language: {}".format(lang_code))
-            freq_dict_path = self.folder_of_dictionaries + "/" + lang_code + ".txt"
-            self.sym_spells[lang_code] = SymSpell(max_dictionary_edit_distance=self.edit_distance)
-            self.sym_spells[lang_code].load_dictionary(freq_dict_path, 0, 1)
-
-    def _fix_typos_in_word(self, word: AnyStr, lang: AnyStr) -> (AnyStr, List, int):
+    def _spellcheck_token(self, token: spacy.tokens.Token, language: AnyStr) -> (AnyStr, List, int):
         """
         Returns the corrected word if it has a correction, and the word not corrected otherwise
         See details here:
             https://symspellpy.readthedocs.io/en/latest/examples/lookup.html
         """
-        correction = self.sym_spells[lang].lookup(
-            word, self.SUGGESTION_VERBOSITY, transfer_casing=self.TRANSFER_CASING, ignore_token=self.ignore_token
-        )
+        raise NotImplementedError
+        # return (corrected_word, misspell, misspell_count)
 
-        if correction:
-            corrected_word = correction[0].term
+    def spellcheck_document(self, document: spacy.tokens.Doc, language: AnyStr) -> (AnyStr, List, int):
+        spellchecked_document = document
+        misspellings = []
+        misspelling_count = 0
+        try:
+            self._add_symspell_checker(language)
+            # TODO
+        except ValueError as e:
+            logging.warning("Spellcheking error: {} for document: {}".format(e, document.text))
+            logging.info("Returning document as-is without checking spelling"
+        return (document, misspellings, misspelling_count)
 
-            if correction[0].term != word.lower() and word != " ":
-                misspell = word
-                misspell_count = correction[0].count
-            else:
-                misspell = ""
-                misspell_count = 0
-
-        else:
-            corrected_word = word  # if no correction was found, original word is returned
-            misspell = word  # if no correction was found, we assume the word is misspelled
-            misspell_count = 0
-
-        return (corrected_word, misspell, misspell_count)
-
-    def _fix_typos_in_document(self, token_lang: List) -> (AnyStr, List, int):
+    def spell(self, token_lang: List) -> (AnyStr, List, int):
 
         """
         we did not consider word_segmentation as it is much slower.

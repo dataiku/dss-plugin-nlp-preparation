@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Dict, Set
-import dataiku
 import re
 import os
+from typing import Dict, Set
+
+import dataiku
 
 
 def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set:
@@ -30,7 +31,7 @@ def load_plugin_config(recipe_config: Dict) -> Dict:
     params = {}
 
     # path to the folder of dictionaries
-    params["folder_of_dictionaries"] = os.path.join(dataiku.customrecipe.get_recipe_resource(), "dictionaries")
+    params["dictionary_folder_path"] = os.path.join(dataiku.customrecipe.get_recipe_resource(), "dictionaries")
 
     # List of text columns
     params["text_column"] = recipe_config.get("text_column")

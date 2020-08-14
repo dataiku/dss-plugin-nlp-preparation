@@ -11,7 +11,7 @@ import spacy
 from spacymoji import Emoji
 
 from language_dict import SUPPORTED_LANGUAGES_SPACY
-from dku_io_utils import generate_unique
+from plugin_io_utils import generate_unique
 
 
 class MultilingualTokenizer:
@@ -85,9 +85,9 @@ class MultilingualTokenizer:
         """
         added_tokenizer = False
         if pd.isnull(language) or language == "":
-            raise ValueError("Missing language code")
+            raise ValueError("Missing language code for tokenization")
         if language not in SUPPORTED_LANGUAGES_SPACY.keys():
-            raise ValueError("Unsupported language code: {}".format(language))
+            raise ValueError("Unsupported language code for tokenization: {}".format(language))
         if language not in self.spacy_nlp_dict.keys():
             self.spacy_nlp_dict[language] = self.create_spacy_tokenizer(
                 language, self.hashtags_as_token, self.tag_emoji
@@ -131,6 +131,8 @@ class MultilingualTokenizer:
         Returns:
             DataFrame with all columns from the input, plus a new column with tokenized spaCy documents
         """
+        message = "Tokenizing column '{}' in dataframe of {:d} rows".format(text_column, len(df.index))
+        logging.info(message + "...")
         self.tokenized_column = generate_unique("tokenized", df.keys(), text_column)
         # Initialize the tokenized column to empty documents
         df[self.tokenized_column] = pd.Series(
@@ -144,6 +146,7 @@ class MultilingualTokenizer:
             df.loc[language_indices, self.tokenized_column] = pd.Series(
                 tokenized_list, dtype="object", index=language_df.index,  # keep index (important)
             )
+        logging.info(message + ": Done!")
         return df
 
     @staticmethod
