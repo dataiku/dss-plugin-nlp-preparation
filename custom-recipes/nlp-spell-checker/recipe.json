@@ -87,7 +87,7 @@
             "name": "edit_distance",
             "label": "Edit distance",
             "defaultValue": 2,
-            "minI": 0,
+            "minI": 1,
             "maxI": 100,
             "description": "Maximum edit distance between a word and its correction. Increase to correct more.",
             "visibilityCondition": "model.expert == true"

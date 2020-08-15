@@ -2,7 +2,7 @@
 """Use this module to check and correct misspellings"""
 
 import logging
-from typing import List, AnyStr, Set
+from typing import List, AnyStr, Set, Tuple
 from concurrent.futures import ThreadPoolExecutor
 from collections import OrderedDict
 
@@ -24,7 +24,7 @@ class SpellChecker:
 
     DEFAULT_EDIT_DISTANCE = 2
     SUGGESTION_VERBOSITY = Verbosity.TOP  # returns only the closest word
-    NUM_THREADS = 1  # use a single thread to avoid loading dictionary multiple times
+    NUM_THREADS = 4
     COLUMN_DESCRIPTION_DICT = OrderedDict(
         [
             ("corrected_text", "Text with misspellings corrected"),
@@ -98,7 +98,7 @@ class SpellChecker:
                     token._.is_misspelled = True
                     token._.correction = correction
 
-    def check_document(self, document: Doc, language: AnyStr) -> (AnyStr, List, int):
+    def check_document(self, document: Doc, language: AnyStr) -> Tuple[AnyStr, List, int]:
         spelling_mistakes = []
         corrected_word_list = []
         whitespace_list = []
@@ -119,36 +119,55 @@ class SpellChecker:
         spelling_mistakes = unique_list(spelling_mistakes)
         return (corrected_document.text, spelling_mistakes, len(spelling_mistakes))
 
-    def check_df(
-        self,
-        df: pd.DataFrame,
-        text_column: AnyStr,
-        language_column: AnyStr = None,
-        language: AnyStr = "language_column",
-    ) -> pd.DataFrame:
-        # Validate language inputs
-        if language != "language_column":
-            language_column = generate_unique(text_column, df.keys(), "language")
-            df[language_column] = [language] * df.shape[0]
-        # Tokenize DataFrame to obtain a new column with spaCy documents
-        self.tokenizer.tokenize_df(df, text_column, language_column)
-        # Apply check_document on all documents within the column
-        message = "Spellchecking column '{}' in dataframe of {:d} rows".format(text_column, len(df.index))
-        logging.info(message + "...")
-        doc_lang_iterator = (
-            (getattr(row, self.tokenizer.tokenized_column), getattr(row, language_column)) for row in df.itertuples()
-        )
-        with ThreadPoolExecutor(max_workers=self.NUM_THREADS) as executor:
-            output_tuple_list = list(executor.map(lambda x: self.check_document(*x), doc_lang_iterator))
-        logging.info(message + ": Done!")
-        # Format DataFrame: assign and reorder columns
+    def check_document_list(self, document_list: List[Doc], language: AnyStr) -> List[Tuple[AnyStr, List, int]]:
+        output_tuple_list = [("", [], 0)] * len(document_list)
+        try:
+            self._add_symspell_checker(language)
+            doc_lang_iterator = ((doc, language) for doc in document_list)
+            with ThreadPoolExecutor(max_workers=self.NUM_THREADS) as executor:
+                output_tuple_list = list(executor.map(lambda x: self.check_document(*x), doc_lang_iterator))
+        except ValueError as e:
+            logging.warning(
+                "Spell checking error: {} for document list: {}".format(e, [doc.text for doc in document_list])
+            )
+        return output_tuple_list
+
+    def _prepare_df_for_spellchecking(
+        self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr, language: AnyStr
+    ):
         self.column_description_dict = OrderedDict()
         for k, v in self.COLUMN_DESCRIPTION_DICT.items():
-            self.column_description_dict[generate_unique(k, df.keys(), text_column)] = v
-        for i, column in enumerate(self.column_description_dict.keys()):
-            df[column] = [t[i] for t in output_tuple_list]
-            if i == 1:  # post-processing for spelling mistakes
-                df[column] = df[column].apply(lambda x: "" if len(x) == 0 else x)
+            column_name = generate_unique(k, df.keys(), text_column)
+            df[column_name] = pd.Series([""] * len(df.index))
+            self.column_description_dict[column_name] = v
+        self.tokenizer.tokenize_df(df, text_column, language_column, language)
+
+    def _format_output_df(self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr, language: AnyStr):
         del df[self.tokenizer.tokenized_column]
-        move_columns_after(df, columns_to_move=list(self.column_description_dict.keys()), after_column=language_column)
+        spelling_mistakes_column = list(self.column_description_dict.keys())[1]
+        df[spelling_mistakes_column] = df[spelling_mistakes_column].apply(lambda x: "" if len(x) == 0 else x)
+        move_columns_after(df, columns_to_move=list(self.column_description_dict.keys()), after_column=text_column)
+
+    def check_df(
+        self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr, language: AnyStr = "language_column",
+    ) -> pd.DataFrame:
+        self._prepare_df_for_spellchecking(df, text_column, language_column, language)
+        logging.info("Spellchecking column '{}' in dataframe of {:d} rows...".format(text_column, len(df.index)))
+        if language == "language_column":
+            for lang in df[language_column].unique():  # iterate over languages
+                language_indices = df[language_column] == lang
+                document_slice = df.loc[language_indices, self.tokenizer.tokenized_column]  # slicing df by language
+                output_tuple_list = self.check_document_list(document_list=document_slice, language=lang)
+                for i, column in enumerate(self.column_description_dict.keys()):
+                    df.loc[language_indices, column] = pd.Series(
+                        [t[i] for t in output_tuple_list], index=document_slice.index
+                    )
+        else:
+            output_tuple_list = self.check_document_list(
+                document_list=df[self.tokenizer.tokenized_column], language=language
+            )
+            for i, column in enumerate(self.column_description_dict.keys()):
+                df[column] = [t[i] for t in output_tuple_list]
+        # Format output DataFrame
+        self._format_output_df(df, text_column, language_column, language)
         return df

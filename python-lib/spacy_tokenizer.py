@@ -130,7 +130,9 @@ class MultilingualTokenizer:
             tokenized = self.spacy_nlp_dict[self.default_language].pipe(text_list, batch_size=self.batch_size)
         return list(tokenized)
 
-    def tokenize_df(self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr) -> pd.DataFrame:
+    def tokenize_df(
+        self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr, language: AnyStr = "language_column"
+    ) -> pd.DataFrame:
         """Public method to tokenize a text column in a pandas DataFrame, given a language column
 
         This methods adds a new column to the DataFrame, whose name is saved as the `tokenized_column` attribute
@@ -139,24 +141,27 @@ class MultilingualTokenizer:
             df: Input pandas DataFrame
             text_column: Name of the column containing text data
             language_column: Name of the column with language codes in ISO 639-1 format
+            language: Language code in ISO 639-1 format, cf. https://spacy.io/usage/models#languages
+                if equal to "language_column" this parameter is ignored in favor of language_column
 
         Returns:
             DataFrame with all columns from the input, plus a new column with tokenized spaCy documents
         """
-        message = "Tokenizing column '{}' in dataframe of {:d} rows".format(text_column, len(df.index))
-        logging.info(message + "...")
+        logging.info("Tokenizing column '{}' in dataframe of {:d} rows...".format(text_column, len(df.index)))
         self.tokenized_column = generate_unique("tokenized", df.keys(), text_column)
         # Initialize the tokenized column to empty documents
         df[self.tokenized_column] = pd.Series([Doc(Vocab())] * len(df.index), dtype="object")
-        language_list = df[language_column].unique()
-        for language in language_list:  # iterate over languages
-            language_indices = df[language_column] == language
-            language_df = df.loc[language_indices, text_column]  # slicing input df by language
-            tokenized_list = self.tokenize_list(text_list=language_df.values, language=language)
-            df.loc[language_indices, self.tokenized_column] = pd.Series(
-                tokenized_list, dtype="object", index=language_df.index,  # keep index (important)
-            )
-        logging.info(message + ": Done!")
+        if language == "language_column":
+            for lang in df[language_column].unique():  # iterate over languages
+                language_indices = df[language_column] == lang
+                text_slice = df.loc[language_indices, text_column]  # slicing input df by language
+                tokenized_list = self.tokenize_list(text_list=text_slice, language=lang)
+                df.loc[language_indices, self.tokenized_column] = pd.Series(
+                    tokenized_list, dtype="object", index=text_slice.index,  # keep index (important)
+                )
+        else:
+            tokenized_list = self.tokenize_list(text_list=df[text_column], language=language)
+            df[self.tokenized_column] = tokenized_list
         return df
 
     def convert_spacy_doc_to_list(
