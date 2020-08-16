@@ -18,6 +18,19 @@ from language_dict import SUPPORTED_LANGUAGES_SPACY
 from plugin_io_utils import generate_unique
 
 
+# The constants below should cover not all but a majority of common cases
+SYMBOL_REGEX = (
+    r"""[º°'"%&()％＆*+-<=>?\\[\]\/^_`{|}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏]+"""
+)
+ORDER_UNITS = ["eme", "th", "st", "nd", "rd", "k"]
+WEIGHT_UNITS = ["mg", "g", "kg", "t", "lb", "oz"]
+DISTANCE_SPEED_UNITS = ["mm", "cm", "m", "km", "in", "ft", "yd", "mi", "kmh", "mph"]
+TIME_UNITS = ["ns", "ms", "s", "m", "min", "h", "d", "y"]
+VOLUME_UNITS = ["ml", "dl", "l", "pt", "qt", "gal"]
+MISC_UNITS = ["k", "a", "v", "mol", "cd", "w", "n", "c"]
+UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + TIME_UNITS + VOLUME_UNITS + MISC_UNITS
+
+
 class MultilingualTokenizer:
     """Wrapper class to handle tokenization with spaCy for multiple languages"""
 
@@ -37,16 +50,6 @@ class MultilingualTokenizer:
         "is_symbol",
         "is_unit",
     ]
-    SYMBOL_REGEX = (
-        r"""[º°'"%&()％＆*+-<=>?\\[\]\/^_`{|}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏]+"""
-    )
-    ORDER_UNITS = ["eme", "th", "st", "nd", "rd", "k"]
-    WEIGHT_UNITS = ["mg", "g", "kg", "t", "lb", "oz"]
-    DISTANCE_SPEED_UNITS = ["mm", "cm", "m", "km", "in", "ft", "yd", "mi", "kmh", "mph"]
-    TIME_UNITS = ["ns", "ms", "s", "m", "min", "h", "d", "y"]
-    VOLUME_UNITS = ["ml", "dl", "l", "pt", "qt", "gal"]
-    MISC_UNITS = ["k", "a", "v", "mol", "cd", "w", "n", "c"]
-    UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + TIME_UNITS + VOLUME_UNITS + MISC_UNITS
 
     def __init__(
         self,
@@ -71,11 +74,11 @@ class MultilingualTokenizer:
         Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
         Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
         Token.set_extension(
-            "is_symbol", getter=lambda token: re.sub(self.SYMBOL_REGEX, "", token.text) == "", force=True,
+            "is_symbol", getter=lambda token: re.sub(SYMBOL_REGEX, "", token.text) == "", force=True,
         )
         Token.set_extension(
             "is_unit",
-            getter=lambda token: any([token.text.lower().replace(s, "").isdigit() for s in self.UNITS]),
+            getter=lambda token: any([token.text.lower().replace(s, "").isdigit() for s in UNITS]),
             force=True,
         )
 

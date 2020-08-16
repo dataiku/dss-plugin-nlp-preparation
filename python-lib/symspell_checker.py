@@ -81,7 +81,7 @@ class SpellChecker:
         return added_checker
 
     def check_token(self, token: Token, language: AnyStr):
-        text = token.text.lower()
+        text = token.text
         if text != "" and text[:1] in punctuation:  # special case with punctation prefixes
             text = text[1:]
         match_token_attributes = [
@@ -90,7 +90,7 @@ class SpellChecker:
         ]
         if not any(match_token_attributes) and text not in self.custom_vocabulary_set:
             correction_suggestions = self.symspell_checker_dict[language].lookup(
-                token.text,
+                text,
                 verbosity=self.SUGGESTION_VERBOSITY,
                 max_edit_distance=self.edit_distance,
                 ignore_token=self.ignore_token,
@@ -98,7 +98,7 @@ class SpellChecker:
             )
             if len(correction_suggestions) != 0:
                 correction = correction_suggestions[0].term
-                if correction.lower() != text:
+                if correction.lower() != text.lower():
                     token._.is_misspelled = True
                     token._.correction = correction
 
