@@ -3,7 +3,7 @@
 
 import logging
 from string import punctuation
-from typing import List, AnyStr, Set, Tuple
+from typing import List, AnyStr, Set, Tuple, Dict
 from concurrent.futures import ThreadPoolExecutor
 from collections import OrderedDict
 from time import time
@@ -40,6 +40,7 @@ class SpellChecker:
         tokenizer: MultilingualTokenizer,
         dictionary_folder_path: AnyStr,
         custom_vocabulary_set: Set[AnyStr] = set(),
+        custom_corrections: Dict = {},
         edit_distance: int = DEFAULT_EDIT_DISTANCE,
         ignore_token: AnyStr = None,
         transfer_casing: bool = True,
@@ -47,6 +48,7 @@ class SpellChecker:
         self.tokenizer = tokenizer
         self.dictionary_folder_path = dictionary_folder_path
         self.custom_vocabulary_set = custom_vocabulary_set
+        self.custom_corrections = custom_corrections
         self.edit_distance = edit_distance
         self.ignore_token = ignore_token
         self.transfer_casing = transfer_casing
@@ -84,23 +86,27 @@ class SpellChecker:
         text = token.text
         if text != "" and text[:1] in punctuation:  # special case with punctation prefixes
             text = text[1:]
-        match_token_attributes = [
-            getattr(token, t, False) or getattr(token._, t, False)
-            for t in self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
-        ]
-        if not any(match_token_attributes) and text not in self.custom_vocabulary_set:
-            correction_suggestions = self.symspell_checker_dict[language].lookup(
-                text,
-                verbosity=self.SUGGESTION_VERBOSITY,
-                max_edit_distance=self.edit_distance,
-                ignore_token=self.ignore_token,
-                transfer_casing=self.transfer_casing,
-            )
-            if len(correction_suggestions) != 0:
-                correction = correction_suggestions[0].term
-                if correction.lower() != text.lower():
-                    token._.is_misspelled = True
-                    token._.correction = correction
+        if text in self.custom_corrections.keys():  # special case of custom corrections
+            token._.is_misspelled = True
+            token._.correction = str(self.custom_corrections[text])
+        else:
+            match_token_attributes = [
+                getattr(token, t, False) or getattr(token._, t, False)
+                for t in self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
+            ]
+            if not any(match_token_attributes) and text not in self.custom_vocabulary_set:
+                correction_suggestions = self.symspell_checker_dict[language].lookup(
+                    text,
+                    verbosity=self.SUGGESTION_VERBOSITY,
+                    max_edit_distance=self.edit_distance,
+                    ignore_token=self.ignore_token,
+                    transfer_casing=self.transfer_casing,
+                )
+                if len(correction_suggestions) != 0:
+                    correction = correction_suggestions[0].term
+                    if correction.lower() != text.lower():
+                        token._.is_misspelled = True
+                        token._.correction = correction
 
     def check_document(self, document: Doc, language: AnyStr) -> Tuple[AnyStr, List, int]:
         (spelling_mistakes, corrected_word_list, whitespace_list) = ([], [], [])
@@ -151,8 +157,11 @@ class SpellChecker:
 
     def _format_output_df(self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr, language: AnyStr):
         del df[self.tokenizer.tokenized_column]
+        corrected_text_column = list(self.column_description_dict.keys())[0]
         spelling_mistakes_column = list(self.column_description_dict.keys())[1]
+        misspelling_count_column = list(self.column_description_dict.keys())[2]
         df[spelling_mistakes_column] = df[spelling_mistakes_column].apply(lambda x: "" if len(x) == 0 else x)
+        df.loc[df[corrected_text_column] == "", misspelling_count_column] = ""
         move_columns_after(df, columns_to_move=list(self.column_description_dict.keys()), after_column=text_column)
 
     def check_df(

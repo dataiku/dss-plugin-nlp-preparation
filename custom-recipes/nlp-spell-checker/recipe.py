@@ -13,6 +13,7 @@ spellchecker = SpellChecker(
     ignore_token=params["ignore_word_regex"],
     edit_distance=params["edit_distance"],
     custom_vocabulary_set=params["custom_vocabulary_set"],
+    custom_corrections=params["custom_corrections"],
 )
 
 # Write output

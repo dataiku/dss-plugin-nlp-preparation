@@ -19,7 +19,16 @@
         {
             "name": "custom_vocabulary",
             "label": "Custom vocabulary (optional)",
-            "description": "Dataset with a single column of words that should not be corrected",
+            "description": "Dataset with a single column for words that should not be corrected",
+            "arity": "UNARY",
+            "required": false,
+            "acceptsDataset": true,
+            "acceptsManagedFolder": false
+        },
+        {
+            "name": "custom_corrections",
+            "label": "Custom corrections (optional)",
+            "description": "Dataset with the first column for words and the second one for their correction",
             "arity": "UNARY",
             "required": false,
             "acceptsDataset": true,
