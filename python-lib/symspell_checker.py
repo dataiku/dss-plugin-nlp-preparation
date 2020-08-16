@@ -2,6 +2,7 @@
 """Use this module to check and correct misspellings"""
 
 import logging
+from string import punctuation
 from typing import List, AnyStr, Set, Tuple
 from concurrent.futures import ThreadPoolExecutor
 from collections import OrderedDict
@@ -80,11 +81,14 @@ class SpellChecker:
         return added_checker
 
     def check_token(self, token: Token, language: AnyStr):
+        text = token.text.lower()
+        if text != "" and text[:1] in punctuation:  # special case with punctation prefixes
+            text = text[1:]
         match_token_attributes = [
             getattr(token, t, False) or getattr(token._, t, False)
             for t in self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
         ]
-        if not any(match_token_attributes) and token.text.lower() not in self.custom_vocabulary_set:
+        if not any(match_token_attributes) and text not in self.custom_vocabulary_set:
             correction_suggestions = self.symspell_checker_dict[language].lookup(
                 token.text,
                 verbosity=self.SUGGESTION_VERBOSITY,
@@ -94,7 +98,7 @@ class SpellChecker:
             )
             if len(correction_suggestions) != 0:
                 correction = correction_suggestions[0].term
-                if correction.lower() != token.text.lower():
+                if correction.lower() != text:
                     token._.is_misspelled = True
                     token._.correction = correction
 
