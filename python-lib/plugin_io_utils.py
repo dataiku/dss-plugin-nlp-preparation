@@ -2,11 +2,22 @@
 from typing import List, AnyStr
 
 import pandas as pd
+import numpy as np
 
 
 def unique_list(sequence: List) -> List:
     seen = set()
     return [x for x in sequence if not (x in seen or seen.add(x))]
+
+
+def clean_text_df(df: pd.DataFrame, dropna_columns: List[AnyStr] = None) -> pd.DataFrame:
+    for col in df.columns:
+        df[col] = df[col].str.strip().replace("", np.NaN)
+    if dropna_columns is None:
+        df = df.dropna()
+    else:
+        df = df.dropna(subset=dropna_columns)
+    return df
 
 
 def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr = None) -> AnyStr:

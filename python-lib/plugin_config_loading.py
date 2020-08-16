@@ -12,6 +12,7 @@ from dataiku.customrecipe import (
     get_recipe_resource,
 )
 
+from plugin_io_utils import clean_text_df
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
 
@@ -27,13 +28,14 @@ def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set
     col_type = columns[0]["type"]
     assert col_type == "string", "Column of custom vocabulary dataset must be of string type"
 
-    custom_vocabulary_set = set(custom_vocabulary_dataset.get_dataframe()[col_name].str.lower().tolist())
-    return custom_vocabulary_set
+    df = clean_text_df(custom_vocabulary_dataset.get_dataframe())
+    custom_vocabulary = set(df[col_name].astype(str).str.lower().tolist())
+    return custom_vocabulary
 
 
 def custom_corrections_checker(custom_corrections_dataset: dataiku.Dataset) -> Dict:
     """
-    Helper function to check the content of the optional custom corrections  dataset
+    Helper function to check the content of the optional custom corrections dataset
     """
     dataset_schema = custom_corrections_dataset.get_config()["schema"]
     columns = dataset_schema["columns"]
@@ -43,12 +45,9 @@ def custom_corrections_checker(custom_corrections_dataset: dataiku.Dataset) -> D
     column_string_types = word_column["type"] == "string" and correction_column["type"] == "string"
     assert column_string_types, "Columns of custom corrections dataset must be of string type"
 
-    df = (
-        custom_corrections_dataset.get_dataframe(infer_with_pandas=False)
-        .dropna(subset=[word_column["name"]])
-        .fillna("")
-    )
-    custom_corrections_dict = {str(row[0]).strip(): str(row[1]).strip() for row in df.itertuples(index=False)}
+    df = custom_corrections_dataset.get_dataframe(infer_with_pandas=False)
+    df = clean_text_df(df, dropna_columns=[word_column["name"]]).fillna("").astype(str)
+    custom_corrections_dict = {row[0]: row[1] for row in df.itertuples(index=False)}
     return custom_corrections_dict
 
 
