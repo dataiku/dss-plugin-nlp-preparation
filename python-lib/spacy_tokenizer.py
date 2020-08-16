@@ -4,12 +4,13 @@
 import re
 import logging
 from typing import List, AnyStr
+from time import time
 
 import pandas as pd
 
 import spacy
 from spacy.language import Language
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
 from spacy.vocab import Vocab
 from spacymoji import Emoji
 
@@ -30,7 +31,22 @@ class MultilingualTokenizer:
         "like_url",
         "like_email",
         "like_num",
+        "is_emoji",
+        "is_hashtag",
+        "is_username",
+        "is_symbol",
+        "is_unit",
     ]
+    SYMBOL_REGEX = (
+        r"""[º°'"%&()％＆*+-<=>?\\[\]\/^_`{|}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏]+"""
+    )
+    ORDER_UNITS = ["eme", "th", "st", "nd", "rd", "k"]
+    WEIGHT_UNITS = ["mg", "g", "kg", "t", "lb", "oz"]
+    DISTANCE_SPEED_UNITS = ["mm", "cm", "m", "km", "in", "ft", "yd", "mi", "kmh", "mph"]
+    TIME_UNITS = ["ns", "ms", "s", "m", "min", "h", "d", "y"]
+    VOLUME_UNITS = ["ml", "dl", "l", "pt", "qt", "gal"]
+    MISC_UNITS = ["k", "a", "v", "mol", "cd", "w", "n", "c"]
+    UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + TIME_UNITS + VOLUME_UNITS + MISC_UNITS
 
     def __init__(
         self,
@@ -49,6 +65,19 @@ class MultilingualTokenizer:
             )
         self.batch_size = int(batch_size)
         self.tokenized_column = None  # may be changed by tokenize_df
+        self._set_token_extensions()
+
+    def _set_token_extensions(self):
+        Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
+        Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
+        Token.set_extension(
+            "is_symbol", getter=lambda token: re.sub(self.SYMBOL_REGEX, "", token.text) == "", force=True,
+        )
+        Token.set_extension(
+            "is_unit",
+            getter=lambda token: any([token.text.lower().replace(s, "").isdigit() for s in self.UNITS]),
+            force=True,
+        )
 
     @staticmethod
     def create_spacy_tokenizer(language: AnyStr, hashtags_as_token: bool = True, tag_emoji: bool = True) -> Language:
@@ -62,7 +91,8 @@ class MultilingualTokenizer:
         Returns:
             Instanciated spaCy Language object with the tokenizer
         """
-        logging.info("Loading spaCy tokenizer for language: {}".format(language))
+        start = time()
+        logging.info("Loading tokenizer for language '{}'...".format(language))
         nlp = spacy.blank(language)
         if hashtags_as_token:
             re_token_match = spacy.tokenizer._get_regex_pattern(nlp.Defaults.token_match)
@@ -79,6 +109,7 @@ class MultilingualTokenizer:
             except AttributeError as e:
                 # As of spacy 2.3.2 we know this will not work for Chinese, Thai and Japanese
                 logging.warning("Could not load spacymoji for language: {} because of error: {}".format(language, e))
+        logging.info("Loading tokenizer for language '{}': Done in {:.1f} seconds!".format(language, time() - start))
         return nlp
 
     def _add_spacy_tokenizer(self, language: AnyStr) -> bool:
@@ -119,16 +150,23 @@ class MultilingualTokenizer:
         Returns:
             List of tokenized spaCy documents
         """
+        start = time()
+        logging.info("Tokenizing {:d} texts in language '{}'...".format(len(text_list), language))
         text_list = [str(t) if pd.notnull(t) else "" for t in text_list]
         try:
             self._add_spacy_tokenizer(language)
-            tokenized = self.spacy_nlp_dict[language].pipe(text_list, batch_size=self.batch_size)
+            tokenized = list(self.spacy_nlp_dict[language].pipe(text_list, batch_size=self.batch_size))
         except ValueError as e:
             logging.warning(
                 "Tokenization error: {} for text list: {}, defaulting to fallback tokenizer".format(e, text_list)
             )
-            tokenized = self.spacy_nlp_dict[self.default_language].pipe(text_list, batch_size=self.batch_size)
-        return list(tokenized)
+            tokenized = list(self.spacy_nlp_dict[self.default_language].pipe(text_list, batch_size=self.batch_size))
+        logging.info(
+            "Tokenizing {:d} texts in language '{}': Done in {:.1f} seconds!".format(
+                len(tokenized), language, time() - start
+            )
+        )
+        return tokenized
 
     def tokenize_df(
         self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr, language: AnyStr = "language_column"
@@ -147,7 +185,6 @@ class MultilingualTokenizer:
         Returns:
             DataFrame with all columns from the input, plus a new column with tokenized spaCy documents
         """
-        logging.info("Tokenizing column '{}' in dataframe of {:d} rows...".format(text_column, len(df.index)))
         self.tokenized_column = generate_unique("tokenized", df.keys(), text_column)
         # Initialize the tokenized column to empty documents
         df[self.tokenized_column] = pd.Series([Doc(Vocab())] * len(df.index), dtype="object")
@@ -175,6 +212,7 @@ class MultilingualTokenizer:
         Args:
             document: A spaCy document returned by `tokenize_list` or `tokenized_df`
             filter_token_attributes: List of spaCy token attributes to filter, cf. https://spacy.io/api/token#attributes
+                User-defined token attributes are also accepted, for instance token._.yourattribute
             to_lower: If True, convert all strings to lowercase
 
         Returns:
@@ -182,7 +220,10 @@ class MultilingualTokenizer:
         """
         output_text = []
         for token in document:
-            match_token_attributes = [getattr(token, t, False) for t in filter_token_attributes]
+            match_token_attributes = [
+                getattr(token, t, False) or getattr(token._, t, False)
+                for t in self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
+            ]
             if not any(match_token_attributes):
                 text = token.text.lower() if to_lower else token.text
                 output_text.append(text.strip())

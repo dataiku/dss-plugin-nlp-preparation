@@ -87,11 +87,6 @@ def load_plugin_config() -> Dict:
     else:
         logging.info("Expert mode is disabled")
 
-    # batch size
-    params["batch_size"] = int(recipe_config.get("batch_size"))
-    assert params["batch_size"] >= 1 and params["batch_size"] <= 1000000, "Batch size must be between 1 and 1000000"
-    logging.info("Batch size: {}".format(params["batch_size"]))
-
     # edit distance
     params["edit_distance"] = recipe_config.get("edit_distance")
     assert params["edit_distance"] >= 1 and params["edit_distance"] <= 100, "Edit distance must be between 2 and 100"

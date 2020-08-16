@@ -99,16 +99,6 @@
             "defaultValue": "",
             "description": "Regular expression for words not to be corrected. Ex: \"\\w+\\d\" to preserve \"home1\".",
             "visibilityCondition": "model.expert == true"
-        },
-        {
-            "type": "INT",
-            "name": "batch_size",
-            "label": "Batch size",
-            "defaultValue": 1000,
-            "minI": 1,
-            "maxI": 1000000,
-            "description": "Number of rows to process in each batch. Decrease for long text data.",
-            "visibilityCondition": "model.expert == true"
         }
     ],
     "resourceKeys": []

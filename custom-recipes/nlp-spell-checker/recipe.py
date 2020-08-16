@@ -8,7 +8,7 @@ params = load_plugin_config()
 
 # Run
 spellchecker = SpellChecker(
-    tokenizer=MultilingualTokenizer(batch_size=params["batch_size"]),
+    tokenizer=MultilingualTokenizer(),
     dictionary_folder_path=params["dictionary_folder_path"],
     ignore_token=params["ignore_word_regex"],
     edit_distance=params["edit_distance"],
@@ -19,7 +19,6 @@ spellchecker = SpellChecker(
 process_dataset_chunks(
     input_dataset=params["input_dataset"],
     output_dataset=params["output_dataset"],
-    chunksize=params["batch_size"],
     func=spellchecker.check_df,
     text_column=params["text_column"],
     language=params["language"],
