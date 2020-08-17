@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Module with constants defining the language support of underlying NLP libraries: spaCy and SymSpell"""
 
 SUPPORTED_LANGUAGES_SYMSPELL = {
     "ar": "Arabic",

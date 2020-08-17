@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Module with read/write utility functions based on the Dataiku API"""
+
 from typing import List, AnyStr
 
 import pandas as pd
@@ -6,11 +8,29 @@ import numpy as np
 
 
 def unique_list(sequence: List) -> List:
+    """Make a list unique, ordering values by order of appearance in the original list
+
+    Args:
+        sequence: Original list
+
+    Returns:
+       List with unique elements ordered by appearance in the original list
+    """
     seen = set()
     return [x for x in sequence if not (x in seen or seen.add(x))]
 
 
 def clean_text_df(df: pd.DataFrame, dropna_columns: List[AnyStr] = None) -> pd.DataFrame:
+    """Clean a pandas.DataFrame containing text columns to get rid of empty strings and NaNs values
+
+    Args:
+        df: Input pandas.DataFrame which should contain only text
+        dropna_columns: Optional list of column names where empty strings and NaN should be checked
+            Default is None, which means that all columns will be checked
+
+    Returns:
+       pandas.DataFrame with rows dropped in case of empty strings or NaN values
+    """
     for col in df.columns:
         df[col] = df[col].str.strip().replace("", np.NaN)
     if dropna_columns is None:
@@ -21,8 +41,15 @@ def clean_text_df(df: pd.DataFrame, dropna_columns: List[AnyStr] = None) -> pd.D
 
 
 def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr = None) -> AnyStr:
-    """
-    Generate a unique name among existing ones by suffixing a number. Can also add a prefix.
+    """Generate a unique name among existing ones by suffixing a number. Can also add an optional prefix.
+
+    Args:
+        name: Input name
+        existing_names: List of existing names
+        prefix: Optional prefix to add to the output name
+
+    Returns:
+       Unique name with a number suffix in case of conflict, and an optional prefix
     """
     if prefix is not None:
         new_name = "{}_{}".format(prefix, name)
@@ -39,8 +66,15 @@ def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr =
 
 
 def move_columns_after(df: pd.DataFrame, columns_to_move: List[AnyStr], after_column: AnyStr) -> pd.DataFrame:
-    """
-    Reorder columns by moving a list of columns after another
+    """Reorder columns by moving a list of columns after another column
+
+    Args:
+        df: Input pandas.DataFrame
+        columns_to_move: List of column names to move
+        after_column: Name of the columns to move columns after
+
+    Returns:
+       pandas.DataFrame with reordered columns
     """
     after_column_position = df.columns.get_loc(after_column) + 1
     reordered_columns = (

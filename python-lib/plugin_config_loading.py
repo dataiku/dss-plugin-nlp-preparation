@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Module with utility functions for loading, resolving and validating plugin parameters"""
+
 import logging
 import re
 import os
@@ -17,7 +19,7 @@ from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
 
 def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set:
-    """Helper function to check the content of the optional custom vocabulary dataset"""
+    """Utility function to check the content of the optional custom vocabulary dataset"""
     dataset_schema = custom_vocabulary_dataset.get_config()["schema"]
     columns = dataset_schema["columns"]
     assert len(columns) == 1, "Custom vocabulary dataset must have only one column"
@@ -32,7 +34,7 @@ def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set
 
 
 def custom_corrections_checker(custom_corrections_dataset: dataiku.Dataset) -> Dict:
-    """Helper function to check the content of the optional custom corrections dataset"""
+    """Utility function to check the content of the optional custom corrections dataset"""
     dataset_schema = custom_corrections_dataset.get_config()["schema"]
     columns = dataset_schema["columns"]
     assert len(columns) == 2, "Custom corrections dataset must have only two columns"
@@ -48,7 +50,7 @@ def custom_corrections_checker(custom_corrections_dataset: dataiku.Dataset) -> D
 
 
 def load_plugin_config() -> Dict:
-    """Helper function to load and validate plugin config into a clean `params` dictionary"""
+    """Utility function to load, resolve and validate all plugin config into a clean `params` dictionary"""
     params = {}
     recipe_config = get_recipe_config()
 

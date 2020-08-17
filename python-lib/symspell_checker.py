@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Use this module to check and correct misspellings"""
+"""Module with a class to check and correct misspellings in multiple languages"""
 
 import logging
 from string import punctuation
@@ -17,7 +17,7 @@ from plugin_io_utils import unique_list, generate_unique, move_columns_after
 from spacy_tokenizer import MultilingualTokenizer
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
-
+# Setting custom spaCy token extensions to store spellchecking information
 Token.set_extension("is_misspelled", default=False, force=True)
 Token.set_extension("correction", default="", force=True)
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Use this module to tokenize text data in multiple languages"""
+"""Module with a class to tokenize text data in multiple languages"""
 
 import re
 import logging
@@ -49,7 +49,7 @@ class MultilingualTokenizer:
         hashtags_as_token (bool): Treat hashtags as one token instead of two
         tag_emoji (bool): Use the spacymoji library to tag emojis
         batch_size (int): Number of documents to process in spaCy pipelines
-        spacy_nlp_dict (dict): Dictionary holding spaCy Language objects (value) by language code (key)
+        spacy_nlp_dict (dict): Dictionary holding spaCy Language instances (value) by language code (key)
         tokenized_column (str): Name of the dataframe column storing tokenized documents
     """
 
@@ -111,7 +111,7 @@ class MultilingualTokenizer:
             tag_emoji: If True, use spacymoji extension to add a tag on emojis
 
         Returns:
-            Instanciated spaCy Language object with the tokenizer
+            spaCy Language instance with the tokenizer
         """
         start = time()
         logging.info("Loading tokenizer for language '{}'...".format(language))
@@ -247,7 +247,7 @@ class MultilingualTokenizer:
             to_lower: If True, convert all strings to lowercase
 
         Returns:
-            Filtered list of strings
+            List of strings if `output_format` == "list", or text string if `output_format` == "str",
         """
         (output_text_list, whitespace_list) = ([], [])
         assert output_format in {"list", "str"}, "Choose either 'list' or 'str' option"
