@@ -8,9 +8,7 @@ import dataiku
 
 
 def count_records(dataset: dataiku.Dataset) -> int:
-    """
-    Count the number of records of a dataset using the Dataiku dataset metrics API
-    """
+    """Count the number of records of a dataset using the Dataiku dataset metrics API"""
     metric_id = "records:COUNT_RECORDS"
     dataset_name = dataset.name.split(".")[1]
     partitions = dataset.read_partitions
@@ -37,9 +35,8 @@ def count_records(dataset: dataiku.Dataset) -> int:
 def process_dataset_chunks(
     input_dataset: dataiku.Dataset, output_dataset: dataiku.Dataset, func: Callable, chunksize: float = 1000, **kwargs
 ) -> None:
-    """
-    Read a dataset by chunks, process each dataframe chunk with a function and write back to another dataset.
-    Automatically adds a tqdm progress bar and generic logging.
+    """Read a dataset by chunks, process each dataframe chunk with a function and write back to another dataset.
+    Passes keyword arguments to the function, adds a tqdm progress bar and generic logging.
     """
     input_count_records = count_records(input_dataset)
     assert input_count_records != 0, "Input dataset has no records"
@@ -61,9 +58,8 @@ def process_dataset_chunks(
 def set_column_description(
     input_dataset: dataiku.Dataset, output_dataset: dataiku.Dataset, column_description_dict: Dict,
 ) -> None:
-    """
-    Set column descriptions of the output dataset based on a dictionary of column descriptions
-    and retains the column descriptions from the input dataset if the column name matches
+    """Set column descriptions of the output dataset based on a dictionary of column descriptions
+    Retains the column descriptions from the input dataset if the column name matches
     """
     input_dataset_schema = input_dataset.read_schema()
     output_dataset_schema = output_dataset.read_schema()

@@ -18,6 +18,10 @@ from spacy_tokenizer import MultilingualTokenizer
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
 
+Token.set_extension("is_misspelled", default=False, force=True)
+Token.set_extension("correction", default="", force=True)
+
+
 class SpellChecker:
     """
     Spell checker wrapper class on top of symspellpy
@@ -54,11 +58,6 @@ class SpellChecker:
         self.transfer_casing = transfer_casing
         self.symspell_checker_dict = {}
         self.column_description_dict = self.COLUMN_DESCRIPTION_DICT  # may be changed by check_df
-        self._set_token_extensions()
-
-    def _set_token_extensions(self):
-        Token.set_extension("is_misspelled", default=False, force=True)
-        Token.set_extension("correction", default="", force=True)
 
     def _create_symspell_checker(self, language: AnyStr, edit_distance: int) -> SymSpell:
         start = time()
