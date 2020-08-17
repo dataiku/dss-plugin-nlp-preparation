@@ -98,11 +98,11 @@ SUPPORTED_LANGUAGES_SPACY = {
 }
 
 SPACY_LANGUAGE_MODELS = {
-    "en": "en_core_web_sm",
-    "es": "es_core_news_sm",
-    "zh": "zh_core_web_sm",
-    "xx": "xx_ent_wiki_sm",
-    "pl": "nb_core_news_sm",
-    "fr": "fr_core_news_sm",
-    "de": "de_core_news_sm",
+    "en": "en_core_web_sm",  # OntoNotes
+    "es": "es_core_news_sm",  # Wikipedia
+    "zh": "zh_core_web_sm",  # OntoNotes
+    "xx": "xx_ent_wiki_sm",  # Wikipedia
+    "pl": "nb_core_news_sm",  # NorNE
+    "fr": "fr_core_news_sm",  # Wikipedia
+    "de": "de_core_news_sm",  # OntoNotes
 }

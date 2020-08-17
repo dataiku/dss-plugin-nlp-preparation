@@ -61,10 +61,10 @@ class SpellChecker:
         self.symspell_checker_dict = {}
         self.column_description_dict = self.COLUMN_DESCRIPTION_DICT  # may be changed by check_df
 
-    def _create_symspell_checker(self, language: AnyStr, edit_distance: int) -> SymSpell:
+    def _create_symspell_checker(self, language: AnyStr) -> SymSpell:
         start = time()
         logging.info("Loading spellchecker for language '{}'...".format(language))
-        symspell_checker = SymSpell(max_dictionary_edit_distance=edit_distance)
+        symspell_checker = SymSpell(max_dictionary_edit_distance=self.edit_distance)
         frequency_dict_path = self.dictionary_folder_path + "/" + language + ".txt"
         symspell_checker.load_dictionary(frequency_dict_path, term_index=0, count_index=1, encoding="utf-8")
         if len(self.custom_vocabulary_set) != 0:
@@ -80,9 +80,7 @@ class SpellChecker:
         if language not in SUPPORTED_LANGUAGES_SYMSPELL.keys():
             raise ValueError("Unsupported language code: {}".format(language))
         if language not in self.symspell_checker_dict.keys():
-            self.symspell_checker_dict[language] = self._create_symspell_checker(
-                language=language, edit_distance=self.edit_distance
-            )
+            self.symspell_checker_dict[language] = self._create_symspell_checker(language=language)
             added_checker = True
         return added_checker
 
@@ -133,7 +131,7 @@ class SpellChecker:
             corrected_document = Doc(vocab=document.vocab, words=corrected_word_list, spaces=whitespace_list)
         except ValueError as e:
             logging.warning(
-                "Spellchecking error: {} for document: {}, output columns will be empty".format(
+                "Spellchecking error: '{}' for document: '{}', output columns will be empty".format(
                     e, truncate_text_list([document.text])
                 )
             )
@@ -161,7 +159,7 @@ class SpellChecker:
                 )
         except ValueError as e:
             logging.warning(
-                "Spellchecking error: {} for documents: {}, output columns will be empty".format(
+                "Spellchecking error: '{}' for documents: '{}', output columns will be empty".format(
                     e, truncate_text_list([d.text for d in document_list])
                 )
             )

@@ -29,6 +29,7 @@ TIME_UNITS = ["ns", "ms", "s", "m", "min", "h", "d", "y"]
 VOLUME_UNITS = ["ml", "dl", "l", "pt", "qt", "gal"]
 MISC_UNITS = ["k", "a", "v", "mol", "cd", "w", "n", "c"]
 UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + TIME_UNITS + VOLUME_UNITS + MISC_UNITS
+TIME_REGEX = r"""(:|-|\.|\/|am|pm|h)+"""
 
 # Setting custom spaCy token extensions to allow for easier filtering in downstream tasks
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
@@ -37,7 +38,10 @@ Token.set_extension(
     "is_symbol", getter=lambda token: re.sub(SYMBOL_REGEX, "", token.text) == "", force=True,
 )
 Token.set_extension(
-    "is_unit", getter=lambda token: any([token.text.lower().replace(s, "").isdigit() for s in UNITS]), force=True,
+    "is_unit", getter=lambda token: any([token.lower_.replace(s, "").isdigit() for s in UNITS]), force=True,
+)
+Token.set_extension(
+    "is_time", getter=lambda token: re.sub(TIME_REGEX, "", token.lower_).isdigit(), force=True,
 )
 
 
@@ -71,6 +75,7 @@ class MultilingualTokenizer:
         "is_username",
         "is_symbol",
         "is_unit",
+        "is_time",
     ]
     """list: List of available native and custom spaCy token attributes"""
 
@@ -87,7 +92,7 @@ class MultilingualTokenizer:
         Args:
             default_language (str, optional): Fallback language code in ISO 639-1 format.
                 Default is the "multilingual language code": https://spacy.io/models/xx
-            use_models: If True (default), loads spaCy models, which is slower but allows to retrieve
+            use_models: If True, loads spaCy models, which is slower but allows to retrieve
                 Part-of-Speech and Entities tags for downstream tasks
             hashtags_as_token (bool, optional): Treat hashtags as one token instead of two
                 Default is True, which overrides the spaCy default behavior
@@ -103,11 +108,11 @@ class MultilingualTokenizer:
         self.batch_size = int(batch_size)
         self.spacy_nlp_dict = {}
         if default_language is not None:
-            self.spacy_nlp_dict[default_language] = self.create_spacy_tokenizer(default_language)
+            self.spacy_nlp_dict[default_language] = self._create_spacy_tokenizer(default_language)
         self.tokenized_column = None  # may be changed by tokenize_df
 
-    def create_spacy_tokenizer(self, language: AnyStr) -> Language:
-        """Public method to create a custom spaCy tokenizer for a given language
+    def _create_spacy_tokenizer(self, language: AnyStr) -> Language:
+        """Private method to create a custom spaCy tokenizer for a given language
 
         Args:
             language: Language code in ISO 639-1 format, cf. https://spacy.io/usage/models#languages
@@ -120,8 +125,10 @@ class MultilingualTokenizer:
         if language in SPACY_LANGUAGE_MODELS.keys() and self.use_models:
             try:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
-            except OSError:
-                logging.warning("Spacy model not available for language: '{}'".format(language))
+            except OSError as e:
+                logging.warning(
+                    "Spacy model not available for language: '{}' because of error: '{}'".format(language, e)
+                )
                 nlp = spacy.blank(language)
         else:
             nlp = spacy.blank(language)  # spaCy language without models (https://spacy.io/usage/models)
@@ -163,9 +170,9 @@ class MultilingualTokenizer:
         if pd.isnull(language) or language == "":
             raise ValueError("Missing language code")
         if language not in SUPPORTED_LANGUAGES_SPACY.keys():
-            raise ValueError("Unsupported language code: {}".format(language))
+            raise ValueError("Unsupported language code: '{}'".format(language))
         if language not in self.spacy_nlp_dict.keys():
-            self.spacy_nlp_dict[language] = self.create_spacy_tokenizer(language)
+            self.spacy_nlp_dict[language] = self._create_spacy_tokenizer(language)
             added_tokenizer = True
         return added_tokenizer
 
@@ -199,7 +206,7 @@ class MultilingualTokenizer:
             )
         except ValueError as e:
             logging.warning(
-                "Tokenization error: {} for text list: {}, defaulting to fallback tokenizer".format(
+                "Tokenization error: '{}' for text list: '{}', defaulting to fallback tokenizer".format(
                     e, truncate_text_list(text_list)
                 )
             )
