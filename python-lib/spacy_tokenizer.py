@@ -118,7 +118,11 @@ class MultilingualTokenizer:
         start = time()
         logging.info("Loading tokenizer for language '{}'...".format(language))
         if language in SPACY_LANGUAGE_MODELS.keys() and self.use_models:
-            nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
+            try:
+                nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
+            except OSError:
+                logging.warning("Spacy model not available for language: '{}'".format(language))
+                nlp = spacy.blank(language)
         else:
             nlp = spacy.blank(language)  # spaCy language without models (https://spacy.io/usage/models)
         if self.hashtags_as_token:
