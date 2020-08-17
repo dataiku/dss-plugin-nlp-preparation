@@ -14,7 +14,7 @@ from spacy.tokens import Doc, Token
 from spacy.vocab import Vocab
 from spacymoji import Emoji
 
-from language_dict import SUPPORTED_LANGUAGES_SPACY
+from language_dict import SUPPORTED_LANGUAGES_SPACY, SPACY_LANGUAGE_MODELS
 from plugin_io_utils import generate_unique, truncate_text_list
 
 
@@ -46,6 +46,8 @@ class MultilingualTokenizer:
 
     Attributes:
         default_language (str): Fallback language code in ISO 639-1 format
+        use_models (bool): If True, load spaCy models for available languages.
+            Slower but adds additional tagging capabilities to the pipeline.
         hashtags_as_token (bool): Treat hashtags as one token instead of two
         tag_emoji (bool): Use the spacymoji library to tag emojis
         batch_size (int): Number of documents to process in spaCy pipelines
@@ -54,6 +56,7 @@ class MultilingualTokenizer:
     """
 
     DEFAULT_BATCH_SIZE = 1000
+    DEFAULT_NUM_PROCESS = 2
     DEFAULT_FILTER_TOKEN_ATTRIBUTES = [
         "is_space",
         "is_punct",
@@ -74,6 +77,7 @@ class MultilingualTokenizer:
     def __init__(
         self,
         default_language: AnyStr = "xx",  # Multilingual model from spaCy
+        use_models: bool = False,
         hashtags_as_token: bool = True,
         tag_emoji: bool = True,
         batch_size: int = DEFAULT_BATCH_SIZE,
@@ -83,6 +87,8 @@ class MultilingualTokenizer:
         Args:
             default_language (str, optional): Fallback language code in ISO 639-1 format.
                 Default is the "multilingual language code": https://spacy.io/models/xx
+            use_models: If True (default), loads spaCy models, which is slower but allows to retrieve
+                Part-of-Speech and Entities tags for downstream tasks
             hashtags_as_token (bool, optional): Treat hashtags as one token instead of two
                 Default is True, which overrides the spaCy default behavior
             tag_emoji (bool, optional): Use the spacymoji library to tag emojis
@@ -91,32 +97,31 @@ class MultilingualTokenizer:
                 Default is set by the DEFAULT_BATCH_SIZE class constant
         """
         self.default_language = default_language
+        self.use_models = use_models
         self.hashtags_as_token = hashtags_as_token
         self.tag_emoji = tag_emoji
         self.batch_size = int(batch_size)
         self.spacy_nlp_dict = {}
         if default_language is not None:
-            self.spacy_nlp_dict[default_language] = self.create_spacy_tokenizer(
-                default_language, hashtags_as_token, tag_emoji
-            )
+            self.spacy_nlp_dict[default_language] = self.create_spacy_tokenizer(default_language)
         self.tokenized_column = None  # may be changed by tokenize_df
 
-    @staticmethod
-    def create_spacy_tokenizer(language: AnyStr, hashtags_as_token: bool = True, tag_emoji: bool = True) -> Language:
-        """Static method to create a custom spaCy tokenizer for a given language
+    def create_spacy_tokenizer(self, language: AnyStr) -> Language:
+        """Public method to create a custom spaCy tokenizer for a given language
 
         Args:
             language: Language code in ISO 639-1 format, cf. https://spacy.io/usage/models#languages
-            hashtags_as_token: If True, override spaCy default tokenizer to tokenize hashtags as a whole
-            tag_emoji: If True, use spacymoji extension to add a tag on emojis
 
         Returns:
             spaCy Language instance with the tokenizer
         """
         start = time()
         logging.info("Loading tokenizer for language '{}'...".format(language))
-        nlp = spacy.blank(language)  # spaCy language without full models (https://spacy.io/usage/models)
-        if hashtags_as_token:
+        if language in SPACY_LANGUAGE_MODELS.keys() and self.use_models:
+            nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
+        else:
+            nlp = spacy.blank(language)  # spaCy language without models (https://spacy.io/usage/models)
+        if self.hashtags_as_token:
             re_token_match = spacy.tokenizer._get_regex_pattern(nlp.Defaults.token_match)
             re_token_match = r"""({re_token_match}|#\w+)"""
             nlp.tokenizer.token_match = re.compile(re_token_match).match
@@ -124,7 +129,7 @@ class MultilingualTokenizer:
             if "#" in _prefixes:
                 _prefixes.remove("#")
                 nlp.tokenizer.prefix_search = spacy.util.compile_prefix_regex(_prefixes).search
-        if tag_emoji:
+        if self.tag_emoji:
             try:
                 emoji = Emoji(nlp)
                 nlp.add_pipe(emoji, first=True)
@@ -156,9 +161,7 @@ class MultilingualTokenizer:
         if language not in SUPPORTED_LANGUAGES_SPACY.keys():
             raise ValueError("Unsupported language code: {}".format(language))
         if language not in self.spacy_nlp_dict.keys():
-            self.spacy_nlp_dict[language] = self.create_spacy_tokenizer(
-                language, self.hashtags_as_token, self.tag_emoji
-            )
+            self.spacy_nlp_dict[language] = self.create_spacy_tokenizer(language)
             added_tokenizer = True
         return added_tokenizer
 
@@ -180,7 +183,11 @@ class MultilingualTokenizer:
         text_list = [str(t) if pd.notnull(t) else "" for t in text_list]
         try:
             self._add_spacy_tokenizer(language)
-            tokenized = list(self.spacy_nlp_dict[language].pipe(text_list, batch_size=self.batch_size))
+            tokenized = list(
+                self.spacy_nlp_dict[language].pipe(
+                    text_list, batch_size=self.batch_size, n_process=self.DEFAULT_NUM_PROCESS
+                )
+            )
             logging.info(
                 "Tokenizing {:d} texts in language '{}': Done in {:.2f} seconds.".format(
                     len(tokenized), language, time() - start

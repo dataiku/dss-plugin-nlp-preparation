@@ -154,7 +154,7 @@ class SpellChecker:
                     len(tuple_list), language, time() - start
                 )
             )
-            uncorrected_list = list(itertools.chain.from_iterable([t[3] for t in tuple_list]))
+            uncorrected_list = unique_list(list(itertools.chain.from_iterable([t[3] for t in tuple_list])))
             if len(uncorrected_list) != 0:
                 logging.warning(
                     "No corrections found for '{}' in language '{}', keeping as-is".format(uncorrected_list, language)

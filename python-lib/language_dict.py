@@ -96,3 +96,13 @@ SUPPORTED_LANGUAGES_SPACY = {
     "yo": "Yoruba",
     "zh": "Chinese (simplified)",
 }
+
+SPACY_LANGUAGE_MODELS = {
+    "en": "en_core_web_sm",
+    "es": "es_core_news_sm",
+    "zh": "zh_core_web_sm",
+    "xx": "xx_ent_wiki_sm",
+    "pl": "nb_core_news_sm",
+    "fr": "fr_core_news_sm",
+    "de": "de_core_news_sm",
+}
