@@ -13,7 +13,7 @@ from spacy.tokens import Token, Doc
 from spacy.vocab import Vocab
 from symspellpy.symspellpy import SymSpell, Verbosity
 
-from plugin_io_utils import unique_list, generate_unique, move_columns_after
+from plugin_io_utils import unique_list, generate_unique, move_columns_after, truncate_text_list
 from spacy_tokenizer import MultilingualTokenizer
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
@@ -68,7 +68,7 @@ class SpellChecker:
         if len(self.custom_vocabulary_set) != 0:
             for word in self.custom_vocabulary_set:
                 symspell_checker.create_dictionary_entry(key=word, count=1)
-        logging.info("Loading spellchecker for language '{}': Done in {:.1f} seconds!".format(language, time() - start))
+        logging.info("Loading spellchecker for language '{}': Done in {:.2f} seconds.".format(language, time() - start))
         return symspell_checker
 
     def _add_symspell_checker(self, language: AnyStr) -> bool:
@@ -109,6 +109,12 @@ class SpellChecker:
                     if correction.lower() != text.lower():
                         token._.is_misspelled = True
                         token._.correction = correction
+                else:
+                    logging.warning(
+                        "No correction found for '{}' in language '{}', keeping as-is".format(text, language)
+                    )
+                    token._.is_misspelled = True
+                    token._.correction = text
 
     def check_document(self, document: Doc, language: AnyStr) -> Tuple[AnyStr, List, int]:
         (spelling_mistakes, corrected_word_list, whitespace_list) = ([], [], [])
@@ -125,7 +131,11 @@ class SpellChecker:
                     corrected_word_list.append(token.text)
             corrected_document = Doc(vocab=document.vocab, words=corrected_word_list, spaces=whitespace_list)
         except ValueError as e:
-            logging.warning("Spellchecking error: {} for document: {}".format(e, document.text))
+            logging.warning(
+                "Spellchecking error: {} for document: {}, output columns will be empty".format(
+                    e, truncate_text_list([document.text])
+                )
+            )
         spelling_mistakes = unique_list(spelling_mistakes)
         return (corrected_document.text, spelling_mistakes, len(spelling_mistakes))
 
@@ -138,13 +148,17 @@ class SpellChecker:
             doc_lang_iterator = ((doc, language) for doc in document_list)
             with ThreadPoolExecutor(max_workers=self.NUM_THREADS) as executor:
                 tuple_list = list(executor.map(lambda x: self.check_document(*x), doc_lang_iterator))
-        except ValueError as e:
-            logging.warning("Spellchecking error: {} for documents: {}".format(e, [doc.text for doc in document_list]))
-        logging.info(
-            "Spellchecking {:d} documents in language '{}': Done in {:.1f} seconds!".format(
-                len(tuple_list), language, time() - start
+            logging.info(
+                "Spellchecking {:d} documents in language '{}': Done in {:.2f} seconds.".format(
+                    len(tuple_list), language, time() - start
+                )
             )
-        )
+        except ValueError as e:
+            logging.warning(
+                "Spellchecking error: {} for documents: {}, output columns will be empty".format(
+                    e, truncate_text_list([d.text for d in document_list])
+                )
+            )
         return tuple_list
 
     def _prepare_df_for_spellchecking(
@@ -171,12 +185,16 @@ class SpellChecker:
     ) -> pd.DataFrame:
         self._prepare_df_for_spellchecking(df, text_column, language_column, language)
         if language == "language_column":
-            for lang in df[language_column].unique():  # iterate over languages
+            languages = df[language_column].dropna().unique()
+            for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
                 document_slice = df.loc[language_indices, self.tokenizer.tokenized_column]  # slicing df by language
-                tuple_list = self.check_document_list(document_list=document_slice, language=lang)
-                for i, column in enumerate(self.column_description_dict.keys()):
-                    df.loc[language_indices, column] = pd.Series([t[i] for t in tuple_list], index=document_slice.index)
+                if len(document_slice) != 0:
+                    tuple_list = self.check_document_list(document_list=document_slice, language=lang)
+                    for i, column in enumerate(self.column_description_dict.keys()):
+                        df.loc[language_indices, column] = pd.Series(
+                            [t[i] for t in tuple_list], index=document_slice.index
+                        )
         else:
             tuple_list = self.check_document_list(document_list=df[self.tokenizer.tokenized_column], language=language)
             for i, column in enumerate(self.column_description_dict.keys()):

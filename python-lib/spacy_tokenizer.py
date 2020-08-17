@@ -15,7 +15,7 @@ from spacy.vocab import Vocab
 from spacymoji import Emoji
 
 from language_dict import SUPPORTED_LANGUAGES_SPACY
-from plugin_io_utils import generate_unique
+from plugin_io_utils import generate_unique, truncate_text_list
 
 
 # The constants below should cover a majority of cases for tokens with symbols and unit measurements: "8h", "90kmh", ...
@@ -130,8 +130,8 @@ class MultilingualTokenizer:
                 nlp.add_pipe(emoji, first=True)
             except AttributeError as e:
                 # As of spacy 2.3.2 we know this will not work for Chinese, Thai and Japanese
-                logging.warning("Could not load spacymoji for language: {} because of error: {}".format(language, e))
-        logging.info("Loading tokenizer for language '{}': Done in {:.1f} seconds!".format(language, time() - start))
+                logging.info("Emoji tokenization not available for language: {} because: {}".format(language, e))
+        logging.info("Loading tokenizer for language '{}': Done in {:.2f} seconds.".format(language, time() - start))
         return nlp
 
     def _add_spacy_tokenizer(self, language: AnyStr) -> bool:
@@ -181,16 +181,23 @@ class MultilingualTokenizer:
         try:
             self._add_spacy_tokenizer(language)
             tokenized = list(self.spacy_nlp_dict[language].pipe(text_list, batch_size=self.batch_size))
+            logging.info(
+                "Tokenizing {:d} texts in language '{}': Done in {:.2f} seconds.".format(
+                    len(tokenized), language, time() - start
+                )
+            )
         except ValueError as e:
             logging.warning(
-                "Tokenization error: {} for text list: {}, defaulting to fallback tokenizer".format(e, text_list)
+                "Tokenization error: {} for text list: {}, defaulting to fallback tokenizer".format(
+                    e, truncate_text_list(text_list)
+                )
             )
             tokenized = list(self.spacy_nlp_dict[self.default_language].pipe(text_list, batch_size=self.batch_size))
-        logging.info(
-            "Tokenizing {:d} texts in language '{}': Done in {:.1f} seconds!".format(
-                len(tokenized), language, time() - start
+            logging.info(
+                "Tokenizing {:d} texts using fallback tokenizer: Done in {:.2f} seconds.".format(
+                    len(tokenized), time() - start
+                )
             )
-        )
         return tokenized
 
     def tokenize_df(
@@ -214,13 +221,15 @@ class MultilingualTokenizer:
         # Initialize the tokenized column to empty documents
         df[self.tokenized_column] = pd.Series([Doc(Vocab())] * len(df.index), dtype="object")
         if language == "language_column":
-            for lang in df[language_column].unique():  # iterate over languages
+            languages = df[language_column].dropna().unique()
+            for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
                 text_slice = df.loc[language_indices, text_column]  # slicing input df by language
-                tokenized_list = self.tokenize_list(text_list=text_slice, language=lang)
-                df.loc[language_indices, self.tokenized_column] = pd.Series(
-                    tokenized_list, dtype="object", index=text_slice.index,  # keep index (important)
-                )
+                if len(text_slice) != 0:
+                    tokenized_list = self.tokenize_list(text_list=text_slice, language=lang)
+                    df.loc[language_indices, self.tokenized_column] = pd.Series(
+                        tokenized_list, dtype="object", index=text_slice.index,  # keep index (important)
+                    )
         else:
             tokenized_list = self.tokenize_list(text_list=df[text_column], language=language)
             df[self.tokenized_column] = tokenized_list

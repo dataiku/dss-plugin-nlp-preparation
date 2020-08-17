@@ -37,7 +37,7 @@ SUPPORTED_LANGUAGES_SYMSPELL = {
     "th": "Thai",
     "tr": "Turkish",
     "vi": "Vietnamese",
-    "zh": "Chinese",
+    "zh": "Chinese (simplified)",
 }
 
 SUPPORTED_LANGUAGES_SPACY = {
@@ -94,5 +94,5 @@ SUPPORTED_LANGUAGES_SPACY = {
     "ur": "Urdu",
     "vi": "Vietnamese",
     "yo": "Yoruba",
-    "zh": "Chinese",
+    "zh": "Chinese (simplified)",
 }
