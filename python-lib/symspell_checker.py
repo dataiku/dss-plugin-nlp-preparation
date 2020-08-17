@@ -2,6 +2,7 @@
 """Module with a class to check and correct misspellings in multiple languages"""
 
 import logging
+import itertools
 from string import punctuation
 from typing import List, AnyStr, Set, Tuple, Dict
 from concurrent.futures import ThreadPoolExecutor
@@ -20,6 +21,7 @@ from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 # Setting custom spaCy token extensions to store spellchecking information
 Token.set_extension("is_misspelled", default=False, force=True)
 Token.set_extension("correction", default="", force=True)
+Token.set_extension("original_word", default="", force=True)
 
 
 class SpellChecker:
@@ -110,14 +112,11 @@ class SpellChecker:
                         token._.is_misspelled = True
                         token._.correction = correction
                 else:
-                    logging.warning(
-                        "No correction found for '{}' in language '{}', keeping as-is".format(text, language)
-                    )
                     token._.is_misspelled = True
-                    token._.correction = text
+                    token._.correction = token.text
 
-    def check_document(self, document: Doc, language: AnyStr) -> Tuple[AnyStr, List, int]:
-        (spelling_mistakes, corrected_word_list, whitespace_list) = ([], [], [])
+    def check_document(self, document: Doc, language: AnyStr) -> Tuple[AnyStr, List, int, List]:
+        (spelling_mistakes, corrected_word_list, whitespace_list, uncorrected_list) = ([], [], [], [])
         corrected_document = Doc(Vocab())
         try:
             self._add_symspell_checker(language)
@@ -127,6 +126,8 @@ class SpellChecker:
                 if token._.is_misspelled:
                     spelling_mistakes.append(token.text)
                     corrected_word_list.append(token._.correction)
+                    if token._.correction == token.text:
+                        uncorrected_list.append(token.text)
                 else:
                     corrected_word_list.append(token.text)
             corrected_document = Doc(vocab=document.vocab, words=corrected_word_list, spaces=whitespace_list)
@@ -137,12 +138,12 @@ class SpellChecker:
                 )
             )
         spelling_mistakes = unique_list(spelling_mistakes)
-        return (corrected_document.text, spelling_mistakes, len(spelling_mistakes))
+        return (corrected_document.text, spelling_mistakes, len(spelling_mistakes), uncorrected_list)
 
-    def check_document_list(self, document_list: List[Doc], language: AnyStr) -> List[Tuple[AnyStr, List, int]]:
+    def check_document_list(self, document_list: List[Doc], language: AnyStr) -> List[Tuple[AnyStr, List, int, List]]:
         start = time()
         logging.info("Spellchecking {:d} documents in language '{}'...".format(len(document_list), language))
-        tuple_list = [("", [], 0)] * len(document_list)
+        tuple_list = [("", [], 0, [])] * len(document_list)
         try:
             self._add_symspell_checker(language)
             doc_lang_iterator = ((doc, language) for doc in document_list)
@@ -153,6 +154,11 @@ class SpellChecker:
                     len(tuple_list), language, time() - start
                 )
             )
+            uncorrected_list = list(itertools.chain.from_iterable([t[3] for t in tuple_list]))
+            if len(uncorrected_list) != 0:
+                logging.warning(
+                    "No corrections found for '{}' in language '{}', keeping as-is".format(uncorrected_list, language)
+                )
         except ValueError as e:
             logging.warning(
                 "Spellchecking error: {} for documents: {}, output columns will be empty".format(
