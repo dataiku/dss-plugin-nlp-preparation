@@ -14,6 +14,7 @@ spellchecker = SpellChecker(
     edit_distance=params["edit_distance"],
     custom_vocabulary_set=params["custom_vocabulary_set"],
     custom_corrections=params["custom_corrections"],
+    compute_diagnosis=params["compute_diagnosis"],
 )
 
 # Write output
@@ -28,5 +29,12 @@ process_dataset_chunks(
 set_column_description(
     input_dataset=params["input_dataset"],
     output_dataset=params["output_dataset"],
-    column_description_dict=spellchecker.column_description_dict,
+    column_description_dict=spellchecker._output_column_description_dict,
 )
+if params["compute_diagnosis"]:
+    diagnosis_df = spellchecker._create_diagnosis_df()
+    params["diagnosis_dataset"].write_with_schema(diagnosis_df)
+    set_column_description(
+        output_dataset=params["diagnosis_dataset"],
+        column_description_dict=spellchecker.DIAGNOSIS_COLUMN_DESCRIPTION_DICT,
+    )

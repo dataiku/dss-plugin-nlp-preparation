@@ -13,8 +13,7 @@
             "description": "Dataset with text columns containing misspelled words",
             "arity": "UNARY",
             "required": true,
-            "acceptsDataset": true,
-            "acceptsManagedFolder": false
+            "acceptsDataset": true
         },
         {
             "name": "custom_vocabulary",
@@ -22,8 +21,7 @@
             "description": "Dataset with a single column for words that should not be corrected",
             "arity": "UNARY",
             "required": false,
-            "acceptsDataset": true,
-            "acceptsManagedFolder": false
+            "acceptsDataset": true
         },
         {
             "name": "custom_corrections",
@@ -31,15 +29,22 @@
             "description": "Dataset with the first column for words and the second one for their correction",
             "arity": "UNARY",
             "required": false,
-            "acceptsDataset": true,
-            "acceptsManagedFolder": false
+            "acceptsDataset": true
         }
     ],
     "outputRoles": [
         {
             "name": "output_dataset",
             "label": "Output dataset",
-            "description": "Output dataset with identified misspellings and corrected text",
+            "description": "Dataset with identified misspellings and corrected text",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        },
+        {
+            "name": "diagnosis_dataset",
+            "label": "Diagnosis dataset",
+            "description": "Dataset with diagnosis on each word",
             "arity": "UNARY",
             "required": false,
             "acceptsDataset": true

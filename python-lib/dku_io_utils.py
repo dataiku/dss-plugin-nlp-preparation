@@ -76,20 +76,24 @@ def process_dataset_chunks(
 
 
 def set_column_description(
-    input_dataset: dataiku.Dataset, output_dataset: dataiku.Dataset, column_description_dict: Dict,
+    output_dataset: dataiku.Dataset, column_description_dict: Dict, input_dataset: dataiku.Dataset = None
 ) -> None:
     """Set column descriptions of the output dataset based on a dictionary of column descriptions
 
     Retains the column descriptions from the input dataset if the column name matches.
 
     Args:
-        input_dataset: Input dataiku.Dataset instance
         output_dataset: Output dataiku.Dataset instance
         column_description_dict: Dictionary holding column descriptions (value) by column name (key)
+        input_dataset: Optional input dataiku.Dataset instance
+            in case you want to retain input column descriptions
     """
-    input_dataset_schema = input_dataset.read_schema()
     output_dataset_schema = output_dataset.read_schema()
-    input_columns_names = [col["name"] for col in input_dataset_schema]
+    input_dataset_schema = []
+    input_columns_names = []
+    if input_dataset is not None:
+        input_dataset_schema = input_dataset.read_schema()
+        input_columns_names = [col["name"] for col in input_dataset_schema]
     for output_col_info in output_dataset_schema:
         output_col_name = output_col_info.get("name", "")
         output_col_info["comment"] = column_description_dict.get(output_col_name)
