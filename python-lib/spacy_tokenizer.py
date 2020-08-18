@@ -253,12 +253,13 @@ class MultilingualTokenizer:
             df[self.tokenized_column] = tokenized_list
         return df
 
-    @staticmethod
     def convert_spacy_doc(
+        self,
         document: Doc,
         output_format: AnyStr = "list",
         filter_or_keep: AnyStr = "filter",
         token_attributes: List[AnyStr] = DEFAULT_FILTER_TOKEN_ATTRIBUTES,
+        lemmatize: bool = False,
         lowercase: bool = True,
     ) -> Union[AnyStr, List[AnyStr]]:
         """Static method to convert a spaCy document into a list of strings or a string
@@ -271,6 +272,7 @@ class MultilingualTokenizer:
                 Else, choose "keep" to keep only the tokens which match the list of `token_attributes`
             token_attributes: List of spaCy token attributes, cf. https://spacy.io/api/token#attributes
                 User-defined token attributes are also accepted, for instance token._.yourattribute
+            lemmatize: If True, convert all strings to their lemmatized form
             to_lower: If True, convert all strings to lowercase
 
         Returns:
@@ -284,7 +286,10 @@ class MultilingualTokenizer:
             filter_conditions = filter_or_keep == "filter" and not any(match_token_attributes)
             keep_conditions = filter_or_keep == "keep" and sum(match_token_attributes) >= 1
             if filter_conditions or keep_conditions:
-                token_text = token.text.strip()
+                if lemmatize:
+                    token_text = token.lemma_
+                else:
+                    token_text = token.text.strip()
                 if token_text != "":
                     output_text_list.append(token_text)
                     try:

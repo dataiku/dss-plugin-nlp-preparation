@@ -64,17 +64,6 @@ def load_plugin_config() -> Dict:
     assert len(output_dataset_names) != 0, "Please specify output dataset"
     params["output_dataset"] = dataiku.Dataset(output_dataset_names[0])
 
-    # diagnosis dataset
-    diagnosis_dataset_names = get_output_names_for_role("diagnosis_dataset")
-    params["diagnosis_dataset"] = None
-    params["compute_diagnosis"] = False
-    if len(diagnosis_dataset_names) != 0:
-        logging.info("Spellchecker diagnosis will be computed")
-        params["compute_diagnosis"] = True
-        params["diagnosis_dataset"] = dataiku.Dataset(diagnosis_dataset_names[0])
-    else:
-        logging.info("Spellchecker diagnosis will not be computed")
-
     # custom_vocabulary (optional input dataset)
     params["custom_vocabulary_set"] = set()
     custom_vocabulary_input = get_input_names_for_role("custom_vocabulary")
@@ -90,6 +79,17 @@ def load_plugin_config() -> Dict:
         custom_corrections_dataset = dataiku.Dataset(custom_corrections_input[0])
         params["custom_corrections"] = custom_corrections_checker(custom_corrections_dataset)
     logging.info("Custom corrections: {}".format(params["custom_corrections"]))
+
+    # diagnosis dataset (optional output dataset)
+    diagnosis_dataset_names = get_output_names_for_role("diagnosis_dataset")
+    params["diagnosis_dataset"] = None
+    params["compute_diagnosis"] = False
+    if len(diagnosis_dataset_names) != 0:
+        logging.info("Spellchecker diagnosis will be computed")
+        params["compute_diagnosis"] = True
+        params["diagnosis_dataset"] = dataiku.Dataset(diagnosis_dataset_names[0])
+    else:
+        logging.info("Spellchecker diagnosis will not be computed")
 
     # path to the folder of dictionaries
     params["dictionary_folder_path"] = os.path.join(get_recipe_resource(), "dictionaries")

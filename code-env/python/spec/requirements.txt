@@ -11,3 +11,4 @@ pythainlp==2.2.1
 pyvi==0.1
 tqdm==4.48.2
 spacymoji==2.0.0
+spacy-lookups-data==0.3.2
