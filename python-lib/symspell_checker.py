@@ -260,4 +260,5 @@ class SpellChecker:
         df.loc[~df["is_misspelled"], "corrected_word"] = ""
         df = df.sort_values(by=["is_misspelled", "word_count"], ascending=False)
         logging.info("Computing spellchecker diagnosis: Done!")
+        # This is a test
         return df
