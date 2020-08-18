@@ -219,7 +219,7 @@ class MultilingualTokenizer:
         return tokenized
 
     def tokenize_df(
-        self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr, language: AnyStr = "language_column"
+        self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr = "", language: AnyStr = "language_column"
     ) -> pd.DataFrame:
         """Public method to tokenize a text column in a pandas DataFrame, given a language column
 
