@@ -257,8 +257,8 @@ class SpellChecker:
             language_indices = df["language"] == lang
             df_slice = df.loc[language_indices, "original_word"]
             df.loc[language_indices, "word_count"] = df_slice.apply(lambda x: self._token_dict[lang].get(x, 0))
+        # Cleaning and sorting output dataframe
         df.loc[~df["is_misspelled"], "corrected_word"] = ""
         df = df.sort_values(by=["is_misspelled", "word_count"], ascending=False)
         logging.info("Computing spellchecker diagnosis: Done!")
-        # This is a test
         return df
