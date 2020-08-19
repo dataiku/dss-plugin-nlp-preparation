@@ -1,14 +1,13 @@
+# -*- coding: utf-8 -*-
+"""Misspelling Correction recipe script"""
+
 from plugin_config_loading import load_plugin_config
-from spacy_tokenizer import MultilingualTokenizer
 from symspell_checker import SpellChecker
 from dku_io_utils import process_dataset_chunks, set_column_description
 
 # Setup
 params = load_plugin_config()
-
-# Run
 spellchecker = SpellChecker(
-    tokenizer=MultilingualTokenizer(),
     dictionary_folder_path=params["dictionary_folder_path"],
     ignore_token=params["ignore_word_regex"],
     edit_distance=params["edit_distance"],
@@ -17,7 +16,7 @@ spellchecker = SpellChecker(
     compute_diagnosis=params["compute_diagnosis"],
 )
 
-# Write output
+# Run
 process_dataset_chunks(
     input_dataset=params["input_dataset"],
     output_dataset=params["output_dataset"],
