@@ -32,7 +32,7 @@ set_column_description(
     column_description_dict=spellchecker._output_column_description_dict,
 )
 if params["compute_diagnosis"]:
-    diagnosis_df = spellchecker._create_diagnosis_df()
+    diagnosis_df = spellchecker.create_diagnosis_df()
     params["diagnosis_dataset"].write_with_schema(diagnosis_df)
     set_column_description(
         output_dataset=params["diagnosis_dataset"],

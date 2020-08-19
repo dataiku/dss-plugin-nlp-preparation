@@ -43,8 +43,8 @@
         },
         {
             "name": "diagnosis_dataset",
-            "label": "Diagnosis dataset",
-            "description": "Dataset with diagnosis on each word",
+            "label": "Diagnosis dataset (optional)",
+            "description": "Dataset with the spellchecker diagnosis of each word",
             "arity": "UNARY",
             "required": false,
             "acceptsDataset": true

@@ -39,6 +39,10 @@ SUPPORTED_LANGUAGES_SYMSPELL = {
     "vi": "Vietnamese",
     "zh": "Chinese (simplified)",
 }
+"""dict: SymSpell dictionaries included in this plugin
+
+Dictionary with ISO 639-1 language code (key) and language name (value)
+"""
 
 SUPPORTED_LANGUAGES_SPACY = {
     "af": "Afrikaans",
@@ -91,11 +95,17 @@ SUPPORTED_LANGUAGES_SPACY = {
     "th": "Thai",
     "tl": "Tagalog",
     "tr": "Turkish",
+    "tt": "Tatar",
     "ur": "Urdu",
     "vi": "Vietnamese",
     "yo": "Yoruba",
     "zh": "Chinese (simplified)",
 }
+"""dict: Languages supported by spaCy: https://spacy.io/usage/models#languages
+
+Dictionary with ISO 639-1 language code (key) and language name (value).
+Korean and Ukrainian not included because they require system-level package installations
+"""
 
 SPACY_LANGUAGE_MODELS = {
     "en": "en_core_web_sm",  # OntoNotes
@@ -106,3 +116,7 @@ SPACY_LANGUAGE_MODELS = {
     "fr": "fr_core_news_sm",  # Wikipedia
     "de": "de_core_news_sm",  # OntoNotes
 }
+"""dict: Mapping between ISO 639-1 language code and spaCy model identifiers
+
+Models with Creative Commons licenses are not included because this plugin is licensed under Apache-2
+"""

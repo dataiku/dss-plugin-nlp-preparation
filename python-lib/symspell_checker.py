@@ -2,7 +2,7 @@
 """Module with a class to check and correct misspellings in multiple languages"""
 
 import logging
-from typing import List, AnyStr, Set, Tuple, Dict
+from typing import List, AnyStr, Set, Tuple, Dict, Pattern
 from concurrent.futures import ThreadPoolExecutor
 from collections import OrderedDict
 from time import time
@@ -23,9 +23,18 @@ Token.set_extension("correction", default="", force=True)
 
 
 class SpellChecker:
-    """
-    Spell checker wrapper class on top of symspellpy
-    See https://symspellpy.readthedocs.io/en/latest/api/symspellpy.html#symspellpy
+    """Wrapper class to check spelling with SymSpellPy
+
+    Relies on spaCy for tokenization of text data before calling the spellchecker
+
+    Attributes:
+        dictionary_folder_path (str): Local path to a folder containing SymSpell dictionary files
+        custom_vocabulary_set (set): Set of words that should not be corrected
+        custom_corrections (dict): Dictionary of words (key) and their custom correction (value)
+        edit_distance (int): Maximum edit distance between a word and its correction
+        ignore_token (Pattern): Regular expression for words not to be corrected
+        transfer_casing (bool): Transfer input word case to the corrected word
+        compute_diagnosis (bool): Compute spellchecker diagnosis of each word
     """
 
     DEFAULT_EDIT_DISTANCE = 2
@@ -51,20 +60,36 @@ class SpellChecker:
 
     def __init__(
         self,
-        tokenizer: MultilingualTokenizer,
         dictionary_folder_path: AnyStr,
-        compute_diagnosis: bool = True,
         custom_vocabulary_set: Set[AnyStr] = set(),
         custom_corrections: Dict = {},
         edit_distance: int = DEFAULT_EDIT_DISTANCE,
-        ignore_token: AnyStr = None,
+        ignore_token: Pattern = None,
         transfer_casing: bool = True,
+        compute_diagnosis: bool = True,
     ):
-        self.tokenizer = tokenizer
+        """Initialization method for the SpellChecker class, with optional arguments
+
+        Args:
+            dictionary_folder_path: Local path to a folder containing SymSpell dictionary files
+                Each dictionary file in the folder should be named "xx.txt"
+                where xx is the language code in ISO 639-1 format
+            custom_vocabulary_set: Optional - Set of words that should not be corrected
+            custom_corrections: Optional - Dictionary of words (key) and their custom correction (value)
+            edit_distance: Maximum edit distance between a word and its correction.
+                Default is 2, which is SymSpell recommendation for reasonable speed and quality
+            ignore_token: Regular expression for words not to be corrected
+                Should be a compiled regex object, use re.compile beforehand
+            transfer_casing (bool): If True, transfer input word case to the corrected word
+                Default is True, which works well for European languages
+            compute_diagnosis (bool): If True, compute spellchecker diagnosis of each word
+                Adds ~20% processing time but allows to understand what the spellchecker did
+        """
+        self._tokenizer = MultilingualTokenizer()
         self.dictionary_folder_path = dictionary_folder_path
         self.custom_vocabulary_set = custom_vocabulary_set
         self.custom_corrections = custom_corrections
-        self.edit_distance = edit_distance
+        self.edit_distance = int(edit_distance)
         self.ignore_token = ignore_token
         self.transfer_casing = transfer_casing
         self._symspell_checker_dict = {}
@@ -75,6 +100,14 @@ class SpellChecker:
             self._diagnosis_list = []  # may be changed by check_token
 
     def _create_symspell_checker(self, language: AnyStr) -> SymSpell:
+        """Private method to create a SymSpell instance for a given language
+
+        Args:
+            language: Language code in ISO 639-1 format
+
+        Returns:
+            SymSpell checker instance loaded with the language dictionary
+        """
         start = time()
         logging.info("Loading spellchecker for language '{}'...".format(language))
         symspell_checker = SymSpell(max_dictionary_edit_distance=self.edit_distance)
@@ -87,6 +120,21 @@ class SpellChecker:
         return symspell_checker
 
     def _add_symspell_checker(self, language: AnyStr) -> bool:
+        """Private method to add a SymSpell checker for a given language
+
+        The SymSpell checker is added to the `_symspell_checker_dict` private dictionary attribute,
+        if the language code is valid and recognized among the list of supported languages
+        (`SUPPORTED_LANGUAGES_SYMSPELL` constant), else it will raise a ValueError exception.
+
+        Args:
+            language: Language code in ISO 639-1 format
+
+        Returns:
+            True if the SymSpell spellchecker was added, else False
+
+        Raises:
+            ValueError: If the language code is missing or not in SUPPORTED_LANGUAGES_SYMSPELL
+        """
         added_checker = False
         if pd.isnull(language) or language == "":
             raise ValueError("Missing language code")
@@ -98,7 +146,18 @@ class SpellChecker:
         return added_checker
 
     @lru_cache(maxsize=1024)
-    def _symspell_check(self, text: AnyStr, language: AnyStr) -> (bool, AnyStr, AnyStr):
+    def symspell_check_text(self, text: AnyStr, language: AnyStr) -> (bool, AnyStr, AnyStr):
+        """Public method to check the spelling of a piece of text for a given language
+
+        This method expects the SymSpell checker to be added for the language,
+        use `_add_symspell_checker` beforehand
+
+        Args:
+            language: Language code in ISO 639-1 format
+
+        Returns:
+            True if the tokenizer was added, else False
+        """
         (is_misspelled, correction, diagnosis) = (False, text, "")
         correction_suggestions = self._symspell_checker_dict[language].lookup(
             text,
@@ -119,13 +178,6 @@ class SpellChecker:
             (is_misspelled, correction) = (True, text)
         return (is_misspelled, correction, diagnosis)
 
-    def _add_to_diagnosis(self, token: Token, language: AnyStr, diagnosis_tuple) -> None:
-        if token.text not in self._token_dict[language].keys():
-            self._token_dict[language][token.text] = 1
-            self._diagnosis_list.append(diagnosis_tuple)
-        else:
-            self._token_dict[language][token.text] += 1
-
     def check_token(self, token: Token, language: AnyStr) -> (bool, AnyStr):
         (is_misspelled, correction, diagnosis) = (False, token.text, "")
         if token.text in self.custom_corrections.keys():  # special case of custom corrections
@@ -137,11 +189,11 @@ class SpellChecker:
             else:
                 token_attributes = [
                     t
-                    for t in self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
+                    for t in self._tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
                     if getattr(token, t, False) or getattr(token._, t, False)
                 ]
                 if len(token_attributes) == 0:
-                    symspell_check = self._symspell_check(token.text, language)
+                    symspell_check = self.symspell_check_text(token.text, language)
                     (is_misspelled, correction, diagnosis) = (
                         symspell_check[0],
                         symspell_check[1],
@@ -208,10 +260,10 @@ class SpellChecker:
             column_name = generate_unique(k, df.keys(), text_column)
             df[column_name] = pd.Series([""] * len(df.index))
             self._output_column_description_dict[column_name] = v
-        self.tokenizer.tokenize_df(df, text_column, language_column, language)
+        self._tokenizer.tokenize_df(df, text_column, language_column, language)
 
     def _format_output_df(self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr, language: AnyStr):
-        del df[self.tokenizer.tokenized_column]
+        del df[self._tokenizer.tokenized_column]
         corrected_text_column = list(self._output_column_description_dict.keys())[0]
         spelling_mistakes_column = list(self._output_column_description_dict.keys())[1]
         misspelling_count_column = list(self._output_column_description_dict.keys())[2]
@@ -229,7 +281,7 @@ class SpellChecker:
             languages = df[language_column].dropna().unique()
             for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
-                document_slice = df.loc[language_indices, self.tokenizer.tokenized_column]  # slicing df by language
+                document_slice = df.loc[language_indices, self._tokenizer.tokenized_column]  # slicing df by language
                 if len(document_slice) != 0:
                     tuple_list = self.check_document_list(document_list=document_slice, language=lang)
                     for i, column in enumerate(self._output_column_description_dict.keys()):
@@ -237,14 +289,21 @@ class SpellChecker:
                             [t[i] for t in tuple_list], index=document_slice.index
                         )
         else:
-            tuple_list = self.check_document_list(document_list=df[self.tokenizer.tokenized_column], language=language)
+            tuple_list = self.check_document_list(document_list=df[self._tokenizer.tokenized_column], language=language)
             for i, column in enumerate(self._output_column_description_dict.keys()):
                 df[column] = [t[i] for t in tuple_list]
         # Format output DataFrame
         self._format_output_df(df, text_column, language_column, language)
         return df
 
-    def _create_diagnosis_df(self) -> pd.DataFrame:
+    def _add_to_diagnosis(self, token: Token, language: AnyStr, diagnosis_tuple) -> None:
+        if token.text not in self._token_dict[language].keys():
+            self._token_dict[language][token.text] = 1
+            self._diagnosis_list.append(diagnosis_tuple)
+        else:
+            self._token_dict[language][token.text] += 1
+
+    def create_diagnosis_df(self) -> pd.DataFrame:
         df = pd.DataFrame()
         logging.info("Computing spellchecker diagnosis...")
         for i, column in enumerate(self.DIAGNOSIS_COLUMN_DESCRIPTION_DICT.keys()):

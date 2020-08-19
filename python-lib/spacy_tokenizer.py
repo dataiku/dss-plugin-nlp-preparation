@@ -262,7 +262,7 @@ class MultilingualTokenizer:
         lemmatize: bool = False,
         lowercase: bool = True,
     ) -> Union[AnyStr, List[AnyStr]]:
-        """Static method to convert a spaCy document into a list of strings or a string
+        """Public method to convert a spaCy document into a list of strings or a string
 
         Args:
             document: A spaCy document returned by `tokenize_list` or `tokenized_df`
@@ -276,10 +276,13 @@ class MultilingualTokenizer:
             to_lower: If True, convert all strings to lowercase
 
         Returns:
-            List of strings if `output_format` == "list", or text string if `output_format` == "str",
+            Depends on the chosen `output_format` argument:
+                List of strings if `output_format` == "list"
+                Text string if `output_format` == "str"
+                Spacy document if `output_format` == "doc"
         """
         (output_text_list, whitespace_list) = ([], [])
-        assert output_format in {"list", "str"}, "Choose either 'list' or 'str' option"
+        assert output_format in {"list", "str", "doc"}, "Choose either 'list', 'str' or 'doc' option"
         assert filter_or_keep in {"filter", "keep"}, "Choose either 'filter' or 'keep' option"
         for token in document:
             match_token_attributes = [getattr(token, t, False) or getattr(token._, t, False) for t in token_attributes]
@@ -302,4 +305,7 @@ class MultilingualTokenizer:
             return output_text_list
         else:
             output_document = Doc(vocab=document.vocab, words=output_text_list, spaces=whitespace_list)
-            return output_document.text
+            if output_format == "doc":
+                return output_document
+            else:
+                return output_format.text
