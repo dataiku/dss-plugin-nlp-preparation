@@ -13,7 +13,7 @@ from spacy.tokens import Token, Doc
 from spacy.vocab import Vocab
 from symspellpy.symspellpy import SymSpell, Verbosity
 
-from plugin_io_utils import unique_list, generate_unique, truncate_text_list
+from plugin_io_utils import unique_list, generate_unique, truncate_text_list, clean_empty_list
 from spacy_tokenizer import MultilingualTokenizer
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
@@ -286,7 +286,7 @@ class SpellChecker:
         """
         start = time()
         logging.info("Spellchecking {:d} documents in language '{}'...".format(len(document_list), language))
-        tuple_list = [("", [], 0, [])] * len(document_list)
+        tuple_list = [("", [], 0)] * len(document_list)
         try:
             self._add_symspell_checker(language)
             doc_lang_iterator = ((doc, language) for doc in document_list)
@@ -340,7 +340,7 @@ class SpellChecker:
         corrected_text_column = list(self._output_column_description_dict.keys())[0]
         spelling_mistakes_column = list(self._output_column_description_dict.keys())[1]
         misspelling_count_column = list(self._output_column_description_dict.keys())[2]
-        df[spelling_mistakes_column] = df[spelling_mistakes_column].apply(lambda x: "" if len(x) == 0 else x)
+        df[spelling_mistakes_column] = df[spelling_mistakes_column].apply(clean_empty_list)
         df.loc[df[corrected_text_column] == "", misspelling_count_column] = ""
 
     def check_df(

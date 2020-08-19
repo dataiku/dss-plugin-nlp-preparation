@@ -140,7 +140,7 @@ class MultilingualTokenizer:
             if "#" in _prefixes:
                 _prefixes.remove("#")
                 nlp.tokenizer.prefix_search = spacy.util.compile_prefix_regex(_prefixes).search
-        if self.tag_emoji:
+        if self.tag_emoji and language != self.default_language:
             try:
                 emoji = Emoji(nlp)
                 nlp.add_pipe(emoji, first=True)

@@ -1,10 +1,26 @@
 # -*- coding: utf-8 -*-
 """Module with read/write utility functions based on the Dataiku API"""
 
-from typing import List, AnyStr
+from typing import List, AnyStr, Union
 
 import pandas as pd
 import numpy as np
+
+
+def clean_empty_list(sequence: List) -> Union[List, AnyStr]:
+    """If the input sequence is a valid non-empty list, return list, else an empty string
+
+    Args:
+        sequence: Original list
+
+    Returns:
+       Original list or empty string
+    """
+    output = ""
+    if isinstance(sequence, list):
+        if len(sequence) != 0:
+            output = sequence
+    return output
 
 
 def unique_list(sequence: List) -> List:
