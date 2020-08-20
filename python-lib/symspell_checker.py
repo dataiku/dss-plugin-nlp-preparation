@@ -4,7 +4,7 @@
 import logging
 from typing import List, AnyStr, Set, Tuple, Dict, Pattern
 from concurrent.futures import ThreadPoolExecutor
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from time import time
 from functools import lru_cache
 
@@ -39,7 +39,7 @@ class SpellChecker:
 
     DEFAULT_EDIT_DISTANCE = 2
     SUGGESTION_VERBOSITY = Verbosity.TOP  # returns only the closest word
-    NUM_THREADS = 4
+    DEFAULT_NUM_THREADS = 4
     OUTPUT_COLUMN_DESCRIPTION_DICT = OrderedDict(
         [
             ("corrected", "Corrected text"),
@@ -95,8 +95,10 @@ class SpellChecker:
         self._symspell_checker_dict = {}
         self._output_column_description_dict = self.OUTPUT_COLUMN_DESCRIPTION_DICT  # may be changed by check_df
         self.compute_diagnosis = compute_diagnosis
+        self.num_threads = self.DEFAULT_NUM_THREADS
         if self.compute_diagnosis:
-            self._token_dict = {k: {} for k in SUPPORTED_LANGUAGES_SYMSPELL}  # may be changed by check_token
+            self.num_threads = 1  # avoid multithreading when counting tokens, it's not thread-safe
+            self._token_dict = {k: Counter() for k in SUPPORTED_LANGUAGES_SYMSPELL}  # may be changed by check_token
             self._diagnosis_list = []  # may be changed by check_token
 
     def _create_symspell_checker(self, language: AnyStr) -> SymSpell:
@@ -290,7 +292,7 @@ class SpellChecker:
         try:
             self._add_symspell_checker(language)
             doc_lang_iterator = ((doc, language) for doc in document_list)
-            with ThreadPoolExecutor(max_workers=self.NUM_THREADS) as executor:
+            with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
                 tuple_list = list(executor.map(lambda x: self.check_document(*x), doc_lang_iterator))
             logging.info(
                 "Spellchecking {:d} documents in language '{}': Done in {:.2f} seconds.".format(
@@ -397,10 +399,8 @@ class SpellChecker:
                 Should be ordered as DIAGNOSIS_COLUMN_DESCRIPTION_DICT except the word_count column
         """
         if token.text not in self._token_dict[language].keys():
-            self._token_dict[language][token.text] = 1
             self._diagnosis_list.append(diagnosis_tuple)
-        else:
-            self._token_dict[language][token.text] += 1
+        self._token_dict[language][token.text] += 1
 
     def create_diagnosis_df(self) -> pd.DataFrame:
         """Public method to diagnose the spellchecker actions after running `check_df`
