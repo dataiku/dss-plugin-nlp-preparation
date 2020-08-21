@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from collections import OrderedDict, Counter
 from time import time
 from functools import lru_cache
+from threading import Lock
 
 import pandas as pd
 from spacy.tokens import Token, Doc
@@ -95,9 +96,8 @@ class SpellChecker:
         self._symspell_checker_dict = {}
         self._output_column_description_dict = self.OUTPUT_COLUMN_DESCRIPTION_DICT  # may be changed by check_df
         self.compute_diagnosis = compute_diagnosis
-        self.num_threads = self.DEFAULT_NUM_THREADS
         if self.compute_diagnosis:
-            self.num_threads = 1  # avoid multithreading when counting tokens, it's not thread-safe
+            self._diagnosis_lock = Lock()
             self._token_dict = {k: Counter() for k in SUPPORTED_LANGUAGES_SYMSPELL}  # may be changed by check_token
             self._diagnosis_list = []  # may be changed by check_token
 
@@ -140,9 +140,9 @@ class SpellChecker:
         added_checker = False
         if pd.isnull(language) or language == "":
             raise ValueError("Missing language code")
-        if language not in SUPPORTED_LANGUAGES_SYMSPELL.keys():
+        if language not in SUPPORTED_LANGUAGES_SYMSPELL:
             raise ValueError("Unsupported language code: {}".format(language))
-        if language not in self._symspell_checker_dict.keys():
+        if language not in self._symspell_checker_dict:
             self._symspell_checker_dict[language] = self._create_symspell_checker(language=language)
             added_checker = True
         return added_checker
@@ -292,7 +292,7 @@ class SpellChecker:
         try:
             self._add_symspell_checker(language)
             doc_lang_iterator = ((doc, language) for doc in document_list)
-            with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
+            with ThreadPoolExecutor(max_workers=self.DEFAULT_NUM_THREADS) as executor:
                 tuple_list = list(executor.map(lambda x: self.check_document(*x), doc_lang_iterator))
             logging.info(
                 "Spellchecking {:d} documents in language '{}': Done in {:.2f} seconds.".format(
@@ -387,7 +387,7 @@ class SpellChecker:
         return df
 
     def _add_to_diagnosis(self, token: Token, language: AnyStr, diagnosis_tuple) -> None:
-        """Private method to add diagnosis information on a token
+        """Private method to add diagnosis information on a token, in a thread-safe way
 
         If the compute_diagnosis attribute is True, this function is ran whenever the `check_token` method is called
         Writes to the private _token_dict and _diagnosis_list attributes
@@ -398,9 +398,11 @@ class SpellChecker:
             diagnosis_tuple: Tuple of diagnosis information
                 Should be ordered as DIAGNOSIS_COLUMN_DESCRIPTION_DICT except the word_count column
         """
-        if token.text not in self._token_dict[language].keys():
-            self._diagnosis_list.append(diagnosis_tuple)
-        self._token_dict[language][token.text] += 1
+        with self._diagnosis_lock:
+            if token.text not in self._token_dict.get(language, {}):
+                self._diagnosis_list.append(diagnosis_tuple)
+            if language in SUPPORTED_LANGUAGES_SYMSPELL:
+                self._token_dict[language][token.text] += 1
 
     def create_diagnosis_df(self) -> pd.DataFrame:
         """Public method to diagnose the spellchecker actions after running `check_df`

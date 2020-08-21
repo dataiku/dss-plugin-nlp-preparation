@@ -36,7 +36,7 @@ def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set
     assert col_type == "string", "Column of custom vocabulary dataset must be of string type"
 
     df = clean_text_df(custom_vocabulary_dataset.get_dataframe())
-    custom_vocabulary = set(df[col_name].astype(str).str.lower().tolist())
+    custom_vocabulary = set(df[col_name].astype(str).tolist())
     return custom_vocabulary
 
 
