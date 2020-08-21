@@ -4,5 +4,5 @@ This Dataiku DSS plugin provides a recipe to perform spell checks and automatica
 
 Documentation: https://www.dataiku.com/dss/plugins/info/nlp-spell-checker.html
 
-### Licence
+## Licence
 This plugin is distributed under the Apache License version 2.0
