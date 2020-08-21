@@ -1,4 +1,4 @@
-# Spell Checker Plugin
+# Spell Checker Plugin 🚧 WORK IN PROGRESS
 
 This Dataiku DSS plugin provides a recipe to perform spell checks and automatically correct typos in text data.
 
