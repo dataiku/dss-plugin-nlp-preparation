@@ -54,7 +54,6 @@ class MultilingualTokenizer:
         use_models (bool): If True, load spaCy models for available languages.
             Slower but adds additional tagging capabilities to the pipeline.
         hashtags_as_token (bool): Treat hashtags as one token instead of two
-        tag_emoji (bool): Use the spacymoji library to tag emojis
         batch_size (int): Number of documents to process in spaCy pipelines
         spacy_nlp_dict (dict): Dictionary holding spaCy Language instances (value) by language code (key)
         tokenized_column (str): Name of the dataframe column storing tokenized documents
@@ -96,8 +95,6 @@ class MultilingualTokenizer:
                 Part-of-Speech and Entities tags for downstream tasks
             hashtags_as_token (bool, optional): Treat hashtags as one token instead of two
                 Default is True, which overrides the spaCy default behavior
-            tag_emoji (bool, optional): Use the spacymoji library to tag emojis
-                Default is True, which allows to filter or extract emojis in downstream tasks
             batch_size (int, optional): Number of documents to process in spaCy pipelines
                 Default is set by the DEFAULT_BATCH_SIZE class constant
         """
