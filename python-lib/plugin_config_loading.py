@@ -18,6 +18,12 @@ from plugin_io_utils import clean_text_df
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
 
 
+class PluginParamValidationError(ValueError):
+    """Custom exception raised when the the plugin parameters chosen by the user are invalid"""
+
+    pass
+
+
 def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set:
     """Utility function to check the content of the optional custom vocabulary dataset
 
@@ -29,11 +35,13 @@ def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set
     """
     dataset_schema = custom_vocabulary_dataset.get_config()["schema"]
     columns = dataset_schema["columns"]
-    assert len(columns) == 1, "Custom vocabulary dataset must have only one column"
+    if len(columns) != 1:
+        raise PluginParamValidationError("Custom vocabulary dataset must have only one column")
 
     col_name = columns[0]["name"]
     col_type = columns[0]["type"]
-    assert col_type == "string", "Column of custom vocabulary dataset must be of string type"
+    if col_type != "string":
+        raise PluginParamValidationError("Column of custom vocabulary dataset must be of string type")
 
     df = clean_text_df(custom_vocabulary_dataset.get_dataframe())
     custom_vocabulary = set(df[col_name].astype(str).tolist())
@@ -52,11 +60,12 @@ def custom_corrections_checker(custom_corrections_dataset: dataiku.Dataset) -> D
     """
     dataset_schema = custom_corrections_dataset.get_config()["schema"]
     columns = dataset_schema["columns"]
-    assert len(columns) == 2, "Custom corrections dataset must have only two columns"
+    if len(columns) != 2:
+        raise PluginParamValidationError("Custom corrections dataset must have only two columns")
 
     (word_column, correction_column) = (columns[0], columns[1])
-    column_string_types = word_column["type"] == "string" and correction_column["type"] == "string"
-    assert column_string_types, "Columns of custom corrections dataset must be of string type"
+    if word_column["type"] != "string" or correction_column["type"] != "string":
+        raise PluginParamValidationError("Columns of custom corrections dataset must be of string type")
 
     df = custom_corrections_dataset.get_dataframe(infer_with_pandas=False)
     df = clean_text_df(df, dropna_columns=[word_column["name"]]).fillna("").astype(str)
@@ -75,12 +84,14 @@ def load_plugin_config() -> Dict:
 
     # input dataset
     input_dataset_names = get_input_names_for_role("input_dataset")
-    assert len(input_dataset_names) != 0, "Please specify input dataset"
+    if len(input_dataset_names) == 0:
+        raise PluginParamValidationError("Please specify input dataset")
     params["input_dataset"] = dataiku.Dataset(input_dataset_names[0])
 
     # output dataset
     output_dataset_names = get_output_names_for_role("output_dataset")
-    assert len(output_dataset_names) != 0, "Please specify output dataset"
+    if len(output_dataset_names) == 0:
+        raise PluginParamValidationError("Please specify output dataset")
     params["output_dataset"] = dataiku.Dataset(output_dataset_names[0])
 
     # custom_vocabulary (optional input dataset)
@@ -116,21 +127,21 @@ def load_plugin_config() -> Dict:
     # List of text columns
     params["text_column"] = recipe_config.get("text_column")
     logging.info("Text column: {}".format(params["text_column"]))
-    assert params["text_column"] != "", "Empty text column selection"
+    if params["text_column"] == "":
+        raise PluginParamValidationError("Empty text column selection")
 
     # Language selection
     params["language"] = recipe_config.get("language")
     if params["language"] == "language_column":
         params["language_column"] = recipe_config.get("language_column")
-        assert (
-            params["language_column"] is not None and params["language_column"] != ""
-        ), "Empty language column selection"
+        if params["language_column"] is None or params["language_column"] == "":
+            raise PluginParamValidationError("Empty language column selection")
         logging.info("Language column: {}".format(params["language_column"]))
     else:
-        assert params["language"] is not None and params["language"] != "", "Empty language selection"
-        assert params["language"] in SUPPORTED_LANGUAGES_SYMSPELL.keys(), "Unsupported language code: {}".format(
-            params["language"]
-        )
+        if params["language"] is None or params["language"] == "":
+            raise PluginParamValidationError("Empty language selection")
+        if params["language"] not in SUPPORTED_LANGUAGES_SYMSPELL:
+            raise PluginParamValidationError("Unsupported language code: {}".format(params["language"]))
         params["language_column"] = ""
         logging.info("Language: {}".format(params["language"]))
 
@@ -142,7 +153,8 @@ def load_plugin_config() -> Dict:
 
     # edit distance
     params["edit_distance"] = recipe_config.get("edit_distance")
-    assert params["edit_distance"] >= 1 and params["edit_distance"] <= 100, "Edit distance must be between 2 and 100"
+    if params["edit_distance"] < 2 or params["edit_distance"] > 100:
+        raise PluginParamValidationError("Edit distance must be between 2 and 100")
     logging.info("Maximum edit distance: {}".format(params["edit_distance"]))
 
     # ignore token
@@ -154,8 +166,8 @@ def load_plugin_config() -> Dict:
         # Check for valid regex
         try:
             ignore_token_compiled = re.compile(params["ignore_word_regex"])
-        except re.error:
-            assert False, "Ignore pattern parameter: Invalid regex"
+        except re.error as e:
+            raise PluginParamValidationError("Ignore pattern parameter is not a valid regex: {}".format(e))
         params["ignore_word_regex"] = ignore_token_compiled.pattern
         logging.info("Regular expression for words not to be corrected: {}".format(params["ignore_word_regex"]))
 

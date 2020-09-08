@@ -163,23 +163,29 @@ class SpellChecker:
                 3. Spellchecker diagnosis string explaining the spellchecker action
         """
         (is_misspelled, correction, diagnosis) = (False, word, "")
-        correction_suggestions = self._symspell_checker_dict[language].lookup(
-            word,
-            verbosity=self.SUGGESTION_VERBOSITY,
-            max_edit_distance=self.edit_distance,
-            ignore_token=self.ignore_token,
-            transfer_casing=self.transfer_casing,
-        )
-        if len(correction_suggestions) != 0:
-            correction_suggestion = correction_suggestions[0].term
-            if correction_suggestion.lower() != word.lower():
-                diagnosis = "NOK - Corrected by spellchecker"
-                (is_misspelled, correction) = (True, correction_suggestion)
+        try:
+            correction_suggestions = self._symspell_checker_dict[language].lookup(
+                word,
+                verbosity=self.SUGGESTION_VERBOSITY,
+                max_edit_distance=self.edit_distance,
+                ignore_token=self.ignore_token,
+                transfer_casing=self.transfer_casing,
+            )
+            if len(correction_suggestions) != 0:
+                correction_suggestion = correction_suggestions[0].term
+                if correction_suggestion.lower() != word.lower():
+                    diagnosis = "NOK - Corrected by spellchecker"
+                    (is_misspelled, correction) = (True, correction_suggestion)
+                else:
+                    diagnosis = "OK - Approved by spellchecker"
             else:
-                diagnosis = "OK - Approved by spellchecker"
-        else:
-            diagnosis = "WARN - No correction found, keeping as-is"
-            (is_misspelled, correction) = (True, word)
+                diagnosis = "WARN - No correction found, keeping as-is"
+                (is_misspelled, correction) = (True, word)
+        except IndexError as e:  # rare case when the spellchecker fails on some words because of a wrong language
+            logging.warning(
+                "Spellchecker failed on word '{}' in language '{}' because of error: '{}'".format(word, language, e)
+            )
+            diagnosis = "WARN - Spellchecker failed because of error: '{}', keeping as-is".format(e)
         return (is_misspelled, correction, diagnosis)
 
     def check_token(self, token: Token, language: AnyStr) -> Tuple[bool, AnyStr, AnyStr]:
@@ -262,8 +268,8 @@ class SpellChecker:
             corrected_document = Doc(vocab=document.vocab, words=corrected_word_list, spaces=whitespace_list)
         except ValueError as e:
             logging.warning(
-                "Spellchecking error: '{}' for document: '{}', output columns will be empty".format(
-                    e, truncate_text_list([document.text])
+                "Spellchecking error: '{}' for document: '{}' in language: '{}', output columns will be empty".format(
+                    e, truncate_text_list([document.text]), language
                 )
             )
         spelling_mistakes = unique_list(spelling_mistakes)
@@ -301,8 +307,8 @@ class SpellChecker:
             )
         except ValueError as e:
             logging.warning(
-                "Spellchecking error: '{}' for documents: '{}', output columns will be empty".format(
-                    e, truncate_text_list([d.text for d in document_list])
+                "Spellchecking error: '{}' for documents: '{}' in language '{}', output columns will be empty".format(
+                    e, truncate_text_list([d.text for d in document_list]), language
                 )
             )
         return tuple_list

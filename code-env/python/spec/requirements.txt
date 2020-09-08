@@ -1,4 +1,4 @@
-symspellpy==6.5.2
+symspellpy==6.7.0
 spacy==2.3.2
 jieba==0.42.1
 SudachiPy==0.4.9 
@@ -10,5 +10,5 @@ pymorphy2-dicts-ru==2.4.404381.4453942
 pythainlp==2.2.3
 pyvi==0.1
 tqdm==4.48.2
-spacymoji==2.0.0
+emoji==0.6.0
 spacy-lookups-data==0.3.2

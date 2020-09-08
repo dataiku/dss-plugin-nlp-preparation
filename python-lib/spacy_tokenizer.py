@@ -12,7 +12,7 @@ import spacy
 from spacy.language import Language
 from spacy.tokens import Doc, Token
 from spacy.vocab import Vocab
-from spacymoji import Emoji
+from emoji import UNICODE_EMOJI
 
 from language_dict import SUPPORTED_LANGUAGES_SPACY, SPACY_LANGUAGE_MODELS
 from plugin_io_utils import generate_unique, truncate_text_list
@@ -29,11 +29,12 @@ TIME_UNITS = ["ns", "ms", "s", "m", "min", "h", "d", "y"]
 VOLUME_UNITS = ["ml", "dl", "l", "pt", "qt", "gal"]
 MISC_UNITS = ["k", "a", "v", "mol", "cd", "w", "n", "c"]
 UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + TIME_UNITS + VOLUME_UNITS + MISC_UNITS
-TIME_REGEX = r"""(:|-|\.|\/|am|pm|h)+"""
+TIME_REGEX = r"""(:|-|\.|\/|am|AM|pm|PM|h|H)+"""
 
 # Setting custom spaCy token extensions to allow for easier filtering in downstream tasks
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
+Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
 Token.set_extension(
     "is_symbol", getter=lambda token: re.sub(SYMBOL_REGEX, "", token.text) == "", force=True,
 )
@@ -84,7 +85,6 @@ class MultilingualTokenizer:
         default_language: AnyStr = "xx",  # Multilingual model from spaCy
         use_models: bool = False,
         hashtags_as_token: bool = True,
-        tag_emoji: bool = True,
         batch_size: int = DEFAULT_BATCH_SIZE,
     ):
         """Initialization method for the MultilingualTokenizer class, with optional arguments
@@ -104,7 +104,6 @@ class MultilingualTokenizer:
         self.default_language = default_language
         self.use_models = use_models
         self.hashtags_as_token = hashtags_as_token
-        self.tag_emoji = tag_emoji
         self.batch_size = int(batch_size)
         self.spacy_nlp_dict = {}
         if default_language is not None:
@@ -127,7 +126,7 @@ class MultilingualTokenizer:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
             except OSError as e:
                 logging.warning(
-                    "Spacy model not available for language: '{}' because of error: '{}'".format(language, e)
+                    "Spacy model not available for language '{}' because of error: '{}'".format(language, e)
                 )
                 nlp = spacy.blank(language)
         else:
@@ -140,13 +139,6 @@ class MultilingualTokenizer:
             if "#" in _prefixes:
                 _prefixes.remove("#")
                 nlp.tokenizer.prefix_search = spacy.util.compile_prefix_regex(_prefixes).search
-        if self.tag_emoji and language != self.default_language:
-            try:
-                emoji = Emoji(nlp)
-                nlp.add_pipe(emoji, first=True)
-            except AttributeError as e:
-                # As of spacy 2.3.2 we know this will not work for Chinese, Thai and Japanese
-                logging.info("Emoji tokenization not available for language: {} because: {}".format(language, e))
         logging.info("Loading tokenizer for language '{}': Done in {:.2f} seconds.".format(language, time() - start))
         return nlp
 
@@ -206,7 +198,7 @@ class MultilingualTokenizer:
             )
         except ValueError as e:
             logging.warning(
-                "Tokenization error: '{}' for text list: '{}', defaulting to fallback tokenizer".format(
+                "Tokenization error: {} for text list: '{}', defaulting to fallback tokenizer".format(
                     e, truncate_text_list(text_list)
                 )
             )
