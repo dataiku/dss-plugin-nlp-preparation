@@ -9,7 +9,7 @@ from spacy_tokenizer import MultilingualTokenizer  # noqa
 
 
 def test_tokenize_df_english():
-    input_df = pd.DataFrame({"input_text": ["I hope nothing. I fear nothing. I am free. 💩 😂 #OMG"],})
+    input_df = pd.DataFrame({"input_text": ["I hope nothing. I fear nothing. I am free. 💩 😂 #OMG"]})
     tokenizer = MultilingualTokenizer()
     output_df = tokenizer.tokenize_df(df=input_df, text_column="input_text", language="en")
     tokenized_document = output_df[tokenizer.tokenized_column][0]
