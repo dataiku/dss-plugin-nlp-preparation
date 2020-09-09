@@ -10,14 +10,9 @@ from symspell_checker import SpellChecker  # noqa
 
 def test_spellcheck_df_english():
     input_df = pd.DataFrame(
-        {
-            "input_text": [
-                "Can yu readtHIS messa ge despite thehorible AB1234  sppelingmsitakes",
-                "Whereis th elove hehaD Dated forImuch of thepast who couqdn'tread in sixthgrade AND ins pired him",
-                "!? Nooo way I CAN'T haz cheezburger 💩 😂 #OMG",
-            ],
-        }
-    ).sort_values(by=["input_text"])
+        {"input_text": ["Can yu readtHIS message despite thehorible AB1234 sppelingmsitakes 😂 #OMG"]}
+    )
+    print(input_df)
     assert True
 
 
@@ -27,9 +22,10 @@ def test_spellcheck_df_multilingual():
             "input_text": [
                 "Can yu readtHIS messa ge despite thehorible AB1234  sppelingmsitakes",
                 "Les fautes d'ortograf c pas toop #LOOOL PTDR",
-                "covfefe tnetennba rosebud",
+                "!? Nooo way I CAN'T haz cheezburger 💩 😂 #OMG",
             ],
-            "language": ["en", "fr", "unknown"],
+            "language": ["en", "fr", "es"],
         }
     ).sort_values(by=["input_text"])
+    print(input_df)
     assert True
