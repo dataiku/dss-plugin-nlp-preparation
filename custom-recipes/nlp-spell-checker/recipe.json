@@ -10,7 +10,7 @@
         {
             "name": "input_dataset",
             "label": "Input dataset",
-            "description": "Dataset with text columns containing misspelled words",
+            "description": "Dataset with a text column containing misspelled words",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true
