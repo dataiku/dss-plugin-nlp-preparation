@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Module with read/write utility functions whi are *not* based on the Dataiku API"""
+"""Module with read/write utility functions which are *not* based on the Dataiku API"""
 
 from typing import List, AnyStr, Union
 
