@@ -345,7 +345,7 @@ class SpellChecker:
         Args:
             df: Input pandas DataFrame
         """
-       df.drop(self._tokenizer.tokenized_column, axis=1, inplace=True)
+        df.drop(self._tokenizer.tokenized_column, axis=1, inplace=True)
         corrected_text_column = list(self.output_column_description_dict.keys())[0]
         spelling_mistakes_column = list(self.output_column_description_dict.keys())[1]
         misspelling_count_column = list(self.output_column_description_dict.keys())[2]
