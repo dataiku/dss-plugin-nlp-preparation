@@ -35,6 +35,7 @@ class SpellChecker:
         edit_distance (int): Maximum edit distance between a word and its correction
         ignore_token (Pattern): Regular expression for words not to be corrected
         transfer_casing (bool): Transfer input word case to the corrected word
+        output_column_description_dict (dict): Dictionary of column names (key) and their description (value)
         compute_diagnosis (bool): Compute spellchecker diagnosis of each word
     """
 
@@ -94,7 +95,7 @@ class SpellChecker:
         self.ignore_token = ignore_token
         self.transfer_casing = transfer_casing
         self._symspell_checker_dict = {}
-        self._output_column_description_dict = self.OUTPUT_COLUMN_DESCRIPTION_DICT  # may be changed by check_df
+        self.output_column_description_dict = self.OUTPUT_COLUMN_DESCRIPTION_DICT  # may be changed by check_df
         self.compute_diagnosis = compute_diagnosis
         if self.compute_diagnosis:
             self._diagnosis_lock = Lock()
@@ -328,11 +329,11 @@ class SpellChecker:
             language: Language code in ISO 639-1 format
                 If equal to "language_column" this parameter is ignored in favor of language_column
         """
-        self._output_column_description_dict = OrderedDict()
+        self.output_column_description_dict = OrderedDict()
         for k, v in self.OUTPUT_COLUMN_DESCRIPTION_DICT.items():
             column_name = generate_unique(k, df.keys(), text_column)
             df[column_name] = pd.Series([""] * len(df.index))
-            self._output_column_description_dict[column_name] = v
+            self.output_column_description_dict[column_name] = v
         self._tokenizer.tokenize_df(df, text_column, language_column, language)
 
     def _format_output_df(self, df: pd.DataFrame) -> None:
@@ -345,9 +346,9 @@ class SpellChecker:
             df: Input pandas DataFrame
         """
         del df[self._tokenizer.tokenized_column]
-        corrected_text_column = list(self._output_column_description_dict.keys())[0]
-        spelling_mistakes_column = list(self._output_column_description_dict.keys())[1]
-        misspelling_count_column = list(self._output_column_description_dict.keys())[2]
+        corrected_text_column = list(self.output_column_description_dict.keys())[0]
+        spelling_mistakes_column = list(self.output_column_description_dict.keys())[1]
+        misspelling_count_column = list(self.output_column_description_dict.keys())[2]
         df[spelling_mistakes_column] = df[spelling_mistakes_column].apply(clean_empty_list)
         df.loc[df[corrected_text_column] == "", misspelling_count_column] = ""
 
@@ -381,13 +382,13 @@ class SpellChecker:
                 document_slice = df.loc[language_indices, self._tokenizer.tokenized_column]  # slicing df by language
                 if len(document_slice) != 0:
                     tuple_list = self.check_document_list(document_list=document_slice, language=lang)
-                    for i, column in enumerate(self._output_column_description_dict.keys()):
+                    for i, column in enumerate(self.output_column_description_dict.keys()):
                         df.loc[language_indices, column] = pd.Series(
                             [t[i] for t in tuple_list], index=document_slice.index
                         )
         else:
             tuple_list = self.check_document_list(document_list=df[self._tokenizer.tokenized_column], language=language)
-            for i, column in enumerate(self._output_column_description_dict.keys()):
+            for i, column in enumerate(self.output_column_description_dict.keys()):
                 df[column] = [t[i] for t in tuple_list]
         self._format_output_df(df)
         return df

@@ -28,7 +28,7 @@ process_dataset_chunks(
 set_column_description(
     input_dataset=params["input_dataset"],
     output_dataset=params["output_dataset"],
-    column_description_dict=spellchecker._output_column_description_dict,
+    column_description_dict=spellchecker.output_column_description_dict,
 )
 if params["compute_diagnosis"]:
     diagnosis_df = spellchecker.create_diagnosis_df()

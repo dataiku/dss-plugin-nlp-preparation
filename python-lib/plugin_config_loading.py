@@ -43,7 +43,7 @@ def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set
     if col_type != "string":
         raise PluginParamValidationError("Column of custom vocabulary dataset must be of string type")
 
-    df = clean_text_df(custom_vocabulary_dataset.get_dataframe())
+    df = clean_text_df(custom_vocabulary_dataset.get_dataframe(infer_with_pandas=False))
     custom_vocabulary = set(df[col_name].astype(str).tolist())
     return custom_vocabulary
 
