@@ -118,7 +118,7 @@ class MultilingualTokenizer:
         """
         start = time()
         logging.info("Loading tokenizer for language '{}'...".format(language))
-        if language in SPACY_LANGUAGE_MODELS.keys() and self.use_models:
+        if language in SPACY_LANGUAGE_MODELS and self.use_models:
             try:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
             except OSError as e:
@@ -158,9 +158,9 @@ class MultilingualTokenizer:
         added_tokenizer = False
         if pd.isnull(language) or language == "":
             raise ValueError("Missing language code")
-        if language not in SUPPORTED_LANGUAGES_SPACY.keys():
+        if language not in SUPPORTED_LANGUAGES_SPACY:
             raise ValueError("Unsupported language code: '{}'".format(language))
-        if language not in self.spacy_nlp_dict.keys():
+        if language not in self.spacy_nlp_dict:
             self.spacy_nlp_dict[language] = self._create_spacy_tokenizer(language)
             added_tokenizer = True
         return added_tokenizer

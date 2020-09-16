@@ -127,7 +127,7 @@ def load_plugin_config() -> Dict:
     # List of text columns
     params["text_column"] = recipe_config.get("text_column")
     logging.info("Text column: {}".format(params["text_column"]))
-    if params["text_column"] == "":
+    if not params["text_column"]:
         raise PluginParamValidationError("Empty text column selection")
 
     # Language selection
@@ -138,7 +138,7 @@ def load_plugin_config() -> Dict:
             raise PluginParamValidationError("Empty language column selection")
         logging.info("Language column: {}".format(params["language_column"]))
     else:
-        if params["language"] is None or params["language"] == "":
+        if not params["language"]:
             raise PluginParamValidationError("Empty language selection")
         if params["language"] not in SUPPORTED_LANGUAGES_SYMSPELL:
             raise PluginParamValidationError("Unsupported language code: {}".format(params["language"]))

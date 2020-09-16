@@ -19,7 +19,7 @@ def count_records(dataset: dataiku.Dataset) -> int:
         Number of records
     """
     metric_id = "records:COUNT_RECORDS"
-    dataset_name = dataset.name.split(".")[1]
+    dataset_name = dataset.short_name
     partitions = dataset.read_partitions
     client = dataiku.api_client()
     project = client.get_project(dataiku.default_project_key())
@@ -67,10 +67,7 @@ def process_dataset_chunks(
         for i, df in tqdm(enumerate(df_iterator), total=len_iterator):
             output_df = func(df=df, **kwargs)
             if i == 0:
-                if output_dataset.writePartition is None or output_dataset.writePartition == "":
-                    output_dataset.write_schema_from_dataframe(output_df, dropAndCreate=True)
-                else:
-                    output_dataset.write_schema_from_dataframe(output_df)
+               output_dataset.write_schema_from_dataframe(output_df, dropAndCreate=bool(not output_dataset.writePartition)
             writer.write_dataframe(output_df)
     logging.info("Processing dataframe chunks: Done!")
 
