@@ -22,6 +22,15 @@ plugin:
 
 unit-tests:
 	@echo "[START] Running unit tests..."
+	@PYTHON_VERSION=`python3 -V 2>&1 | sed 's/[^0-9]*//g' | cut -c 1,2`; \
+	MATCHING_VERSION=`cat code-env/python/desc.json | python3 -c "import sys, json; print(False) if str($$PYTHON_VERSION) not in [x[-2:] for x in json.load(sys.stdin)['acceptedPythonInterpreters']] else print(True);"`; \
+	if $$MATCHING_VERSION; then\
+        echo "Python3 version ($$PYTHON_VERSION) is in acceptedPythonInterpreters"; \
+	else \
+		echo "Python3 version ($$PYTHON_VERSION) is not in acceptedPythonInterpreters"; \
+		exit 1;\
+    fi
+
 	@( \
 		python3 -m venv env/; \
 		source env/bin/activate; \
