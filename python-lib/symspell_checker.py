@@ -210,7 +210,7 @@ class SpellChecker:
                 3. Spellchecker diagnosis string explaining the spellchecker action
         """
         (is_misspelled, correction, diagnosis) = (False, token.text, "")
-        if token.text in self.custom_corrections.keys():  # special case of custom corrections
+        if token.text in self.custom_corrections:  # special case of custom corrections
             diagnosis = "NOK - Corrected by custom correction"
             (is_misspelled, correction) = (True, str(self.custom_corrections[token.text]))
         else:
@@ -382,13 +382,13 @@ class SpellChecker:
                 document_slice = df.loc[language_indices, self._tokenizer.tokenized_column]  # slicing df by language
                 if len(document_slice) != 0:
                     tuple_list = self.check_document_list(document_list=document_slice, language=lang)
-                    for i, column in enumerate(self.output_column_description_dict.keys()):
+                    for i, column in enumerate(self.output_column_description_dict):
                         df.loc[language_indices, column] = pd.Series(
                             [t[i] for t in tuple_list], index=document_slice.index
                         )
         else:
             tuple_list = self.check_document_list(document_list=df[self._tokenizer.tokenized_column], language=language)
-            for i, column in enumerate(self.output_column_description_dict.keys()):
+            for i, column in enumerate(self.output_column_description_dict):
                 df[column] = [t[i] for t in tuple_list]
         self._format_output_df(df)
         return df
@@ -421,7 +421,7 @@ class SpellChecker:
         """
         df = pd.DataFrame()
         logging.info("Computing spellchecker diagnosis...")
-        for i, column in enumerate(self.DIAGNOSIS_COLUMN_DESCRIPTION_DICT.keys()):
+        for i, column in enumerate(self.DIAGNOSIS_COLUMN_DESCRIPTION_DICT):
             if column != "word_count":
                 df[column] = [t[i] for t in self._diagnosis_list]
         # Retrieve word_count information

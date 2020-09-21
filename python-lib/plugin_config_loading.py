@@ -134,7 +134,7 @@ def load_plugin_config() -> Dict:
     params["language"] = recipe_config.get("language")
     if params["language"] == "language_column":
         params["language_column"] = recipe_config.get("language_column")
-        if params["language_column"] is None or params["language_column"] == "":
+        if not params["language_column"]:
             raise PluginParamValidationError("Empty language column selection")
         logging.info("Language column: {}".format(params["language_column"]))
     else:
