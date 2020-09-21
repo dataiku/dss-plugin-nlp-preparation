@@ -18,7 +18,7 @@ plugin:
 	@echo "[SUCCESS] Archiving plugin to dist/ folder: Done!"
 
 unit-tests:
-	echo "[START] Running unit tests..."
+	@echo "[START] Running unit tests..."
 	@( \
 		PYTHON_VERSION=`python3 -V 2>&1 | sed 's/[^0-9]*//g' | cut -c 1,2`; \
 		PYTHON_VERSION_IS_CORRECT=`cat code-env/python/desc.json | python3 -c "import sys, json; print(str($$PYTHON_VERSION) in [x[-2:] for x in json.load(sys.stdin)['acceptedPythonInterpreters']]);"`; \
