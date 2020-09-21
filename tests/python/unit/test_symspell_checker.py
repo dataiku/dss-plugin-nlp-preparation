@@ -17,7 +17,7 @@ def test_spellcheck_df_english():
     )
     spellchecker = SpellChecker(dictionary_folder_path)
     output_df = spellchecker.check_df(df=input_df, text_column="input_text", language="en")
-    corrected_text_column = list(spellchecker._output_column_description_dict.keys())[0]
+    corrected_text_column = list(spellchecker.output_column_description_dict.keys())[0]
     corrected_text = output_df[corrected_text_column][0]
     expected_correction = "Can you read tHIS message despite the horrible AB1234 spelling mistakes 😂 #OMG"
     assert corrected_text == expected_correction
@@ -36,7 +36,7 @@ def test_spellcheck_df_multilingual():
     )
     spellchecker = SpellChecker(dictionary_folder_path, custom_vocabulary_set={"PTDR"})
     output_df = spellchecker.check_df(df=input_df, text_column="input_text", language_column="language")
-    corrected_text_column = list(spellchecker._output_column_description_dict.keys())[0]
+    corrected_text_column = list(spellchecker.output_column_description_dict.keys())[0]
     corrected_texts = output_df[corrected_text_column].values.tolist()
     expected_corrections = [
         "Can you read tHIS message despite the horrible AB1234 spelling mistakes 😂 #OMG",
