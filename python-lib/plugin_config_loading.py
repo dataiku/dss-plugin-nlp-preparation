@@ -87,6 +87,7 @@ def load_plugin_config() -> Dict:
     if len(input_dataset_names) == 0:
         raise PluginParamValidationError("Please specify input dataset")
     params["input_dataset"] = dataiku.Dataset(input_dataset_names[0])
+    input_dataset_columns = [p["name"] for p in params["input_dataset"].read_schema()]
 
     # output dataset
     output_dataset_names = get_output_names_for_role("output_dataset")
@@ -127,15 +128,15 @@ def load_plugin_config() -> Dict:
     # List of text columns
     params["text_column"] = recipe_config.get("text_column")
     logging.info("Text column: {}".format(params["text_column"]))
-    if not params["text_column"]:
-        raise PluginParamValidationError("Empty text column selection")
+    if params["text_column"] not in input_dataset_columns:
+        raise PluginParamValidationError("Invalid text column selection")
 
     # Language selection
     params["language"] = recipe_config.get("language")
     if params["language"] == "language_column":
         params["language_column"] = recipe_config.get("language_column")
-        if not params["language_column"]:
-            raise PluginParamValidationError("Empty language column selection")
+        if params["language_column"] not in input_dataset_columns:
+            raise PluginParamValidationError("Invalid language column selection")
         logging.info("Language column: {}".format(params["language_column"]))
     else:
         if not params["language"]:
