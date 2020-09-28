@@ -59,7 +59,7 @@ def load_plugin_config_langdetect() -> Dict:
         raise PluginParamValidationError("Invalid language scope: {}".format(params["language_scope"]))
     logging.info("Scope of {:d} languages: {}".format(len(params["language_scope"]), params["language_scope"]))
     # Minimum score
-    params["minimum_score"] = float(recipe_config.get("minimum_score"))
+    params["minimum_score"] = float(recipe_config.get("minimum_score", 0))
     if params["minimum_score"] < 0 or params["minimum_score"] > 1:
         raise PluginParamValidationError("Minimum score must be between 0 and 1")
     logging.info("Minimum score for detection: {:.2f}".format(params["minimum_score"]))
