@@ -1,8 +1,9 @@
 {
     "meta": {
-        "label": "Misspelling Correction",
-        "description": "Identify and correct misspellings in a text column",
-        "icon": "icon-strikethrough"
+        "label": "Spell Checker",
+        "description": "Identify and correct misspellings in a text column for 36 languages",
+        "icon": "icon-strikethrough",
+        "displayOrderRank": 2
     },
     "selectableFromDataset": "input_dataset",
     "kind": "PYTHON",
@@ -104,7 +105,8 @@
             "minI": 1,
             "maxI": 100,
             "description": "Maximum edit distance between a word and its correction. Increase to correct more.",
-            "visibilityCondition": "model.expert == true"
+            "visibilityCondition": "model.expert == true",
+            "mandatory": true
         },
         {
             "type": "STRING",

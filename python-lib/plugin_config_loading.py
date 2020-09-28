@@ -15,13 +15,62 @@ from dataiku.customrecipe import (
 )
 
 from plugin_io_utils import clean_text_df
-from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
+from language_dict import SUPPORTED_LANGUAGES_PYCLD3, SUPPORTED_LANGUAGES_SYMSPELL
 
 
 class PluginParamValidationError(ValueError):
     """Custom exception raised when the the plugin parameters chosen by the user are invalid"""
 
     pass
+
+
+def load_plugin_config_langdetect() -> Dict:
+    """
+    Helper function to load plugin recipe config into a clean parameter dictionary.
+    Applies checks for correct input config.
+    """
+    params = {}
+    # input dataset
+    input_dataset_names = get_input_names_for_role("input_dataset")
+    if len(input_dataset_names) == 0:
+        raise PluginParamValidationError("Please specify input dataset")
+    params["input_dataset"] = dataiku.Dataset(input_dataset_names[0])
+    input_dataset_columns = [p["name"] for p in params["input_dataset"].read_schema()]
+
+    # output dataset
+    output_dataset_names = get_output_names_for_role("output_dataset")
+    if len(output_dataset_names) == 0:
+        raise PluginParamValidationError("Please specify output dataset")
+    params["output_dataset"] = dataiku.Dataset(output_dataset_names[0])
+
+    # Recipe parameters
+    recipe_config = get_recipe_config()
+    # Text column
+    params["text_column"] = recipe_config.get("text_column")
+    logging.info("Text column: {}".format(params["text_column"]))
+    if params["text_column"] not in input_dataset_columns:
+        raise PluginParamValidationError("Invalid text column selection")
+    logging.info("Text column: {}".format(params["text_column"]))
+    # Language scope
+    params["language_scope"] = recipe_config.get("language_scope", [])
+    if len(params["language_scope"]) == 0:
+        params["language_scope"] = SUPPORTED_LANGUAGES_PYCLD3
+    if len(params["language_scope"]) == 0:
+        raise PluginParamValidationError("Invalid language scope: {}".format(params["language_scope"]))
+    logging.info("Scope of {:d} languages: {}".format(len(params["language_scope"]), params["language_scope"]))
+    # Minimum score
+    params["minimum_score"] = float(recipe_config.get("minimum_score"))
+    if params["minimum_score"] < 0 or params["minimum_score"] > 1:
+        raise PluginParamValidationError("Minimum score must be between 0 and 1")
+    logging.info("Minimum score for detection: {:.2f}".format(params["minimum_score"]))
+    # Fallback language
+    params["fallback_language"] = recipe_config.get("fallback_language")
+    if not params["fallback_language"] or params["fallback_language"] == "None":
+        logging.info("No fallback language")
+        params["fallback_language"] = ""
+    else:
+        logging.info("Fallback language: {}".format(params["fallback_language"]))
+    return params
 
 
 def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set:
@@ -73,8 +122,8 @@ def custom_corrections_checker(custom_corrections_dataset: dataiku.Dataset) -> D
     return custom_corrections_dict
 
 
-def load_plugin_config() -> Dict:
-    """Utility function to load, resolve and validate all plugin config into a clean `params` dictionary
+def load_plugin_config_spellchecker() -> Dict:
+    """Utility function to validate and load spell checker parameters into a clean dictionary
 
     Returns:
         Dictionary of parameter names (key) and values

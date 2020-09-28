@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Misspelling Correction recipe script"""
 
-from plugin_config_loading import load_plugin_config
+from plugin_config_loading import load_plugin_config_spellchecker
 from symspell_checker import SpellChecker
 from dku_io_utils import process_dataset_chunks, set_column_description
 
 # Setup
-params = load_plugin_config()
+params = load_plugin_config_spellchecker()
 spellchecker = SpellChecker(
     dictionary_folder_path=params["dictionary_folder_path"],
     ignore_token=params["ignore_word_regex"],

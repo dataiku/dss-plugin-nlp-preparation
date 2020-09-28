@@ -1,0 +1,89 @@
+{
+    "meta": {
+        "label": "Language Detection",
+        "description": "Detect dominant languages in a text column among 114 languages",
+        "icon": "icon-globe",
+        "displayOrderRank": 1
+    },
+    "kind": "PYTHON",
+    "selectableFromDataset": "input_dataset",
+    "inputRoles": [
+        {
+            "name": "input_dataset",
+            "label": "Input Dataset",
+            "description": "Dataset containing text data",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        }
+    ],
+    "outputRoles": [
+        {
+            "name": "output_dataset",
+            "label": "Output Dataset",
+            "description": "Dataset enriched with detected languages",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        }
+    ],
+    "paramsPythonSetup": "get_language_list.py",
+    "params": [
+        {
+            "name": "separator_input",
+            "label": "Input Parameters",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "text_column",
+            "label": "Text column",
+            "type": "COLUMN",
+            "mandatory": true,
+            "columnRole": "input_dataset",
+            "allowedColumnTypes": [
+                "string"
+            ]
+        },
+        {
+            "name": "separator_advanced",
+            "label": "Advanced",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "expert",
+            "label": "Expert mode",
+            "type": "BOOLEAN",
+            "defaultValue": false
+        },
+        {
+            "type": "MULTISELECT",
+            "name": "language_scope",
+            "label": "Language scope",
+            "description": "Scope of languages to choose from. Leave empty to use all 114 languages.",
+            "getChoicesFromPython": true,
+            "visibilityCondition": "model.expert == true",
+            "mandatory": false
+        },
+        {
+            "type": "DOUBLE",
+            "name": "minimum_score",
+            "label": "Minimum score",
+            "description": "Minimum confidence score (from 0 to 1) for the language to be detected. Leave at 0 to apply no filtering.",
+            "minD": 0,
+            "maxD": 1,
+            "defaultValue": 0,
+            "visibilityCondition": "model.expert == true"
+        },
+        {
+            "type": "SELECT",
+            "name": "fallback_language",
+            "label": "Fallback language",
+            "description": "Fallback if the detected language is not within the chosen scope or below minimum score. Leave None to output an empty cell.",
+            "getChoicesFromPython": true,
+            "visibilityCondition": "model.expert == true",
+            "mandatory": false,
+            "defaultValue": "None"
+        }
+    ],
+    "resourceKeys": []
+}
