@@ -1,6 +1,6 @@
 # Text Preparation Plugin
 
-This Dataiku DSS plugin provides a recipe to check misspellings and automatically correct typos in text data.
+This Dataiku DSS plugin provides recipes to detect languages and check misspellings of text data.
 
 Documentation: https://www.dataiku.com/dss/plugins/info/nlp-preparation.html
 
