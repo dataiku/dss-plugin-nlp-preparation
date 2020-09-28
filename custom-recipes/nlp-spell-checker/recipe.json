@@ -1,0 +1,119 @@
+{
+    "meta": {
+        "label": "Misspelling Correction",
+        "description": "Identify and correct misspellings in a text column",
+        "icon": "icon-strikethrough"
+    },
+    "selectableFromDataset": "input_dataset",
+    "kind": "PYTHON",
+    "inputRoles": [
+        {
+            "name": "input_dataset",
+            "label": "Input dataset",
+            "description": "Dataset with a text column containing misspelled words",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        },
+        {
+            "name": "custom_vocabulary",
+            "label": "Custom vocabulary (optional)",
+            "description": "Dataset with a single column for words that should not be corrected (case-sensitive)",
+            "arity": "UNARY",
+            "required": false,
+            "acceptsDataset": true
+        },
+        {
+            "name": "custom_corrections",
+            "label": "Custom corrections (optional)",
+            "description": "Dataset with the first column for words and the second for their correction (case-sensitive)",
+            "arity": "UNARY",
+            "required": false,
+            "acceptsDataset": true
+        }
+    ],
+    "outputRoles": [
+        {
+            "name": "output_dataset",
+            "label": "Output dataset",
+            "description": "Dataset with identified misspellings and corrected text",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        },
+        {
+            "name": "diagnosis_dataset",
+            "label": "Diagnosis dataset (optional)",
+            "description": "Dataset with the spellchecker diagnosis of each word",
+            "arity": "UNARY",
+            "required": false,
+            "acceptsDataset": true
+        }
+    ],
+    "paramsPythonSetup": "get_language_list.py",
+    "params": [
+        {
+            "name": "separator_input",
+            "label": "Input parameters",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "text_column",
+            "label": "Text column",
+            "type": "COLUMN",
+            "mandatory": true,
+            "columnRole": "input_dataset",
+            "allowedColumnTypes": [
+                "string"
+            ]
+        },
+        {
+            "type": "SELECT",
+            "name": "language",
+            "label": "Language",
+            "getChoicesFromPython": true,
+            "defaultValue": "en"
+        },
+        {
+            "name": "language_column",
+            "label": "Language column",
+            "type": "COLUMN",
+            "description": "Column containing ISO 639-1 language codes",
+            "columnRole": "input_dataset",
+            "allowedColumnTypes": [
+                "string"
+            ],
+            "visibilityCondition": "model.language == 'language_column'"
+        },
+        {
+            "name": "separator_advanced",
+            "label": "Advanced",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "expert",
+            "label": "Expert mode",
+            "type": "BOOLEAN",
+            "defaultValue": false
+        },
+        {
+            "type": "INT",
+            "name": "edit_distance",
+            "label": "Edit distance",
+            "defaultValue": 2,
+            "minI": 1,
+            "maxI": 100,
+            "description": "Maximum edit distance between a word and its correction. Increase to correct more.",
+            "visibilityCondition": "model.expert == true"
+        },
+        {
+            "type": "STRING",
+            "name": "ignore_word_regex",
+            "label": "Ignore pattern",
+            "defaultValue": "",
+            "description": "Regular expression for words not to be corrected. Ex: \"\\w+\\d\" to preserve \"home1\".",
+            "visibilityCondition": "model.expert == true"
+        }
+    ],
+    "resourceKeys": []
+}

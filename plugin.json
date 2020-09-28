@@ -1,14 +1,16 @@
 {
-    "id": "nlp-spell-checker",
+    "id": "nlp-preparation",
     "version": "1.0.0",
     "meta": {
-        "label": "Spell Checker",
+        "label": "Text preparation",
         "category": "Natural Language Processing",
-        "description": "Identify and correct misspelled words in text",
+        "description": "Identify and correct misspelled words in text data for 36 languages",
         "author": "Dataiku (Damien JACQUEMART and Alex COMBESSIE)",
-        "icon": "icon-strikethrough",
-        "tags": ["NLP"],
-        "url": "https://www.dataiku.com/product/plugins/nlp-spell-checker/",
+        "icon": "icon-file-text",
+        "tags": [
+            "NLP"
+        ],
+        "url": "https://www.dataiku.com/product/plugins/nlp-preparation/",
         "licenseInfo": "Apache Software License",
         "supportLevel": "TIER2_SUPPORT"
     }
