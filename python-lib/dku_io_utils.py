@@ -32,7 +32,7 @@ def count_records(dataset: dataiku.Dataset) -> int:
         logging.info("Dataset {} contains {:d} records and is not partitioned".format(dataset.name, record_count))
     else:
         for partition in partitions:
-            project.get_dataset(dataset.name).compute_metrics(partition=partition, metric_ids=[metric_id])
+            project.get_dataset(dataset.short_name).compute_metrics(partition=partition, metric_ids=[metric_id])
             metric = dataset.get_last_metric_values()
             record_count += dataiku.ComputedMetrics.get_value_from_data(
                 metric.get_partition_data(partition=partition, metric_id=metric_id)
