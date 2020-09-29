@@ -1,6 +1,6 @@
 {
     "meta": {
-        "label": "Spell Checker",
+        "label": "Spell Checking",
         "description": "Identify and correct misspellings in a text column for 36 languages",
         "icon": "icon-strikethrough",
         "displayOrderRank": 2
