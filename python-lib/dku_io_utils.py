@@ -25,12 +25,12 @@ def count_records(dataset: dataiku.Dataset) -> int:
     client = dataiku.api_client()
     project = client.get_project(dataiku.default_project_key())
     record_count = 0
-    logging.info("Counting records of dataset: {}".format(dataset_name))
+    logging.info("Counting records of dataset: {}...".format(dataset_name))
     if partitions is None or len(partitions) == 0:
         project.get_dataset(dataset_name).compute_metrics(metric_ids=[metric_id])
         metric = dataset.get_last_metric_values()
         record_count = dataiku.ComputedMetrics.get_value_from_data(metric.get_global_data(metric_id=metric_id))
-        logging.info("Dataset contains {:d} records and is not partitioned".format(record_count))
+        logging.info("Dataset {} contains {:d} records and is not partitioned".format(dataset_name, record_count))
     else:
         for partition in partitions:
             project.get_dataset(dataset_name).compute_metrics(partition=partition, metric_ids=[metric_id])
@@ -38,7 +38,9 @@ def count_records(dataset: dataiku.Dataset) -> int:
             record_count += dataiku.ComputedMetrics.get_value_from_data(
                 metric.get_partition_data(partition=partition, metric_id=metric_id)
             )
-        logging.info("Dataset contains {:d} records in partition(s) {}".format(record_count, partitions))
+        logging.info(
+            "Dataset {} contains {:d} records in partition(s) {}".format(dataset_name, record_count, partitions)
+        )
     return record_count
 
 
