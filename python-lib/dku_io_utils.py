@@ -64,7 +64,7 @@ def process_dataset_chunks(
     input_count_records = count_records(input_dataset)
     if input_count_records == 0:
         raise ValueError("Input dataset has no records")
-    logging.info("Processing dataset of {:d} rows by chunks of {:d})...".format(input_count_records, chunksize))
+    logging.info("Processing dataset of {:d} rows by chunks of {:d}...".format(input_count_records, chunksize))
     start = time()
     with output_dataset.get_writer() as writer:
         df_iterator = input_dataset.iter_dataframes(chunksize=chunksize, infer_with_pandas=False)
