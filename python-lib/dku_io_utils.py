@@ -3,6 +3,7 @@
 
 import logging
 import math
+from time import time
 from typing import Callable, Dict
 
 from tqdm import tqdm
@@ -59,8 +60,10 @@ def process_dataset_chunks(
         **kwargs: Optional keyword arguments fed to `func`
     """
     input_count_records = count_records(input_dataset)
-    assert input_count_records != 0, "Input dataset has no records"
-    logging.info("Processing dataframe chunks of size {:d})...".format(chunksize))
+    if input_count_records == 0:
+        raise ValueError("Input dataset has no records")
+    logging.info("Processing dataset of {:d} rows by chunks of {:d})...".format(input_count_records, chunksize))
+    start = time()
     with output_dataset.get_writer() as writer:
         df_iterator = input_dataset.iter_dataframes(chunksize=chunksize, infer_with_pandas=False)
         len_iterator = math.ceil(input_count_records / chunksize)
@@ -71,7 +74,7 @@ def process_dataset_chunks(
                     output_df, dropAndCreate=bool(not output_dataset.writePartition)
                 )
             writer.write_dataframe(output_df)
-    logging.info("Processing dataframe chunks: Done!")
+    logging.info("Processing dataset of {:d} rows: Done in {:.2f} seconds.".format(input_count_records, time() - start))
 
 
 def set_column_description(
