@@ -14,7 +14,7 @@ from language_dict import (
     LANGUAGE_REMAPPING_PYCLD3_LANGID,
 )
 
-from plugin_io_utils import generate_unique
+from plugin_io_utils import generate_unique, truncate_text_list
 
 
 class LanguageDetector:
@@ -66,7 +66,7 @@ class LanguageDetector:
 
     def _detection_filter(self, doc: AnyStr, lang_id: AnyStr, lang_probability: float) -> (AnyStr, float):
         if lang_probability < self.minimum_score or lang_id not in self.language_scope:
-            warning_msg = "Problem encountered for document: '{}'.\n".format(doc)
+            warning_msg = "Problem encountered for document: '{}'.\n".format(truncate_text_list([doc])[0])
             if lang_id not in self.language_scope:
                 warning_msg += "Detected language: '{}' not within language scope: {}.\n".format(
                     lang_id, self.language_scope
