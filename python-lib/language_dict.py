@@ -166,7 +166,6 @@ SUPPORTED_LANGUAGES_SYMSPELL = {
     "id": "Indonesian",
     "is": "Icelandic",
     "it": "Italian",
-    "ja": "Japanese",
     "lt": "Lithuanian",
     "lv": "Latvian",
     "nl": "Dutch",
@@ -216,7 +215,6 @@ SUPPORTED_LANGUAGES_SPACY = {
     "id": "Indonesian",
     "is": "Icelandic",
     "it": "Italian",
-    "ja": "Japanese",
     "kn": "Kannada",
     "lb": "Luxembourgish",
     "lt": "Lithuanian",
@@ -249,7 +247,7 @@ SUPPORTED_LANGUAGES_SPACY = {
 """dict: Languages supported by spaCy: https://spacy.io/usage/models#languages
 
 Dictionary with ISO 639-1 language code (key) and language name (value).
-Korean and Ukrainian not included because they require system-level package installations
+Japanese, Korean and Ukrainian not included because they require system-level operations
 """
 
 SPACY_LANGUAGE_MODELS = {
