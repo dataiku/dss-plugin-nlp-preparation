@@ -208,7 +208,7 @@ def load_plugin_config_spellchecker() -> Dict:
 
     # ignore token
     if len(recipe_config.get("ignore_word_regex")) == 0:
-        logging.info("No regular expression for words  not to be corrected")
+        logging.info("No regular expression for words not to be corrected")
         params["ignore_word_regex"] = None  # symspellpy wants None
     else:
         params["ignore_word_regex"] = recipe_config.get("ignore_word_regex")
