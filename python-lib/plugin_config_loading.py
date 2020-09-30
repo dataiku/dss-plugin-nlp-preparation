@@ -47,7 +47,6 @@ def load_plugin_config_langdetect() -> Dict:
     recipe_config = get_recipe_config()
     # Text column
     params["text_column"] = recipe_config.get("text_column")
-    logging.info("Text column: {}".format(params["text_column"]))
     if params["text_column"] not in input_dataset_columns:
         raise PluginParamValidationError("Invalid text column selection")
     logging.info("Text column: {}".format(params["text_column"]))
