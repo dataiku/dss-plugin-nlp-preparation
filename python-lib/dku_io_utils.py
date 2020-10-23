@@ -18,18 +18,19 @@ def count_records(dataset: dataiku.Dataset) -> int:
 
     Returns:
         Number of records
+
     """
     metric_id = "records:COUNT_RECORDS"
     partitions = dataset.read_partitions
     client = dataiku.api_client()
     project = client.get_project(dataset.project_key)
     record_count = 0
-    logging.info("Counting records of dataset: {}...".format(dataset.name))
+    logging.info(f"Counting records of dataset: {dataset.name}...")
     if partitions is None or len(partitions) == 0:
         project.get_dataset(dataset.short_name).compute_metrics(metric_ids=[metric_id])
         metric = dataset.get_last_metric_values()
         record_count = dataiku.ComputedMetrics.get_value_from_data(metric.get_global_data(metric_id=metric_id))
-        logging.info("Dataset {} contains {:d} records and is not partitioned".format(dataset.name, record_count))
+        logging.info(f"Dataset {dataset.name} contains {record_count:d} records and is not partitioned")
     else:
         for partition in partitions:
             project.get_dataset(dataset.short_name).compute_metrics(partition=partition, metric_ids=[metric_id])
@@ -37,9 +38,7 @@ def count_records(dataset: dataiku.Dataset) -> int:
             record_count += dataiku.ComputedMetrics.get_value_from_data(
                 metric.get_partition_data(partition=partition, metric_id=metric_id)
             )
-        logging.info(
-            "Dataset {} contains {:d} records in partition(s) {}".format(dataset.name, record_count, partitions)
-        )
+        logging.info(f"Dataset {dataset.name} contains {record_count:d} records in partition(s) {partitions}")
     return record_count
 
 
@@ -59,16 +58,20 @@ def process_dataset_chunks(
             and output another pandas.DataFrame
         chunksize: Number of rows of each chunk of pandas.DataFrame fed to `func`
         **kwargs: Optional keyword arguments fed to `func`
+
+    Raises:
+        ValueError: If the input dataset is empty or if pandas cannot read it without type inference
+
     """
     input_count_records = count_records(input_dataset)
     if input_count_records == 0:
         raise ValueError("Input dataset has no records")
-    logging.info(
-        "Processing dataset {} of {:d} rows by chunks of {:d}...".format(
-            input_dataset.name, input_count_records, chunksize
-        )
-    )
+    logging.info(f"Processing dataset {input_dataset.name} of {input_count_records} rows by chunks of {chunksize}...")
     start = time()
+    # First, initialize output schema if not present
+    # Required to show the real error if `iter_dataframes` fails because of invalid input data
+    if not output_dataset.read_schema(raise_if_empty=False):
+        output_dataset.write_schema([{"name": "dku_temp_column", "type": "string"}])
     with output_dataset.get_writer() as writer:
         df_iterator = input_dataset.iter_dataframes(chunksize=chunksize, infer_with_pandas=False)
         len_iterator = math.ceil(input_count_records / chunksize)
@@ -80,9 +83,7 @@ def process_dataset_chunks(
                 )
             writer.write_dataframe(output_df)
     logging.info(
-        "Processing dataset {} of {:d} rows: Done in {:.2f} seconds.".format(
-            input_dataset.name, input_count_records, time() - start
-        )
+        f"Processing dataset {input_dataset.name} of {input_count_records} rows: Done in {time() - start:.2f} seconds."
     )
 
 
@@ -98,6 +99,7 @@ def set_column_description(
         column_description_dict: Dictionary holding column descriptions (value) by column name (key)
         input_dataset: Optional input dataiku.Dataset instance
             in case you want to retain input column descriptions
+
     """
     output_dataset_schema = output_dataset.read_schema()
     input_dataset_schema = []
