@@ -10,5 +10,5 @@ pymorphy2-dicts==2.4.393442.3710985
 pymorphy2-dicts-ru==2.4.404381.4453942
 pythainlp==2.2.4
 pyvi==0.1
-tqdm==4.50.0
+tqdm==4.50.2
 emoji==0.6.0
