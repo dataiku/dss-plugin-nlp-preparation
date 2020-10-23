@@ -59,13 +59,14 @@ def process_dataset_chunks(
         chunksize: Number of rows of each chunk of pandas.DataFrame fed to `func`
         **kwargs: Optional keyword arguments fed to `func`
 
+    Raises:
+        ValueError: If the input dataset is empty or if pandas cannot read it without type inference
+
     """
     input_count_records = count_records(input_dataset)
     if input_count_records == 0:
         raise ValueError("Input dataset has no records")
-    logging.info(
-        f"Processing dataset {input_dataset.name} of {input_count_records:d} rows by chunks of {chunksize:d}..."
-    )
+    logging.info(f"Processing dataset {input_dataset.name} of {input_count_records} rows by chunks of {chunksize}...")
     start = time()
     # First, initialize output schema if not present
     # Required to show the real error if `iter_dataframes` fails because of invalid input data
@@ -82,10 +83,7 @@ def process_dataset_chunks(
                 )
             writer.write_dataframe(output_df)
     logging.info(
-        (
-            f"Processing dataset {input_dataset.name} of {input_count_records:d} rows: ",
-            f"Done in {time() - start:.2f} seconds.",
-        )
+        f"Processing dataset {input_dataset.name} of {input_count_records} rows: Done in {time() - start:.2f} seconds."
     )
 
 
