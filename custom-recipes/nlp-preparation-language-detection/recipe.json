@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Language Detection",
-        "description": "Detect dominant languages in a text column among 114 languages",
+        "description": "Detect dominant languages among 114 languages",
         "icon": "icon-globe",
         "displayOrderRank": 1
     },

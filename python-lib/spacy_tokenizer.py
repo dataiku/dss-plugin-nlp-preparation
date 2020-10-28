@@ -29,7 +29,7 @@ TIME_UNITS = ["ns", "ms", "s", "m", "min", "h", "d", "y"]
 VOLUME_UNITS = ["ml", "dl", "l", "pt", "qt", "gal"]
 MISC_UNITS = ["k", "a", "v", "mol", "cd", "w", "n", "c"]
 UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + TIME_UNITS + VOLUME_UNITS + MISC_UNITS
-TIME_REGEX = r"""(:|-|\.|\/|am|AM|pm|PM|h|H)+"""
+TIME_REGEX = r"(:|-|\.|\/|am|AM|pm|PM|h|H)+"
 
 # Setting custom spaCy token extensions to allow for easier filtering in downstream tasks
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
@@ -39,10 +39,12 @@ Token.set_extension(
     "is_symbol", getter=lambda token: re.sub(SYMBOL_REGEX, "", token.text) == "", force=True,
 )
 Token.set_extension(
-    "is_unit", getter=lambda token: any([token.lower_.replace(s, "").isdigit() for s in UNITS]), force=True,
+    "is_time", getter=lambda token: re.sub(TIME_REGEX, "", token.lower_).isdigit(), force=True,
 )
 Token.set_extension(
-    "is_time", getter=lambda token: re.sub(TIME_REGEX, "", token.lower_).isdigit(), force=True,
+    "is_measure",
+    getter=lambda token: any([re.sub(r"[.,]", "", token.lower_).replace(s, "").isdigit() for s in UNITS]),
+    force=True,
 )
 
 
@@ -61,23 +63,26 @@ class MultilingualTokenizer:
 
     DEFAULT_BATCH_SIZE = 1000
     DEFAULT_NUM_PROCESS = 2
-    DEFAULT_FILTER_TOKEN_ATTRIBUTES = [
-        "is_space",
-        "is_punct",
-        "is_digit",
-        "is_currency",
-        "is_stop",
-        "like_url",
-        "like_email",
-        "like_num",
-        "is_emoji",
-        "is_hashtag",
-        "is_username",
-        "is_symbol",
-        "is_unit",
-        "is_time",
-    ]
-    """list: List of available native and custom spaCy token attributes"""
+    DEFAULT_FILTER_TOKEN_ATTRIBUTES = {
+        "is_space": "Whitespace",
+        "is_punct": "Punctuation",
+        "is_symbol": "Symbol",
+        "is_stop": "Stopword",
+        "like_num": "Number",
+        "is_currency": "Currency",
+        "is_measure": "Measure",
+        "is_time": "Time",
+        "like_url": "URL",
+        "like_email": "Email",
+        "is_username": "Username",
+        "is_hashtag": "Hashtag",
+        "is_emoji": "Emoji",
+    }
+    """dict: Available native and custom spaCy token attributes for filtering
+
+    Key: name of the token attribute defined on spacy Token objects
+    Value: label to designate the token attribute in the user interface
+    """
 
     def __init__(
         self,

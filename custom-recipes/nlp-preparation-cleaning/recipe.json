@@ -1,0 +1,109 @@
+{
+    "meta": {
+        "label": "Text Cleaning",
+        "description": "Tokenize, filter and lemmatize text data in 54 languages",
+        "icon": "icon-align-justify",
+        "displayOrderRank": 2
+    },
+    "selectableFromDataset": "input_dataset",
+    "kind": "PYTHON",
+    "inputRoles": [
+        {
+            "name": "input_dataset",
+            "label": "Input dataset",
+            "description": "Dataset with a raw text column",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        }
+    ],
+    "outputRoles": [
+        {
+            "name": "output_dataset",
+            "label": "Output dataset",
+            "description": "Dataset with tokenized, filtered and lemmatized text",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        }
+    ],
+    "paramsPythonSetup": "get_token_filters.py",
+    "params": [
+        {
+            "name": "separator_input",
+            "label": "Input parameters",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "text_column",
+            "label": "Text column",
+            "type": "COLUMN",
+            "mandatory": true,
+            "columnRole": "input_dataset",
+            "allowedColumnTypes": [
+                "string"
+            ]
+        },
+        {
+            "type": "SELECT",
+            "name": "language",
+            "label": "Language",
+            "getChoicesFromPython": true,
+            "defaultValue": "en"
+        },
+        {
+            "name": "language_column",
+            "label": "Language column",
+            "type": "COLUMN",
+            "description": "Column containing ISO 639-1 language codes",
+            "columnRole": "input_dataset",
+            "allowedColumnTypes": [
+                "string"
+            ],
+            "visibilityCondition": "model.language == 'language_column'"
+        },
+        {
+            "name": "separator_advanced",
+            "label": "Advanced",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "expert",
+            "label": "Expert mode",
+            "type": "BOOLEAN",
+            "defaultValue": false
+        },
+        {
+            "type": "MULTISELECT",
+            "name": "token_filters",
+            "label": "Token filters",
+            "description": "Remove tokens matching these attributes and store them in new columns",
+            "getChoicesFromPython": true,
+            "visibilityCondition": "model.expert",
+            "defaultValue": [
+                "is_space",
+                "is_punct",
+                "is_symbol",
+                "is_stop",
+                "like_num",
+                "is_currency",
+                "is_measure",
+                "is_time",
+                "like_url",
+                "like_email",
+                "is_username",
+                "is_hashtag",
+                "is_emoji"
+            ]
+        },
+        {
+            "name": "lemmatization",
+            "label": "Lemmatization",
+            "type": "BOOLEAN",
+            "visibilityCondition": "model.expert",
+            "defaultValue": true,
+            "description": "Use fixed rules and lookup tables defined by spaCy for each language"
+        }
+    ],
+    "resourceKeys": []
+}
