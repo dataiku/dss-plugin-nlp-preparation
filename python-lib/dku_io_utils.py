@@ -75,7 +75,7 @@ def process_dataset_chunks(
     with output_dataset.get_writer() as writer:
         df_iterator = input_dataset.iter_dataframes(chunksize=chunksize, infer_with_pandas=False)
         len_iterator = math.ceil(input_count_records / chunksize)
-        for i, df in tqdm(enumerate(df_iterator), total=len_iterator):
+        for i, df in tqdm(enumerate(df_iterator), total=len_iterator, unit="chunk", mininterval=1.0):
             output_df = func(df=df, **kwargs)
             if i == 0:
                 output_dataset.write_schema_from_dataframe(
