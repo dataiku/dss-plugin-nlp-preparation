@@ -73,7 +73,7 @@ def clean_text_df(df: pd.DataFrame, dropna_columns: List[AnyStr] = None) -> pd.D
 
 
 def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr = None) -> AnyStr:
-    """Generate a unique name among existing ones by suffixing a number. Can also add an optional prefix.
+    """Generate a unique name among existing ones by suffixing a number and adding a prefix
 
     Args:
         name: Input name
@@ -83,18 +83,15 @@ def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr =
     Returns:
        Unique name with a number suffix in case of conflict, and an optional prefix
     """
-    if prefix is not None:
-        new_name = "{}_{}".format(prefix, name)
+    if prefix:
+        new_name = f"{prefix}_{name}"
     else:
         new_name = name
-    for i in range(1, 1001):
+    for j in range(1, 1001):
         if new_name not in existing_names:
             return new_name
-        if prefix is not None:
-            new_name = "{}_{}_{}".format(prefix, name, i)
-        else:
-            new_name = "{}_{}".format(name, i)
-    raise RuntimeError("Failed to generated a unique name")
+        new_name = f"{name}_{j}"
+    raise RuntimeError(f"Failed to generated a unique name for '{name}'")
 
 
 def move_columns_after(df: pd.DataFrame, columns_to_move: List[AnyStr], after_column: AnyStr) -> pd.DataFrame:

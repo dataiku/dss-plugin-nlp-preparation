@@ -3,7 +3,7 @@
 
 import re
 import logging
-from typing import List, AnyStr, Union
+from typing import List, AnyStr
 from time import time
 
 import pandas as pd
@@ -20,7 +20,7 @@ from plugin_io_utils import generate_unique, truncate_text_list
 
 # The constants below should cover a majority of cases for tokens with symbols and unit measurements: "8h", "90kmh", ...
 SYMBOL_REGEX = re.compile(
-    r"""[º°'"%&()％＆*+-<=>?|/\[]/«»^_`{}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏⸂⸃⸌⸝]+"""
+    r"""[º°'"%&()％＆*+\-<=>?\\[\]\/^_`{|}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏]+"""
 )
 TIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h)+", flags=re.IGNORECASE)
 NUMERIC_SEPARATOR_REGEX = re.compile(r"[.,]")
@@ -127,14 +127,12 @@ class MultilingualTokenizer:
             spaCy Language instance with the tokenizer
         """
         start = time()
-        logging.info("Loading tokenizer for language '{}'...".format(language))
+        logging.info(f"Loading tokenizer for language '{language}'...")
         if language in SPACY_LANGUAGE_MODELS and self.use_models:
             try:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
             except OSError as e:
-                logging.warning(
-                    "Spacy model not available for language '{}' because of error: '{}'".format(language, e)
-                )
+                logging.warning(f"Spacy model not available for language '{language}' because of error: '{e}'")
                 nlp = spacy.blank(language)
         else:
             nlp = spacy.blank(language)  # spaCy language without models (https://spacy.io/usage/models)
@@ -146,7 +144,7 @@ class MultilingualTokenizer:
             if "#" in _prefixes:
                 _prefixes.remove("#")
                 nlp.tokenizer.prefix_search = spacy.util.compile_prefix_regex(_prefixes).search
-        logging.info("Loading tokenizer for language '{}': Done in {:.2f} seconds.".format(language, time() - start))
+        logging.info(f"Loading tokenizer for language '{language}': Done in {time() - start:.2f} seconds.")
         return nlp
 
     def _add_spacy_tokenizer(self, language: AnyStr) -> bool:
@@ -169,7 +167,7 @@ class MultilingualTokenizer:
         if pd.isnull(language) or language == "":
             raise ValueError("Missing language code")
         if language not in SUPPORTED_LANGUAGES_SPACY:
-            raise ValueError("Unsupported language code: '{}'".format(language))
+            raise ValueError(f"Unsupported language code: '{language}'")
         if language not in self.spacy_nlp_dict:
             self.spacy_nlp_dict[language] = self._create_spacy_tokenizer(language)
             added_tokenizer = True
@@ -189,7 +187,7 @@ class MultilingualTokenizer:
             List of tokenized spaCy documents
         """
         start = time()
-        logging.info("Tokenizing {:d} texts in language '{}'...".format(len(text_list), language))
+        logging.info(f"Tokenizing {len(text_list)} texts in language '{language}'...")
         text_list = [str(t) if pd.notnull(t) else "" for t in text_list]
         try:
             self._add_spacy_tokenizer(language)
@@ -199,21 +197,16 @@ class MultilingualTokenizer:
                 )
             )
             logging.info(
-                "Tokenizing {:d} texts in language '{}': Done in {:.2f} seconds.".format(
-                    len(tokenized), language, time() - start
-                )
+                f"Tokenizing {len(tokenized)} texts in language '{language}': Done in {time() - start:.2f} seconds."
             )
         except ValueError as e:
+            truncated_text_list = truncate_text_list(text_list)
             logging.warning(
-                "Tokenization error: {} for text list: '{}', defaulting to fallback tokenizer".format(
-                    e, truncate_text_list(text_list)
-                )
+                f"Tokenization error: {e} for text list: '{truncated_text_list}', defaulting to fallback tokenizer"
             )
             tokenized = list(self.spacy_nlp_dict[self.default_language].pipe(text_list, batch_size=self.batch_size))
             logging.info(
-                "Tokenizing {:d} texts using fallback tokenizer: Done in {:.2f} seconds.".format(
-                    len(tokenized), time() - start
-                )
+                f"Tokenizing {len(tokenized)} texts using fallback tokenizer: Done in {time() - start:.2f} seconds."
             )
         return tokenized
 
@@ -251,60 +244,3 @@ class MultilingualTokenizer:
             tokenized_list = self.tokenize_list(text_list=df[text_column], language=language)
             df[self.tokenized_column] = tokenized_list
         return df
-
-    def convert_spacy_doc(
-        self,
-        document: Doc,
-        output_format: AnyStr = "list",
-        filter_or_keep: AnyStr = "filter",
-        token_attributes: List[AnyStr] = DEFAULT_FILTER_TOKEN_ATTRIBUTES,
-        lemmatize: bool = False,
-        lowercase: bool = True,
-    ) -> Union[AnyStr, List[AnyStr]]:
-        """Public method to convert a spaCy document into a list of strings or a string
-
-        Args:
-            document: A spaCy document returned by `tokenize_list` or `tokenized_df`
-            output_format: Choose "list" (default) to output a list of strings
-                Else, choose
-            filter_or_keep: Choose "filter" (default) to remove all tokens which match the list of `token_attributes`
-                Else, choose "keep" to keep only the tokens which match the list of `token_attributes`
-            token_attributes: List of spaCy token attributes, cf. https://spacy.io/api/token#attributes
-                User-defined token attributes are also accepted, for instance token._.yourattribute
-            lemmatize: If True, convert all strings to their lemmatized form
-            to_lower: If True, convert all strings to lowercase
-
-        Returns:
-            Depends on the chosen `output_format` argument:
-                List of strings if `output_format` == "list"
-                Text string if `output_format` == "str"
-                Spacy document if `output_format` == "doc"
-        """
-        (output_text_list, whitespace_list) = ([], [])
-        assert output_format in {"list", "str", "doc"}, "Choose either 'list', 'str' or 'doc' option"
-        assert filter_or_keep in {"filter", "keep"}, "Choose either 'filter' or 'keep' option"
-        for token in document:
-            match_token_attributes = [getattr(token, t, False) or getattr(token._, t, False) for t in token_attributes]
-            filter_conditions = filter_or_keep == "filter" and not any(match_token_attributes)
-            keep_conditions = filter_or_keep == "keep" and sum(match_token_attributes) >= 1
-            if filter_conditions or keep_conditions:
-                if lemmatize:
-                    token_text = token.lemma_
-                else:
-                    token_text = token.text.strip()
-                if token_text != "":
-                    output_text_list.append(token_text)
-                    try:
-                        whitespace_list.append(len(token.whitespace_) != 0 or token.nbor().is_punct)
-                    except IndexError:  # when reaching the end of the document, nbor() fails
-                        whitespace_list.append(False)
-        if lowercase:
-            output_text_list = [t.lower() for t in output_text_list]
-        if output_format == "list":
-            return output_text_list
-        else:
-            output_document = Doc(vocab=document.vocab, words=output_text_list, spaces=whitespace_list)
-            if output_format == "doc":
-                return output_document
-            else:
-                return output_format.text

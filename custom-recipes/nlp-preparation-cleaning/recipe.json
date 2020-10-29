@@ -71,6 +71,7 @@
             "type": "MULTISELECT",
             "name": "token_filters",
             "label": "Token filters",
+            "description": "Remove tokens matching these attributes",
             "getChoicesFromPython": true,
             "defaultValue": [
                 "is_space",
@@ -82,12 +83,32 @@
                 "is_measure",
                 "is_time",
                 "like_url",
-                "is_html_tag",
                 "like_email",
                 "is_username",
                 "is_hashtag",
                 "is_emoji"
             ]
+        },
+        {
+            "type": "SELECT",
+            "name": "token_simplification",
+            "label": "Token simplification",
+            "description": "spaCy language-specific methods based on predefined rules & lookup tables",
+            "selectChoices": [
+                {
+                    "value": "NONE",
+                    "label": "None"
+                },
+                {
+                    "value": "NORMALIZATION",
+                    "label": "Normalization (rules)"
+                },
+                {
+                    "value": "LEMMATIZATION_LOOKUPS",
+                    "label": "Lemmatization (lookups)"
+                }
+            ],
+            "defaultValue": "LEMMATIZATION_LOOKUPS"
         },
         {
             "name": "lowercase",
@@ -105,28 +126,6 @@
             "label": "Expert mode",
             "type": "BOOLEAN",
             "defaultValue": false
-        },
-        {
-            "type": "SELECT",
-            "name": "token_simplification",
-            "label": "Token simplification",
-            "description": "Language-specific rules & lookup tables cf. https://spacy.io/api/token#attributes",
-            "visibilityCondition": "model.expert",
-            "selectChoices": [
-                {
-                    "value": "NONE",
-                    "label": "None"
-                },
-                {
-                    "value": "LEMMATIZATION",
-                    "label": "Lemmatization"
-                },
-                {
-                    "value": "NORMALIZATION",
-                    "label": "Normalization"
-                }
-            ],
-            "defaultValue": "LEMMATIZATION"
         },
         {
             "type": "SELECT",
