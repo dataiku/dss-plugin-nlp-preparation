@@ -19,9 +19,11 @@ from plugin_io_utils import generate_unique, truncate_text_list
 
 
 # The constants below should cover a majority of cases for tokens with symbols and unit measurements: "8h", "90kmh", ...
-SYMBOL_REGEX = (
-    r"""[º°'"%&()％＆*+-<=>?\\[\]\/^_`{|}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏]+"""
+SYMBOL_REGEX = re.compile(
+    r"""[º°'"%&()％＆*+-<=>?|/\[]/«»^_`{}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏⸂⸃⸌⸝]+"""
 )
+TIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h)+", flags=re.IGNORECASE)
+NUMERIC_SEPARATOR_REGEX = re.compile(r"[.,]")
 ORDER_UNITS = ["eme", "th", "st", "nd", "rd", "k"]
 WEIGHT_UNITS = ["mg", "g", "kg", "t", "lb", "oz"]
 DISTANCE_SPEED_UNITS = ["mm", "cm", "m", "km", "in", "ft", "yd", "mi", "kmh", "mph"]
@@ -29,21 +31,24 @@ TIME_UNITS = ["ns", "ms", "s", "m", "min", "h", "d", "y"]
 VOLUME_UNITS = ["ml", "dl", "l", "pt", "qt", "gal"]
 MISC_UNITS = ["k", "a", "v", "mol", "cd", "w", "n", "c"]
 UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + TIME_UNITS + VOLUME_UNITS + MISC_UNITS
-TIME_REGEX = r"(:|-|\.|\/|am|AM|pm|PM|h|H)+"
+
 
 # Setting custom spaCy token extensions to allow for easier filtering in downstream tasks
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
 Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
+
 Token.set_extension(
     "is_symbol", getter=lambda token: re.sub(SYMBOL_REGEX, "", token.text) == "", force=True,
 )
 Token.set_extension(
-    "is_time", getter=lambda token: re.sub(TIME_REGEX, "", token.lower_).isdigit(), force=True,
+    "is_time", getter=lambda token: re.sub(TIME_REGEX, "", token.text).isdigit(), force=True,
 )
 Token.set_extension(
     "is_measure",
-    getter=lambda token: any([re.sub(r"[.,]", "", token.lower_).replace(s, "").isdigit() for s in UNITS]),
+    getter=lambda token: any(
+        [re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in UNITS]
+    ),
     force=True,
 )
 

@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Text Cleaning",
-        "description": "Tokenize, filter and lemmatize text data in 54 languages",
+        "description": "Tokenize, filter and simplify text data in 54 languages",
         "icon": "icon-align-justify",
         "displayOrderRank": 2
     },
@@ -63,6 +63,39 @@
             "visibilityCondition": "model.language == 'language_column'"
         },
         {
+            "name": "separator_cleaning",
+            "label": "Cleaning parameters",
+            "type": "SEPARATOR"
+        },
+        {
+            "type": "MULTISELECT",
+            "name": "token_filters",
+            "label": "Token filters",
+            "getChoicesFromPython": true,
+            "defaultValue": [
+                "is_space",
+                "is_punct",
+                "is_symbol",
+                "is_stop",
+                "like_num",
+                "is_currency",
+                "is_measure",
+                "is_time",
+                "like_url",
+                "is_html_tag",
+                "like_email",
+                "is_username",
+                "is_hashtag",
+                "is_emoji"
+            ]
+        },
+        {
+            "name": "lowercase",
+            "label": "Lowercase",
+            "type": "BOOLEAN",
+            "defaultValue": true
+        },
+        {
             "name": "separator_advanced",
             "label": "Advanced",
             "type": "SEPARATOR"
@@ -74,35 +107,56 @@
             "defaultValue": false
         },
         {
-            "type": "MULTISELECT",
-            "name": "token_filters",
-            "label": "Token filters",
-            "description": "Remove tokens matching these attributes and store them in new columns",
-            "getChoicesFromPython": true,
+            "type": "SELECT",
+            "name": "token_simplification",
+            "label": "Token simplification",
+            "description": "Language-specific rules & lookup tables cf. https://spacy.io/api/token#attributes",
             "visibilityCondition": "model.expert",
-            "defaultValue": [
-                "is_space",
-                "is_punct",
-                "is_symbol",
-                "is_stop",
-                "like_num",
-                "is_currency",
-                "is_measure",
-                "is_time",
-                "like_url",
-                "like_email",
-                "is_username",
-                "is_hashtag",
-                "is_emoji"
-            ]
+            "selectChoices": [
+                {
+                    "value": "NONE",
+                    "label": "None"
+                },
+                {
+                    "value": "LEMMATIZATION",
+                    "label": "Lemmatization"
+                },
+                {
+                    "value": "NORMALIZATION",
+                    "label": "Normalization"
+                }
+            ],
+            "defaultValue": "LEMMATIZATION"
         },
         {
-            "name": "lemmatization",
-            "label": "Lemmatization",
-            "type": "BOOLEAN",
+            "type": "SELECT",
+            "name": "unicode_normalization",
+            "label": "Unicode normalization",
+            "description": "Post-processing step cf. https://docs.python.org/3/library/unicodedata.html",
             "visibilityCondition": "model.expert",
-            "defaultValue": true,
-            "description": "Use fixed rules and lookup tables defined by spaCy for each language"
+            "selectChoices": [
+                {
+                    "value": "NONE",
+                    "label": "None"
+                },
+                {
+                    "value": "NFC",
+                    "label": "NFC"
+                },
+                {
+                    "value": "NFKC",
+                    "label": "NFKC"
+                },
+                {
+                    "value": "NFD",
+                    "label": "NFD"
+                },
+                {
+                    "value": "NFKD",
+                    "label": "NFKD"
+                }
+            ],
+            "defaultValue": "NONE"
         }
     ],
     "resourceKeys": []
