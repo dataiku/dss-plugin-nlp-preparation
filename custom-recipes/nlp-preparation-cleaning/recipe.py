@@ -2,14 +2,14 @@
 """Text Cleaning recipe script"""
 
 from plugin_config_loading import load_plugin_config_cleaning
+from spacy_tokenizer import MultilingualTokenizer
 from text_cleaner import TextCleaner
 from dku_io_utils import process_dataset_chunks, set_column_descriptions
-
-# from text_cleaner import TextCleaner
 
 # Setup
 params = load_plugin_config_cleaning()
 text_cleaner = TextCleaner(
+    tokenizer=MultilingualTokenizer(stopwords_folder_path=params["stopwords_folder_path"]),
     token_filters=params["token_filters"],
     lemmatization=params["lemmatization"],
     lowercase=params["lowercase"],

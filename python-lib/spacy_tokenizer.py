@@ -2,6 +2,7 @@
 """Module with a class to tokenize text data in multiple languages"""
 
 import re
+import os
 import logging
 from typing import List, AnyStr
 from time import time
@@ -93,6 +94,7 @@ class MultilingualTokenizer:
     def __init__(
         self,
         default_language: AnyStr = "xx",  # Multilingual model from spaCy
+        stopwords_folder_path: AnyStr = None,
         use_models: bool = False,
         hashtags_as_token: bool = True,
         batch_size: int = DEFAULT_BATCH_SIZE,
@@ -111,6 +113,7 @@ class MultilingualTokenizer:
 
         """
         self.default_language = default_language
+        self.stopwords_folder_path = stopwords_folder_path
         self.use_models = use_models
         self.hashtags_as_token = hashtags_as_token
         self.batch_size = int(batch_size)
@@ -147,6 +150,16 @@ class MultilingualTokenizer:
             if "#" in _prefixes:
                 _prefixes.remove("#")
                 nlp.tokenizer.prefix_search = spacy.util.compile_prefix_regex(_prefixes).search
+        if self.stopwords_folder_path and language != "xx":
+            try:
+                stopwords_file_path = os.path.join(self.stopwords_folder_path, f"{language}.txt")
+                with open(stopwords_file_path) as f:
+                    stopwords = set(f.read().splitlines())
+                nlp.Defaults.stop_words |= stopwords
+                for word in nlp.Defaults.stop_words:
+                    nlp.vocab[word].is_stop = True
+            except OSError as e:
+                logging.warning(f"Stopword file for language '{language}' not available because of error: '{e}'")
         logging.info(f"Loading tokenizer for language '{language}': Done in {time() - start:.2f} seconds.")
         return nlp
 

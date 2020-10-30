@@ -2,12 +2,14 @@
 """Misspelling Correction recipe script"""
 
 from plugin_config_loading import load_plugin_config_spellchecker
+from spacy_tokenizer import MultilingualTokenizer
 from symspell_checker import SpellChecker
 from dku_io_utils import process_dataset_chunks, set_column_descriptions
 
 # Setup
 params = load_plugin_config_spellchecker()
 spellchecker = SpellChecker(
+    tokenizer=MultilingualTokenizer(stopwords_folder_path=params["stopwords_folder_path"]),
     dictionary_folder_path=params["dictionary_folder_path"],
     ignore_token=params["ignore_word_regex"],
     edit_distance=params["edit_distance"],

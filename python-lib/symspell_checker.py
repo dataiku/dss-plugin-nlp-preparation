@@ -59,6 +59,7 @@ class SpellChecker:
 
     def __init__(
         self,
+        tokenizer: MultilingualTokenizer,
         dictionary_folder_path: AnyStr,
         custom_vocabulary_set: Set[AnyStr] = set(),
         custom_corrections: Dict = {},
@@ -85,7 +86,7 @@ class SpellChecker:
                 Adds ~20% processing time but allows to understand what the spellchecker did
 
         """
-        self._tokenizer = MultilingualTokenizer()
+        self.tokenizer = tokenizer
         self.dictionary_folder_path = dictionary_folder_path
         self.custom_vocabulary_set = custom_vocabulary_set
         self.custom_corrections = custom_corrections
@@ -221,7 +222,7 @@ class SpellChecker:
             else:
                 token_attributes = [
                     t
-                    for t in self._tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
+                    for t in self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
                     if getattr(token, t, False) or getattr(token._, t, False)
                 ]
                 if len(token_attributes) == 0:
@@ -232,7 +233,7 @@ class SpellChecker:
                         symspell_check[2],
                     )
                 else:
-                    attribute_name = self._tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES[token_attributes[0]].lower()
+                    attribute_name = self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES[token_attributes[0]].lower()
                     diagnosis = f"OK - Detected as '{attribute_name}', keeping as-is"
         if self.compute_diagnosis:
             diagnosis_tuple = (language, token.text, is_misspelled, correction, diagnosis)
@@ -338,7 +339,7 @@ class SpellChecker:
             column_name = generate_unique(k, df.keys(), text_column)
             df[column_name] = pd.Series([""] * len(df.index))
             self.output_column_descriptions[column_name] = v
-        self._tokenizer.tokenize_df(df, text_column, language_column, language)
+        self.tokenizer.tokenize_df(df, text_column, language_column, language)
 
     def _format_output_df(self, df: pd.DataFrame) -> None:
         """Private method to format the output dataframe after spellchecking
@@ -350,7 +351,7 @@ class SpellChecker:
             df: Input pandas DataFrame
 
         """
-        df.drop(self._tokenizer.tokenized_column, axis=1, inplace=True)
+        df.drop(self.tokenizer.tokenized_column, axis=1, inplace=True)
         corrected_text_column = list(self.output_column_descriptions.keys())[0]
         spelling_mistakes_column = list(self.output_column_descriptions.keys())[1]
         misspelling_count_column = list(self.output_column_descriptions.keys())[2]
@@ -385,7 +386,7 @@ class SpellChecker:
             languages = df[language_column].dropna().unique()
             for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
-                document_slice = df.loc[language_indices, self._tokenizer.tokenized_column]  # slicing df by language
+                document_slice = df.loc[language_indices, self.tokenizer.tokenized_column]  # slicing df by language
                 if len(document_slice) != 0:
                     tuple_list = self.check_document_list(document_list=document_slice, language=lang)
                     for i, column in enumerate(self.output_column_descriptions):
@@ -393,7 +394,7 @@ class SpellChecker:
                             [t[i] for t in tuple_list], index=document_slice.index
                         )
         else:
-            tuple_list = self.check_document_list(document_list=df[self._tokenizer.tokenized_column], language=language)
+            tuple_list = self.check_document_list(document_list=df[self.tokenizer.tokenized_column], language=language)
             for i, column in enumerate(self.output_column_descriptions):
                 df[column] = [t[i] for t in tuple_list]
         self._format_output_df(df)

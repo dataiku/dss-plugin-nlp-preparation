@@ -177,6 +177,9 @@ def load_plugin_config_spellchecker() -> Dict:
     else:
         logging.info("Spellchecker diagnosis will not be computed")
 
+    # path to the folder of stopwords
+    params["stopwords_folder_path"] = os.path.join(get_recipe_resource(), "stopwords")
+
     # path to the folder of dictionaries
     params["dictionary_folder_path"] = os.path.join(get_recipe_resource(), "dictionaries")
 
@@ -252,6 +255,9 @@ def load_plugin_config_cleaning() -> Dict:
     if len(output_dataset_names) == 0:
         raise PluginParamValidationError("Please specify output dataset")
     params["output_dataset"] = dataiku.Dataset(output_dataset_names[0])
+
+    # path to the folder of stopwords
+    params["stopwords_folder_path"] = os.path.join(get_recipe_resource(), "stopwords")
 
     # Text column selection
     params["text_column"] = recipe_config.get("text_column")

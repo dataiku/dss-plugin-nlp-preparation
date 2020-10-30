@@ -221,6 +221,7 @@ SUPPORTED_LANGUAGES_SPACY = {
     "lv": "Latvian",
     "ml": "Malayalam",
     "mr": "Marathi",
+    "ne": "Nepali",
     "nb": "Norwegian Bokmål",
     "nl": "Dutch",
     "pl": "Polish",
