@@ -11,9 +11,9 @@ from dku_io_utils import process_dataset_chunks, set_column_descriptions
 params = load_plugin_config_cleaning()
 text_cleaner = TextCleaner(
     token_filters=params["token_filters"],
-    token_simplification=params["token_simplification"],
-    unicode_normalization=params["unicode_normalization"],
+    lemmatization=params["lemmatization"],
     lowercase=params["lowercase"],
+    unicode_normalization=params["unicode_normalization"],
 )
 
 # Run

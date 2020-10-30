@@ -17,7 +17,7 @@ from dataiku.customrecipe import (
 from plugin_io_utils import clean_text_df
 from language_dict import SUPPORTED_LANGUAGES_PYCLD3, SUPPORTED_LANGUAGES_SYMSPELL, SUPPORTED_LANGUAGES_SPACY
 from spacy_tokenizer import MultilingualTokenizer
-from text_cleaner import TokenSimplification, UnicodeNormalization
+from text_cleaner import UnicodeNormalization
 
 
 class PluginParamValidationError(ValueError):
@@ -280,8 +280,8 @@ def load_plugin_config_cleaning() -> Dict:
     if not params["token_filters"] <= available_token_filters:
         raise PluginParamValidationError(f"Invalid token filters: {params['token_filters']-available_token_filters}")
     logging.info(f"Token filters: {params['token_filters']}")
-    params["token_simplification"] = TokenSimplification[recipe_config.get("token_simplification")]
-    logging.info(f"Token simplification: {params['token_simplification']}")
+    params["lemmatization"] = bool(recipe_config.get("lemmatization"))
+    logging.info(f"Lemmatization: {params['lemmatization']}")
     params["lowercase"] = bool(recipe_config.get("lowercase"))
     logging.info(f"Lowercase: {params['lowercase']}")
 

@@ -89,29 +89,16 @@
             ]
         },
         {
-            "type": "SELECT",
-            "name": "token_simplification",
-            "label": "Token simplification",
-            "description": "spaCy language-specific methods based on predefined rules & lookup tables",
-            "selectChoices": [
-                {
-                    "value": "NONE",
-                    "label": "None"
-                },
-                {
-                    "value": "NORMALIZATION",
-                    "label": "Normalization (rules)"
-                },
-                {
-                    "value": "LEMMATIZATION_LOOKUPS",
-                    "label": "Lemmatization (lookups)"
-                }
-            ],
-            "defaultValue": "LEMMATIZATION_LOOKUPS"
+            "name": "lemmatization",
+            "label": "Lemmatization",
+            "description": "Simplify words to their “lemma” form e.g. going -> go, mice -> mouse",
+            "type": "BOOLEAN",
+            "defaultValue": true
         },
         {
             "name": "lowercase",
             "label": "Lowercase",
+            "description": "Convert words to lowercase",
             "type": "BOOLEAN",
             "defaultValue": true
         },
