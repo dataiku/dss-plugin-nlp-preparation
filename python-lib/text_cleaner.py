@@ -96,7 +96,7 @@ class TextCleaner:
         if self.lowercase:
             cleaned_token = cleaned_token.lower()
         if self.unicode_normalization != UnicodeNormalization.NONE:
-            cleaned_token = normalize(unistr=cleaned_token, form=self.unicode_normalization.name)
+            cleaned_token = normalize(self.unicode_normalization.name, cleaned_token)
         if token.is_space:
             cleaned_token = " "
         return cleaned_token
