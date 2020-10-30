@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from plugin_config_loading import load_plugin_config_langdetect
 from language_detector import LanguageDetector
-from dku_io_utils import process_dataset_chunks, set_column_description
+from dku_io_utils import process_dataset_chunks, set_column_descriptions
 
 # Setup
 params = load_plugin_config_langdetect()
@@ -18,8 +18,8 @@ process_dataset_chunks(
     text_column=params["text_column"],
     func=detector.detect_languages_df,
 )
-set_column_description(
+set_column_descriptions(
     input_dataset=params["input_dataset"],
     output_dataset=params["output_dataset"],
-    column_description_dict=detector.column_description_dict,
+    column_descriptions=detector.column_descriptions,
 )

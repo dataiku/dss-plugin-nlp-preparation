@@ -27,9 +27,11 @@ class PluginParamValidationError(ValueError):
 
 
 def load_plugin_config_langdetect() -> Dict:
-    """
-    Helper function to load plugin recipe config into a clean parameter dictionary.
-    Applies checks for correct input config.
+    """Utility function to validate and load language detection parameters into a clean dictionary
+
+    Returns:
+        Dictionary of parameter names (key) and values
+
     """
     params = {}
     # input dataset
@@ -82,6 +84,7 @@ def custom_vocabulary_checker(custom_vocabulary_dataset: dataiku.Dataset) -> Set
 
     Returns:
         Set of words in the custom vocabulary
+
     """
     dataset_schema = custom_vocabulary_dataset.get_config()["schema"]
     columns = dataset_schema["columns"]
@@ -107,6 +110,7 @@ def custom_corrections_checker(custom_corrections_dataset: dataiku.Dataset) -> D
 
     Returns:
         Dictionary of words (key) and their custom correction (value)
+
     """
     dataset_schema = custom_corrections_dataset.get_config()["schema"]
     columns = dataset_schema["columns"]
@@ -128,6 +132,7 @@ def load_plugin_config_spellchecker() -> Dict:
 
     Returns:
         Dictionary of parameter names (key) and values
+
     """
     params = {}
     recipe_config = get_recipe_config()
@@ -230,6 +235,7 @@ def load_plugin_config_cleaning() -> Dict:
 
     Returns:
         Dictionary of parameter names (key) and values
+
     """
     params = {}
     recipe_config = get_recipe_config()

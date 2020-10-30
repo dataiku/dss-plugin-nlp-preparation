@@ -74,7 +74,6 @@
             "description": "Remove tokens matching these attributes",
             "getChoicesFromPython": true,
             "defaultValue": [
-                "is_space",
                 "is_punct",
                 "is_symbol",
                 "is_stop",

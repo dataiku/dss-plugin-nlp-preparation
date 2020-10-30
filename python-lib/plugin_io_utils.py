@@ -15,6 +15,7 @@ def clean_empty_list(sequence: List) -> Union[List, AnyStr]:
 
     Returns:
        Original list or empty string
+
     """
     output = ""
     if isinstance(sequence, list):
@@ -31,6 +32,7 @@ def unique_list(sequence: List) -> List:
 
     Returns:
        List with unique elements ordered by appearance in the original list
+
     """
     seen = set()
     return [x for x in sequence if not (x in seen or seen.add(x))]
@@ -45,6 +47,7 @@ def truncate_text_list(text_list: List[AnyStr], num_characters: int = 140) -> Li
 
     Returns:
        List with truncated strings
+
     """
     output_text_list = []
     for text in text_list:
@@ -65,6 +68,7 @@ def clean_text_df(df: pd.DataFrame, dropna_columns: List[AnyStr] = None) -> pd.D
 
     Returns:
        pandas.DataFrame with rows dropped in case of empty strings or NaN values
+
     """
     for col in df.columns:
         df[col] = df[col].str.strip().replace("", np.NaN)
@@ -82,6 +86,7 @@ def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr =
 
     Returns:
        Unique name with a number suffix in case of conflict, and an optional prefix
+
     """
     if prefix:
         new_name = f"{prefix}_{name}"
@@ -104,6 +109,7 @@ def move_columns_after(df: pd.DataFrame, columns_to_move: List[AnyStr], after_co
 
     Returns:
        pandas.DataFrame with reordered columns
+
     """
     after_column_position = df.columns.get_loc(after_column) + 1
     reordered_columns = (

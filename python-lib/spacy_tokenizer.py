@@ -64,6 +64,7 @@ class MultilingualTokenizer:
         batch_size (int): Number of documents to process in spaCy pipelines
         spacy_nlp_dict (dict): Dictionary holding spaCy Language instances (value) by language code (key)
         tokenized_column (str): Name of the dataframe column storing tokenized documents
+
     """
 
     DEFAULT_BATCH_SIZE = 1000
@@ -107,6 +108,7 @@ class MultilingualTokenizer:
                 Default is True, which overrides the spaCy default behavior
             batch_size (int, optional): Number of documents to process in spaCy pipelines
                 Default is set by the DEFAULT_BATCH_SIZE class constant
+
         """
         self.default_language = default_language
         self.use_models = use_models
@@ -125,6 +127,7 @@ class MultilingualTokenizer:
 
         Returns:
             spaCy Language instance with the tokenizer
+
         """
         start = time()
         logging.info(f"Loading tokenizer for language '{language}'...")
@@ -162,6 +165,7 @@ class MultilingualTokenizer:
 
         Raises:
             ValueError: If the language code is missing or not in SUPPORTED_LANGUAGES_SPACY
+
         """
         added_tokenizer = False
         if pd.isnull(language) or language == "":
@@ -185,6 +189,7 @@ class MultilingualTokenizer:
 
         Returns:
             List of tokenized spaCy documents
+
         """
         start = time()
         logging.info(f"Tokenizing {len(text_list)} texts in language '{language}'...")
@@ -226,6 +231,7 @@ class MultilingualTokenizer:
 
         Returns:
             DataFrame with all columns from the input, plus a new column with tokenized spaCy documents
+
         """
         self.tokenized_column = generate_unique("tokenized", df.keys(), text_column)
         # Initialize the tokenized column to empty documents
