@@ -83,8 +83,8 @@ class TextCleaner:
                 column_name = generate_unique(k, df.keys(), text_column)
                 self.output_column_descriptions[column_name] = v
             elif k in self.token_filters:
-                column_name = generate_unique(f"{v.lower()}_list", df.keys(), text_column)
-                self.output_column_descriptions[column_name] = f"List of {v.lower()}s in the original text"
+                column_name = generate_unique(f"{v.lower()}s", df.keys(), text_column)
+                self.output_column_descriptions[column_name] = f"{v}s in the original text"
         self.tokenizer.tokenize_df(df, text_column, language_column, language)
 
     @lru_cache(maxsize=1024)  # Memory cache to avoid cleaning a token which has been cleaned before
@@ -111,13 +111,18 @@ class TextCleaner:
             TODO
 
         """
-        output = {k: [] for k in self.OUTPUT_COLUMN_DESCRIPTIONS}
+        output = {k: "" for k in self.OUTPUT_COLUMN_DESCRIPTIONS}
         output["cleaned"] = ""
         for token in document:
             token_attributes = [t for t in self.token_filters if getattr(token, t, False) or getattr(token._, t, False)]
             if token_attributes:
                 first_token_attribute = token_attributes[0]
-                output[first_token_attribute].append(token.text)
+                output[first_token_attribute] += token.lower_ if self.lowercase else token.text
+                try:
+                    if token.whitespace_ or token.nbor().is_punct or token.nbor().is_space:
+                        output[first_token_attribute] += " "
+                except IndexError:  # when reaching the end of the document, nbor() fails
+                    pass
             else:
                 cleaned_token = self.clean_token(token)
                 if cleaned_token:
@@ -131,7 +136,8 @@ class TextCleaner:
                         output["cleaned"] += " "
                 except IndexError:  # when reaching the end of the document, nbor() fails
                     pass
-        output["cleaned"] = re.sub(WHITESPACE_REGEX, " ", output["cleaned"])  # remove multiple spaces
+        for k in output:
+            output[k] = re.sub(WHITESPACE_REGEX, " ", output[k])  # remove multiple spaces
         return output
 
     def clean_df(self, df: pd.DataFrame, text_column, language_column, language) -> pd.DataFrame:
@@ -156,7 +162,7 @@ class TextCleaner:
                 column_name = generate_unique(k, df.keys(), text_column)
                 df[column_name] = pd.Series([d[k] if d[k] else "" for d in output])
             elif k in self.token_filters:
-                column_name = generate_unique(f"{v.lower()}_list", df.keys(), text_column)
+                column_name = generate_unique(f"{v.lower()}s", df.keys(), text_column)
                 df[column_name] = pd.Series([d[k] if d[k] else "" for d in output])
         logging.info(f"Cleaning {len(df.index)} texts: Done in {time() - start:.2f} seconds.")
         del df[self.tokenizer.tokenized_column]

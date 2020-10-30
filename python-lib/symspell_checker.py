@@ -45,7 +45,8 @@ class SpellChecker:
     DEFAULT_NUM_THREADS = 4
     OUTPUT_COLUMN_DESCRIPTIONS = {
         "corrected": "Corrected text",
-        "misspelling_list": "List of misspellings",
+        "misspellings": "Misspelled text",
+        "misspelling_list": "List of unique misspellings",
         "misspelling_count": "Number of misspellings",
     }
     DIAGNOSIS_COLUMN_DESCRIPTIONS = {
@@ -254,8 +255,9 @@ class SpellChecker:
         Returns:
             Tuple of 3 elements:
                 1. Corrected spaCy document
-                2. List of misspellings as strings
-                3. Number of misspellings
+                2. Misspelled text
+                3. List of misspellings
+                4. Number of misspellings
 
         """
         (spelling_mistakes, corrected_word_list, whitespace_list) = ([], [], [])
@@ -277,8 +279,9 @@ class SpellChecker:
                 f"Spellchecking error: '{e}' for document: '{truncate_text_list([document.text])}' "
                 f"in language: '{language}', output columns will be empty"
             )
-        spelling_mistakes = unique_list(spelling_mistakes)
-        return (corrected_document.text, spelling_mistakes, len(spelling_mistakes))
+        misspellings = " ".join(spelling_mistakes)
+        misspelling_list = unique_list(spelling_mistakes)
+        return (corrected_document.text, misspellings, misspelling_list, len(spelling_mistakes))
 
     def check_document_list(self, document_list: List[Doc], language: AnyStr) -> List[Tuple[AnyStr, List, int]]:
         """Public method to check the spelling of a list of documents for a given language
@@ -301,7 +304,7 @@ class SpellChecker:
         start = time()
         num_doc = len(document_list)
         logging.info(f"Spellchecking {num_doc} documents in language '{language}'...")
-        tuple_list = [("", [], 0)] * len(document_list)
+        tuple_list = [("", "", [], 0)] * len(document_list)
         try:
             self._add_symspell_checker(language)
             doc_lang_iterator = ((doc, language) for doc in document_list)
@@ -353,8 +356,8 @@ class SpellChecker:
         """
         df.drop(self.tokenizer.tokenized_column, axis=1, inplace=True)
         corrected_text_column = list(self.output_column_descriptions.keys())[0]
-        spelling_mistakes_column = list(self.output_column_descriptions.keys())[1]
-        misspelling_count_column = list(self.output_column_descriptions.keys())[2]
+        spelling_mistakes_column = list(self.output_column_descriptions.keys())[2]
+        misspelling_count_column = list(self.output_column_descriptions.keys())[3]
         df[spelling_mistakes_column] = df[spelling_mistakes_column].apply(clean_empty_list)
         df.loc[df[corrected_text_column] == "", misspelling_count_column] = ""
 
