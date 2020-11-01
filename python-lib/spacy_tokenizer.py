@@ -74,18 +74,18 @@ class MultilingualTokenizer:
     DEFAULT_BATCH_SIZE = 1000
     DEFAULT_NUM_PROCESS = 2
     DEFAULT_FILTER_TOKEN_ATTRIBUTES = {
-        "is_space": "Whitespaces",
-        "is_punct": "Punctuations",
-        "is_stop": "Stopwords",
-        "like_num": "Numbers",
-        "is_currency": "Currencies",
-        "is_measure": "Measures",
-        "is_time": "Times",
-        "like_url": "URLs",
-        "like_email": "Emails",
-        "is_username": "Usernames",
-        "is_hashtag": "Hashtags",
-        "is_emoji": "Emojis",
+        "is_space": "Whitespace",
+        "is_punct": "Punctuation",
+        "is_stop": "Stopword",
+        "like_num": "Number",
+        "is_currency": "Currency symbol",
+        "is_measure": "Measure",
+        "is_time": "Time",
+        "like_url": "URL",
+        "like_email": "Email",
+        "is_username": "Username",
+        "is_hashtag": "Hashtag",
+        "is_emoji": "Emoji",
     }
     """dict: Available native and custom spaCy token attributes for filtering
 

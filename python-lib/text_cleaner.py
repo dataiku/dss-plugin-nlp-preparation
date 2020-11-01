@@ -83,8 +83,8 @@ class TextCleaner:
                 column_name = generate_unique(k, df.keys(), text_column)
                 self.output_column_descriptions[column_name] = v
             elif k in self.token_filters:
-                column_name = generate_unique(f"{v.lower()}", df.keys(), text_column)
-                self.output_column_descriptions[column_name] = f"{v} in the original text"
+                column_name = generate_unique(f"{v.lower()}s", df.keys(), text_column)
+                self.output_column_descriptions[column_name] = f"{v}s in the original text"
         self.tokenizer.tokenize_df(df, text_column, language_column, language)
 
     @lru_cache(maxsize=1024)  # Memory cache to avoid cleaning a token which has been cleaned before
@@ -162,7 +162,7 @@ class TextCleaner:
                 column_name = generate_unique(k, df.keys(), text_column)
                 df[column_name] = pd.Series([d[k] if d[k] else "" for d in output])
             elif k in self.token_filters:
-                column_name = generate_unique(f"{v.lower()}", df.keys(), text_column)
+                column_name = generate_unique(f"{v.lower()}s", df.keys(), text_column)
                 df[column_name] = pd.Series([d[k] if d[k] else "" for d in output])
         logging.info(f"Cleaning {len(df.index)} texts: Done in {time() - start:.2f} seconds.")
         del df[self.tokenizer.tokenized_column]

@@ -228,8 +228,9 @@ class SpellChecker:
                     if getattr(token, t, False) or getattr(token._, t, False)
                 ]
                 if len(token_attributes) == 0:
-                    if re.sub(r"\W+", " ", token.text).strip():  # check for invisible characters
-                        symspell_check = self.symspell_check_word(token.text, language)
+                    cleaned_text = re.sub(r"\W+", " ", token.text).strip()  # remove invisible characters
+                    if cleaned_text:
+                        symspell_check = self.symspell_check_word(cleaned_text, language)
                         (is_misspelled, correction, diagnosis) = (
                             symspell_check[0],
                             symspell_check[1],
