@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Module with read/write utility functions which are *not* based on the Dataiku API"""
 
+import re
 from typing import List, AnyStr, Union
 
 import pandas as pd
@@ -88,6 +89,9 @@ def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr =
        Unique name with a number suffix in case of conflict, and an optional prefix
 
     """
+    name = re.sub(r"[^\x00-\x7F]", "_", name).replace(
+        " ", "_"
+    )  # replace non ASCII and whitespace characters by an underscore _
     if prefix:
         new_name = f"{prefix}_{name}"
     else:

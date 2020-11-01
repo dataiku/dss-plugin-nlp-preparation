@@ -171,8 +171,12 @@ class SpellChecker:
         """
         (is_misspelled, correction, diagnosis) = (False, word, "")
         try:
+            cleaned_text = word.strip()  # re.sub(r"\W+", " ", word).strip()  # remove invisible characters
+            # if not cleaned_text:
+            #    diagnosis = "OK - Invisible characters"
+            # else:
             correction_suggestions = self._symspell_checker_dict[language].lookup(
-                word,
+                cleaned_text,
                 verbosity=self.SUGGESTION_VERBOSITY,
                 max_edit_distance=self.edit_distance,
                 ignore_token=self.ignore_token,
@@ -180,7 +184,7 @@ class SpellChecker:
             )
             if len(correction_suggestions) != 0:
                 correction_suggestion = correction_suggestions[0].term
-                if correction_suggestion.lower() != word.lower():
+                if correction_suggestion.lower() != cleaned_text.lower():
                     diagnosis = "NOK - Corrected by spellchecker"
                     (is_misspelled, correction) = (True, correction_suggestion)
                 else:
@@ -228,17 +232,15 @@ class SpellChecker:
                     if getattr(token, t, False) or getattr(token._, t, False)
                 ]
                 if len(token_attributes) == 0:
-                    cleaned_text = re.sub(r"\W+", " ", token.text).strip()  # remove invisible characters
-                    if cleaned_text:
-                        symspell_check = self.symspell_check_word(cleaned_text, language)
-                        (is_misspelled, correction, diagnosis) = (
-                            symspell_check[0],
-                            symspell_check[1],
-                            symspell_check[2],
-                        )
-                        if len(correction) == 1:
-                            print("prout")
-                            print(f"{token.text} -> {correction} - {token_attributes}")
+                    symspell_check = self.symspell_check_word(token.text, language)
+                    (is_misspelled, correction, diagnosis) = (
+                        symspell_check[0],
+                        symspell_check[1],
+                        symspell_check[2],
+                    )
+                    # if len(correction) == 1:
+                    #     print("prout")
+                    #     print(f"{token.text} -> {correction} - {token_attributes}")
                 else:
                     attribute_name = self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES[token_attributes[0]].lower()
                     diagnosis = f"OK - Detected as '{attribute_name}', keeping as-is"

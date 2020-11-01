@@ -23,15 +23,14 @@ from plugin_io_utils import generate_unique, truncate_text_list
 SYMBOL_REGEX = re.compile(
     r"""[º°'"%&()％＆*+\-<=>?\\[\]\/^_`{|}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏]+"""
 )
-TIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h)+", flags=re.IGNORECASE)
+TIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h|hr|min|s|ms|ns|y)+", flags=re.IGNORECASE)
 NUMERIC_SEPARATOR_REGEX = re.compile(r"[.,]")
 ORDER_UNITS = ["eme", "th", "st", "nd", "rd", "k"]
 WEIGHT_UNITS = ["mg", "g", "kg", "t", "lb", "oz"]
 DISTANCE_SPEED_UNITS = ["mm", "cm", "m", "km", "in", "ft", "yd", "mi", "kmh", "mph"]
-TIME_UNITS = ["ns", "ms", "s", "m", "min", "h", "d", "y"]
 VOLUME_UNITS = ["ml", "dl", "l", "pt", "qt", "gal"]
 MISC_UNITS = ["k", "a", "v", "mol", "cd", "w", "n", "c"]
-UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + TIME_UNITS + VOLUME_UNITS + MISC_UNITS
+UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + VOLUME_UNITS + MISC_UNITS
 
 
 # Setting custom spaCy token extensions to allow for easier filtering in downstream tasks
@@ -39,8 +38,10 @@ Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", for
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
 Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
 Token.set_extension(
-    "is_symbol", getter=lambda token: not token.is_punct and re.match(SYMBOL_REGEX, token.text), force=True
-)
+    "is_symbol",
+    getter=lambda token: not token.is_punct and re.search(SYMBOL_REGEX, re.sub(r"\W+", "", token.text).strip()),
+    force=True,
+)  # TODO FIX THIS IT AIN'T WORKING
 Token.set_extension(
     "is_time",
     getter=lambda token: not token.like_num
