@@ -6,6 +6,7 @@
 import os
 import pandas as pd
 
+from spacy_tokenizer import MultilingualTokenizer  # noqa
 from symspell_checker import SpellChecker  # noqa
 
 dictionary_folder_path = os.getenv("DICTIONARY_FOLDER_PATH")
@@ -15,7 +16,7 @@ def test_spellcheck_df_english():
     input_df = pd.DataFrame(
         {"input_text": ["Can yu read tHISs message despite the horible AB1234 sppeling msitakes 😂 #OMG"]}
     )
-    spellchecker = SpellChecker(dictionary_folder_path)
+    spellchecker = SpellChecker(tokenizer=MultilingualTokenizer, dictionary_folder_path=dictionary_folder_path)
     output_df = spellchecker.check_df(df=input_df, text_column="input_text", language="en")
     corrected_text_column = list(spellchecker.output_column_description_dict.keys())[0]
     corrected_text = output_df[corrected_text_column][0]
@@ -34,7 +35,9 @@ def test_spellcheck_df_multilingual():
             "language": ["en", "fr", "es"],
         }
     )
-    spellchecker = SpellChecker(dictionary_folder_path, custom_vocabulary_set={"PTDR"})
+    spellchecker = SpellChecker(
+        tokenizer=MultilingualTokenizer, dictionary_folder_path=dictionary_folder_path, custom_vocabulary_set={"PTDR"}
+    )
     output_df = spellchecker.check_df(df=input_df, text_column="input_text", language_column="language")
     corrected_text_column = list(spellchecker.output_column_description_dict.keys())[0]
     corrected_texts = output_df[corrected_text_column].values.tolist()

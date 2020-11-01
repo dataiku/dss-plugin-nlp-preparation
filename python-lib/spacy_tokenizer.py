@@ -38,18 +38,21 @@ UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + TIME_UNITS + VOLUME_
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
 Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
-
 Token.set_extension(
-    "is_symbol", getter=lambda token: re.sub(SYMBOL_REGEX, "", token.text) == "", force=True,
+    "is_symbol", getter=lambda token: not token.is_punct and re.match(SYMBOL_REGEX, token.text), force=True
 )
 Token.set_extension(
-    "is_time", getter=lambda token: re.sub(TIME_REGEX, "", token.text).isdigit(), force=True,
+    "is_time",
+    getter=lambda token: not token.like_num
+    and token.text[:1].isdigit()
+    and re.sub(TIME_REGEX, "", token.text).isdigit(),
+    force=True,
 )
 Token.set_extension(
     "is_measure",
-    getter=lambda token: any(
-        [re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in UNITS]
-    ),
+    getter=lambda token: not token.like_num
+    and token.text[:1].isdigit()
+    and any([re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in UNITS]),
     force=True,
 )
 
@@ -71,19 +74,18 @@ class MultilingualTokenizer:
     DEFAULT_BATCH_SIZE = 1000
     DEFAULT_NUM_PROCESS = 2
     DEFAULT_FILTER_TOKEN_ATTRIBUTES = {
-        "is_space": "Whitespace",
-        "is_punct": "Punctuation",
-        "is_symbol": "Symbol",
-        "is_stop": "Stopword",
-        "like_num": "Number",
-        "is_currency": "Currency",
-        "is_measure": "Measure",
-        "is_time": "Time",
-        "like_url": "URL",
-        "like_email": "Email",
-        "is_username": "Username",
-        "is_hashtag": "Hashtag",
-        "is_emoji": "Emoji",
+        "is_space": "Whitespaces",
+        "is_punct": "Punctuations",
+        "is_stop": "Stopwords",
+        "like_num": "Numbers",
+        "is_currency": "Currencies",
+        "is_measure": "Measures",
+        "is_time": "Times",
+        "like_url": "URLs",
+        "like_email": "Emails",
+        "is_username": "Usernames",
+        "is_hashtag": "Hashtags",
+        "is_emoji": "Emojis",
     }
     """dict: Available native and custom spaCy token attributes for filtering
 
@@ -150,14 +152,17 @@ class MultilingualTokenizer:
             if "#" in _prefixes:
                 _prefixes.remove("#")
                 nlp.tokenizer.prefix_search = spacy.util.compile_prefix_regex(_prefixes).search
-        if self.stopwords_folder_path and language != "xx":
+        if self.stopwords_folder_path and language in SUPPORTED_LANGUAGES_SPACY:
             try:
                 stopwords_file_path = os.path.join(self.stopwords_folder_path, f"{language}.txt")
                 with open(stopwords_file_path) as f:
-                    stopwords = set(f.read().splitlines())
-                nlp.Defaults.stop_words |= stopwords
-                for word in nlp.Defaults.stop_words:
+                    custom_stopwords = set(f.read().splitlines())
+                for word in custom_stopwords:
                     nlp.vocab[word].is_stop = True
+                for word in nlp.Defaults.stop_words:
+                    if word not in custom_stopwords:
+                        nlp.vocab[word].is_stop = False
+                nlp.Defaults.stop_words = custom_stopwords
             except OSError as e:
                 logging.warning(f"Stopword file for language '{language}' not available because of error: '{e}'")
         logging.info(f"Loading tokenizer for language '{language}': Done in {time() - start:.2f} seconds.")

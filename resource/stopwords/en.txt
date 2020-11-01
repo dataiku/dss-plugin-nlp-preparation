@@ -1,3 +1,9 @@
+'d
+'ll
+'m
+'re
+'s
+'ve
 a
 about
 above
@@ -111,6 +117,7 @@ herein
 hereupon
 hers
 herself
+hi
 him
 himself
 his
@@ -305,3 +312,15 @@ your
 yours
 yourself
 yourselves
+‘d
+‘ll
+‘m
+‘re
+‘s
+‘ve
+’d
+’ll
+’m
+’re
+’s
+’ve

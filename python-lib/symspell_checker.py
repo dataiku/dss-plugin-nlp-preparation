@@ -2,6 +2,7 @@
 """Module with a class to check and correct misspellings in multiple languages"""
 
 import logging
+import re
 from typing import List, AnyStr, Set, Tuple, Dict, Pattern
 from concurrent.futures import ThreadPoolExecutor
 from collections import Counter
@@ -227,12 +228,16 @@ class SpellChecker:
                     if getattr(token, t, False) or getattr(token._, t, False)
                 ]
                 if len(token_attributes) == 0:
-                    symspell_check = self.symspell_check_word(token.text, language)
-                    (is_misspelled, correction, diagnosis) = (
-                        symspell_check[0],
-                        symspell_check[1],
-                        symspell_check[2],
-                    )
+                    if re.sub(r"\W+", " ", token.text).strip():  # check for invisible characters
+                        symspell_check = self.symspell_check_word(token.text, language)
+                        (is_misspelled, correction, diagnosis) = (
+                            symspell_check[0],
+                            symspell_check[1],
+                            symspell_check[2],
+                        )
+                        if len(correction) == 1:
+                            print("prout")
+                            print(f"{token.text} -> {correction} - {token_attributes}")
                 else:
                     attribute_name = self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES[token_attributes[0]].lower()
                     diagnosis = f"OK - Detected as '{attribute_name}', keeping as-is"
