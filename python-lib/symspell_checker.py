@@ -237,9 +237,6 @@ class SpellChecker:
                         symspell_check[1],
                         symspell_check[2],
                     )
-                    if correction == "a":
-                        print("prout")
-                        print(f"{token.text} -> {correction} - {token_attributes}")
                 else:
                     attribute_name = self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES[token_attributes[0]].lower()
                     diagnosis = f"OK - Detected as '{attribute_name}', keeping as-is"

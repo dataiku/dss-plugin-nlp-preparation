@@ -23,8 +23,7 @@ from plugin_io_utils import generate_unique, truncate_text_list
 SYMBOL_REGEX = re.compile(
     r"""[º°'"%&()％＆*+\-<=>?\\[\]\/^_`{|}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏]+"""
 )
-WORD_REGEX = re.compile(r"\W+")
-TIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h|hr|min|s|ms|ns|y)+", flags=re.IGNORECASE)
+DATETIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h|hr|min||mins|s|sec|ms|ns|y)+", flags=re.IGNORECASE)
 NUMERIC_SEPARATOR_REGEX = re.compile(r"[.,]")
 ORDER_UNITS = ["eme", "th", "st", "nd", "rd", "k"]
 WEIGHT_UNITS = ["mg", "g", "kg", "t", "lb", "oz"]
@@ -38,22 +37,27 @@ UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + VOLUME_UNITS + MISC_
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
 Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
-Token.set_extension("is_space", getter=lambda token: not re.sub(WORD_REGEX, "", token.text).strip(), force=True)
+Token.set_extension(
+    "is_space", getter=lambda token: not token.text.isprintable(), force=True
+)  # For some reason, spaCy does not correctly detect all invisible characters
 Token.set_extension(
     "is_symbol",
-    getter=lambda token: not token.is_punct and re.search(SYMBOL_REGEX, re.sub(WORD_REGEX, "", token.text).strip()),
+    getter=lambda token: not token.is_punct
+    and not token.is_currency
+    and not re.sub(SYMBOL_REGEX, "", token.text).strip(),
     force=True,
-)  # TODO FIX THIS IT AIN'T WORKING
+)
 Token.set_extension(
-    "is_time",
+    "is_datetime",
     getter=lambda token: not token.like_num
     and token.text[:1].isdigit()
-    and re.sub(TIME_REGEX, "", token.text).isdigit(),
+    and re.sub(DATETIME_REGEX, "", token.text).isdigit(),
     force=True,
 )
 Token.set_extension(
     "is_measure",
     getter=lambda token: not token.like_num
+    and not getattr(token._, "is_datetime", False)
     and token.text[:1].isdigit()
     and any([re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in UNITS]),
     force=True,
@@ -81,9 +85,10 @@ class MultilingualTokenizer:
         "is_punct": "Punctuation",
         "is_stop": "Stopword",
         "like_num": "Number",
-        "is_currency": "Currency symbol",
+        "is_symbol": "Symbol",
+        "is_currency": "Currency sign",
         "is_measure": "Measure",
-        "is_time": "Time",
+        "is_datetime": "Datetime",
         "like_url": "URL",
         "like_email": "Email",
         "is_username": "Username",

@@ -80,7 +80,7 @@
                 "like_num",
                 "is_currency",
                 "is_measure",
-                "is_time",
+                "is_datetime",
                 "like_url",
                 "like_email",
                 "is_username",
