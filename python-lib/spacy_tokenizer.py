@@ -23,6 +23,7 @@ from plugin_io_utils import generate_unique, truncate_text_list
 SYMBOL_REGEX = re.compile(
     r"""[º°'"%&()％＆*+\-<=>?\\[\]\/^_`{|}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏]+"""
 )
+WORD_REGEX = re.compile(r"\W+")
 TIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h|hr|min|s|ms|ns|y)+", flags=re.IGNORECASE)
 NUMERIC_SEPARATOR_REGEX = re.compile(r"[.,]")
 ORDER_UNITS = ["eme", "th", "st", "nd", "rd", "k"]
@@ -37,9 +38,10 @@ UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + VOLUME_UNITS + MISC_
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
 Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
+Token.set_extension("is_space", getter=lambda token: not re.sub(WORD_REGEX, "", token.text).strip(), force=True)
 Token.set_extension(
     "is_symbol",
-    getter=lambda token: not token.is_punct and re.search(SYMBOL_REGEX, re.sub(r"\W+", "", token.text).strip()),
+    getter=lambda token: not token.is_punct and re.search(SYMBOL_REGEX, re.sub(WORD_REGEX, "", token.text).strip()),
     force=True,
 )  # TODO FIX THIS IT AIN'T WORKING
 Token.set_extension(
@@ -160,9 +162,11 @@ class MultilingualTokenizer:
                     custom_stopwords = set(f.read().splitlines())
                 for word in custom_stopwords:
                     nlp.vocab[word].is_stop = True
+                    nlp.vocab[word.capitalize()].is_stop = True
                 for word in nlp.Defaults.stop_words:
                     if word not in custom_stopwords:
                         nlp.vocab[word].is_stop = False
+                        nlp.vocab[word.capitalize()].is_stop = False
                 nlp.Defaults.stop_words = custom_stopwords
             except OSError as e:
                 logging.warning(f"Stopword file for language '{language}' not available because of error: '{e}'")

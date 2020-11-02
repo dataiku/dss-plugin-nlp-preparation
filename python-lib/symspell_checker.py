@@ -2,7 +2,6 @@
 """Module with a class to check and correct misspellings in multiple languages"""
 
 import logging
-import re
 from typing import List, AnyStr, Set, Tuple, Dict, Pattern
 from concurrent.futures import ThreadPoolExecutor
 from collections import Counter
@@ -238,9 +237,9 @@ class SpellChecker:
                         symspell_check[1],
                         symspell_check[2],
                     )
-                    # if len(correction) == 1:
-                    #     print("prout")
-                    #     print(f"{token.text} -> {correction} - {token_attributes}")
+                    if correction == "a":
+                        print("prout")
+                        print(f"{token.text} -> {correction} - {token_attributes}")
                 else:
                     attribute_name = self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES[token_attributes[0]].lower()
                     diagnosis = f"OK - Detected as '{attribute_name}', keeping as-is"
@@ -454,6 +453,7 @@ class SpellChecker:
             df.loc[language_indices, "word_count"] = df_slice.apply(lambda x: self._token_dict[lang].get(x, 0))
         # Cleaning and sorting output dataframe
         df.loc[~df["is_misspelled"], "corrected_word"] = ""
+        df = df.loc[~df["spellcheck_diagnosis"].str.contains("whitespace")]
         df = df.sort_values(by=["is_misspelled", "word_count"], ascending=False)
         logging.info(f"Computing spellchecker diagnosis: Done in {time() - start:.2f} seconds.")
         return df
