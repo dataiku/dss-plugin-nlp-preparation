@@ -12,3 +12,4 @@ pythainlp==2.2.4
 pyvi==0.1
 tqdm==4.50.2
 emoji==0.6.0
+regex==2020.10.28

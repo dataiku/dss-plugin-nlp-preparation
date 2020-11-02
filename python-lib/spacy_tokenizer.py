@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Module with a class to tokenize text data in multiple languages"""
 
-import re
+import regex as re
 import os
 import logging
 from typing import List, AnyStr
@@ -20,9 +20,8 @@ from plugin_io_utils import generate_unique, truncate_text_list
 
 
 # The constants below should cover a majority of cases for tokens with symbols and unit measurements: "8h", "90kmh", ...
-SYMBOL_REGEX = re.compile(
-    r"""[º°'"%&()％＆*+\-<=>?\\[\]\/^_`{|}~_！？｡。＂＇（）＊＋，－／：；＜＝＞［＼］＾＿｀｛｜｝～｟｠｢｣､、〃《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏]+"""
-)
+SYMBOL_CHARS_REGEX = re.compile(r"(\p{M}|\p{S}|\p{P})+")  # using unicode categories
+INVISIBLE_CHARS_REGEX = re.compile(r"(\p{C}|\p{Z})+")  # using unicode categories
 DATETIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h|hr|min||mins|s|sec|ms|ns|y)+", flags=re.IGNORECASE)
 NUMERIC_SEPARATOR_REGEX = re.compile(r"[.,]")
 ORDER_UNITS = ["eme", "th", "st", "nd", "rd", "k"]
@@ -38,13 +37,11 @@ Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", for
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
 Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
 Token.set_extension(
-    "is_space", getter=lambda token: not token.text.isprintable(), force=True
-)  # For some reason, spaCy does not correctly detect all invisible characters
-Token.set_extension(
     "is_symbol",
     getter=lambda token: not token.is_punct
     and not token.is_currency
-    and not re.sub(SYMBOL_REGEX, "", token.text).strip(),
+    and not getattr(token._, "is_emoji", False)
+    and not re.sub(SYMBOL_CHARS_REGEX, "", token.text).strip(),
     force=True,
 )
 Token.set_extension(
@@ -62,6 +59,16 @@ Token.set_extension(
     and any([re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in UNITS]),
     force=True,
 )
+Token.set_extension(
+    "is_space",
+    getter=lambda token: not getattr(token._, "is_symbol", False)
+    and not getattr(token._, "is_emoji", False)
+    and (
+        not "".join(c for c in token.text.strip() if c.isprintable())
+        or not re.sub(INVISIBLE_CHARS_REGEX, "", token.text.strip())
+    ),
+    force=True,
+)  # For some reason, spaCy does not correctly detect all invisible characters
 
 
 class MultilingualTokenizer:

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Module with a class to check and correct misspellings in multiple languages"""
 
+import unicodedata
 import logging
 from typing import List, AnyStr, Set, Tuple, Dict, Pattern
 from concurrent.futures import ThreadPoolExecutor
@@ -257,7 +258,7 @@ class SpellChecker:
             language: Language code in ISO 639-1 format
 
         Returns:
-            Tuple of 3 elements:
+            Tuple with 4 elements:
                 1. Corrected spaCy document
                 2. Misspelled text
                 3. List of misspellings
@@ -283,7 +284,7 @@ class SpellChecker:
                 f"Spellchecking error: '{e}' for document: '{truncate_text_list([document.text])}' "
                 f"in language: '{language}', output columns will be empty"
             )
-        misspellings = " ".join(spelling_mistakes)
+        misspellings = " ".join(spelling_mistakes).strip()
         misspelling_list = unique_list(spelling_mistakes)
         return (corrected_document.text, misspellings, misspelling_list, len(spelling_mistakes))
 
@@ -299,10 +300,11 @@ class SpellChecker:
             language: Language code in ISO 639-1 format
 
         Returns:
-            List of tuples with 3 elements:
+            List of tuples with 4 elements:
                 1. Corrected spaCy document
-                2. List of misspellings as strings
-                3. Number of misspellings
+                2. Misspelled text
+                3. List of misspellings
+                4. Number of misspellings
 
         """
         start = time()
