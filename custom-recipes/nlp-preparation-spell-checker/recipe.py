@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Misspelling Correction recipe script"""
+"""Spell Checking recipe script"""
 
 from plugin_config_loading import load_plugin_config_spellchecker
 from spacy_tokenizer import MultilingualTokenizer
