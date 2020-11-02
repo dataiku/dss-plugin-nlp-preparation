@@ -19,23 +19,14 @@ from language_dict import SUPPORTED_LANGUAGES_SPACY, SPACY_LANGUAGE_MODELS
 from plugin_io_utils import generate_unique, truncate_text_list
 
 
-# The constants below should cover a majority of cases for tokens with symbols and unit measurements: "8h", "90kmh", ...
-SYMBOL_CHARS_REGEX = re.compile(r"(\p{M}|\p{S}|\p{P})+")  # using unicode categories
-INVISIBLE_CHARS_REGEX = re.compile(r"(\p{C}|\p{Z})+")  # using unicode categories
-DATETIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h|hr|min||mins|s|sec|ms|ns|y)+", flags=re.IGNORECASE)
-NUMERIC_SEPARATOR_REGEX = re.compile(r"[.,]")
-ORDER_UNITS = ["eme", "th", "st", "nd", "rd", "k"]
-WEIGHT_UNITS = ["mg", "g", "kg", "t", "lb", "oz"]
-DISTANCE_SPEED_UNITS = ["mm", "cm", "m", "km", "in", "ft", "yd", "mi", "kmh", "mph"]
-VOLUME_UNITS = ["ml", "dl", "l", "pt", "qt", "gal"]
-MISC_UNITS = ["k", "a", "v", "mol", "cd", "w", "n", "c"]
-UNITS = ORDER_UNITS + WEIGHT_UNITS + DISTANCE_SPEED_UNITS + VOLUME_UNITS + MISC_UNITS
-
-
 # Setting custom spaCy token extensions to allow for easier filtering in downstream tasks
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
 Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
+
+SYMBOL_CHARS_REGEX = re.compile(
+    r"(\p{M}|\p{S}|\p{P})+"
+)  # matches unicode categories M (marks), S (symbols) and P (punctuations)
 Token.set_extension(
     "is_symbol",
     getter=lambda token: not token.is_punct
@@ -44,31 +35,42 @@ Token.set_extension(
     and not re.sub(SYMBOL_CHARS_REGEX, "", token.text).strip(),
     force=True,
 )
+
+DATETIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h|hr|min||mins|s|sec|ms|ns|y)+", flags=re.IGNORECASE)
 Token.set_extension(
     "is_datetime",
-    getter=lambda token: not token.like_num
+    getter=lambda token: not token.like_num  # avoid conflict with existing token attribute
     and token.text[:1].isdigit()
     and re.sub(DATETIME_REGEX, "", token.text).isdigit(),
     force=True,
 )
+
+NUMERIC_SEPARATOR_REGEX = re.compile(r"[.,]")
+ORDER_UNITS = {"eme", "th", "st", "nd", "rd", "k"}
+WEIGHT_UNITS = {"mg", "g", "kg", "t", "lb", "oz"}
+DISTANCE_SPEED_UNITS = {"mm", "cm", "m", "km", "in", "ft", "yd", "mi", "kmh", "mph"}
+VOLUME_UNITS = {"ml", "dl", "l", "pt", "qt", "gal"}
+MISC_UNITS = {"k", "a", "v", "mol", "cd", "w", "n", "c"}
+ALL_UNITS = ORDER_UNITS | WEIGHT_UNITS | DISTANCE_SPEED_UNITS | VOLUME_UNITS | MISC_UNITS
 Token.set_extension(
     "is_measure",
-    getter=lambda token: not token.like_num
+    getter=lambda token: not token.like_num  # avoid conflict with existing token attribute
     and not getattr(token._, "is_datetime", False)
     and token.text[:1].isdigit()
-    and any([re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in UNITS]),
+    and any([re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in ALL_UNITS]),
     force=True,
 )
+
+INVISIBLE_CHARS_REGEX = re.compile(r"(\p{C}|\p{Z})+")  # matches unicode categories C (control chars) and Z (separators)
 Token.set_extension(
     "is_space",
-    getter=lambda token: not getattr(token._, "is_symbol", False)
-    and not getattr(token._, "is_emoji", False)
+    getter=lambda token: not getattr(token._, "is_symbol", False)  # avoid conflict with existing token attribute
     and (
         not "".join(c for c in token.text.strip() if c.isprintable())
         or not re.sub(INVISIBLE_CHARS_REGEX, "", token.text.strip())
     ),
     force=True,
-)  # For some reason, spaCy does not correctly detect all invisible characters
+)  # spaCy does not correctly detect all invisible characters so we need to add this custom attribute
 
 
 class MultilingualTokenizer:

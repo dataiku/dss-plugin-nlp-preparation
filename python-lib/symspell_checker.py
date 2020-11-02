@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Module with a class to check and correct misspellings in multiple languages"""
 
-import unicodedata
 import logging
 from typing import List, AnyStr, Set, Tuple, Dict, Pattern
 from concurrent.futures import ThreadPoolExecutor
