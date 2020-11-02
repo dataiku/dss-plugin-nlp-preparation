@@ -99,7 +99,7 @@ def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr =
     for j in range(1, 1001):
         if new_name not in existing_names:
             return new_name
-        new_name = f"{name}_{j}"
+        new_name = f"{new_name}_{j}"
     raise RuntimeError(f"Failed to generated a unique name for '{name}'")
 
 
