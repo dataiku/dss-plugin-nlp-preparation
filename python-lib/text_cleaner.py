@@ -213,10 +213,10 @@ class TextCleaner:
         for k, v in self.OUTPUT_COLUMN_DESCRIPTIONS.items():
             if k == "cleaned":
                 column_name = generate_unique(k, df.keys(), text_column)
-                df[column_name] = pd.Series([d[k] if d[k] else "" for d in output])
+                df[column_name] = [d.get(k, "") for d in output]
             elif k in self.token_filters:
                 column_name = generate_unique(f"{v.lower()}s", df.keys(), text_column)
-                df[column_name] = pd.Series([d[k] if d[k] else "" for d in output])
+                df[column_name] = [d.get(k, "") for d in output]
         logging.info(f"Cleaning {len(df.index)} texts: Done in {time() - start:.2f} seconds.")
         del df[self.tokenizer.tokenized_column]
         return df
