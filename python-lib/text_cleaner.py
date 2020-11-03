@@ -178,10 +178,12 @@ class TextCleaner:
                 except IndexError:  # when reaching the end of the document, nbor() fails
                     pass
         for k in output:
-            output[k] = re.sub(WHITESPACE_REGEX, " ", output[k])  # remove multiple spaces
+            output[k] = re.sub(WHITESPACE_REGEX, " ", output[k]).strip()  # remove multiple spaces
         return output
 
-    def clean_df(self, df: pd.DataFrame, text_column, language_column, language) -> pd.DataFrame:
+    def clean_df(
+        self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr = "", language: AnyStr = "language_column",
+    ) -> pd.DataFrame:
         """Public method to clean a text column in a pandas DataFrame, given language information
 
         Prepare the dataframe with `self._prepare_df_for_cleaning` to obtain a new column with spaCy documents
