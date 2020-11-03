@@ -47,8 +47,8 @@ def process_dataset_chunks(
 ) -> None:
     """Read a dataset by chunks, process each dataframe chunk with a function and write back to another dataset.
 
-    Passes keyword arguments to the function, adds a tqdm progress bar and generic logging.
-    Directly writes chunks to the output_dataset, so that only one chunk needs to be processed in-memory at a time.
+    Pass keyword arguments to the function, adds a tqdm progress bar and generic logging.
+    Directly write chunks to the output_dataset, so that only one chunk needs to be processed in-memory at a time.
 
     Args:
         input_dataset: Input dataiku.Dataset instance
@@ -92,7 +92,7 @@ def set_column_descriptions(
 ) -> None:
     """Set column descriptions of the output dataset based on a dictionary of column descriptions
 
-    Retains the column descriptions from the input dataset if the column name matches.
+    Retain the column descriptions from the input dataset if the column name matches.
 
     Args:
         output_dataset: Output dataiku.Dataset instance

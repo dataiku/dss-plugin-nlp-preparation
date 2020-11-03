@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 import cld3
 from langid.langid import LanguageIdentifier, model
+from fastcore.utils import store_attr
 
 from language_dict import (
     SUPPORTED_LANGUAGES_PYCLD3,
@@ -45,9 +46,7 @@ class LanguageDetector:
         minimum_score: float = 0.0,
         fallback_language: AnyStr = "",
     ):
-        self.language_scope = language_scope
-        self.minimum_score = float(minimum_score)
-        self.fallback_language = fallback_language
+        store_attr()
         self.column_descriptions = self.COLUMN_DESCRIPTIONS.copy()  # may be changed by detect_languages_df
         self._langid_identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
         self._langid_identifier.set_languages(

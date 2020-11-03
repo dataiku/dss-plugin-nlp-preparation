@@ -13,6 +13,7 @@ import pandas as pd
 from spacy.tokens import Token, Doc
 from spacy.vocab import Vocab
 from symspellpy.symspellpy import SymSpell, Verbosity
+from fastcore.utils import store_attr
 
 from plugin_io_utils import unique_list, generate_unique, truncate_text_list, clean_empty_list
 from spacy_tokenizer import MultilingualTokenizer
@@ -49,6 +50,7 @@ class SpellChecker:
         "misspelling_list": "List of unique misspellings",
         "misspelling_count": "Number of misspellings",
     }
+    """dict: Default column names (key) and descriptions (value) for the output dataset"""
     DIAGNOSIS_COLUMN_DESCRIPTIONS = {
         "language": "Language code in ISO 639-1 format",
         "original_word": "Original word in the input dataset",
@@ -57,6 +59,7 @@ class SpellChecker:
         "spellcheck_diagnosis": "Diagnosis of the spellchecker",
         "word_count": "Word count in the input dataset",
     }
+    """dict: Default column names (key) and descriptions (value) for the optional diagnosis dataset"""
 
     def __init__(
         self,
@@ -87,18 +90,11 @@ class SpellChecker:
                 Adds ~20% processing time but allows to understand what the spellchecker did
 
         """
-        self.tokenizer = tokenizer
-        self.dictionary_folder_path = dictionary_folder_path
-        self.custom_vocabulary_set = custom_vocabulary_set
-        self.custom_corrections = custom_corrections
-        self.edit_distance = int(edit_distance)
-        self.ignore_token = ignore_token
-        self.transfer_casing = transfer_casing
+        store_attr()
         self._symspell_checker_dict = {}
         self.output_column_descriptions = (
             self.OUTPUT_COLUMN_DESCRIPTIONS.copy()
         )  # may be changed by `_prepare_df_for_spellchecker`
-        self.compute_diagnosis = compute_diagnosis
         if self.compute_diagnosis:
             self._diagnosis_lock = Lock()
             self._token_dict = {k: Counter() for k in SUPPORTED_LANGUAGES_SYMSPELL}  # may be changed by check_token
@@ -199,7 +195,7 @@ class SpellChecker:
     def check_token(self, token: Token, language: AnyStr) -> Tuple[bool, AnyStr, AnyStr]:
         """Public method to check the spelling of a spaCy token for a given language
 
-        Applies pre-processing checks before checking with SymSpell:
+        Apply pre-processing checks before checking with SymSpell:
             Checks if the token is in custom_correction or custom_vocabulary_set
             Checks if the token has any attributes indicating that it shouldn't be corrected
             (see spacy_tokenizer.MultilingualTokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES)
@@ -331,8 +327,8 @@ class SpellChecker:
     ) -> None:
         """Private method to prepare a Pandas dataframe in-place before feeding it to the spellchecker
 
-        Tokenizes the content of the text column into a new column containing spaCy documents
-        Adds new columns to hold the future outputs of the spellchecker
+        Tokenize the content of the text column into a new column containing spaCy documents
+        Add new columns to hold the future outputs of the spellchecker
 
         Args:
             df: Input pandas DataFrame
@@ -369,11 +365,11 @@ class SpellChecker:
     def check_df(
         self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr = "", language: AnyStr = "language_column",
     ) -> pd.DataFrame:
-        """Public method to check the spelling of a text column in a pandas DataFrame, given a language column
+        """Public method to check the spelling of a text column in a pandas DataFrame, given language information
 
-        Prepares the dataframe with `_prepare_df_for_spellchecker`
-        Runs `check_document_list` for each language
-        Formats the output dataframe
+        Prepare the dataframe with `_prepare_df_for_spellchecker`
+        Run `check_document_list` for each language
+        Format the output dataframe
 
         Args:
             df: Input pandas DataFrame

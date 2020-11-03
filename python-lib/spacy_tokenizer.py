@@ -14,6 +14,7 @@ from spacy.language import Language
 from spacy.tokens import Doc, Token
 from spacy.vocab import Vocab
 from emoji import UNICODE_EMOJI
+from fastcore.utils import store_attr
 
 from language_dict import SUPPORTED_LANGUAGES_SPACY, SPACY_LANGUAGE_MODELS
 from plugin_io_utils import generate_unique, truncate_text_list
@@ -127,11 +128,7 @@ class MultilingualTokenizer:
                 Default is set by the DEFAULT_BATCH_SIZE class constant
 
         """
-        self.default_language = default_language
-        self.stopwords_folder_path = stopwords_folder_path
-        self.use_models = use_models
-        self.hashtags_as_token = hashtags_as_token
-        self.batch_size = int(batch_size)
+        store_attr()
         self.spacy_nlp_dict = {}
         if default_language is not None:
             self.spacy_nlp_dict[default_language] = self._create_spacy_tokenizer(default_language)
@@ -251,7 +248,7 @@ class MultilingualTokenizer:
     def tokenize_df(
         self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr = "", language: AnyStr = "language_column"
     ) -> pd.DataFrame:
-        """Public method to tokenize a text column in a pandas DataFrame, given a language column
+        """Public method to tokenize a text column in a pandas DataFrame, given language information
 
         This methods adds a new column to the DataFrame, whose name is saved as the `tokenized_column` attribute
 
