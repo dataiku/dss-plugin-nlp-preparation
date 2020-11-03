@@ -154,6 +154,8 @@ class TextCleaner:
         """
         output = {k: "" for k in self.OUTPUT_COLUMN_DESCRIPTIONS}
         output["cleaned"] = ""
+        if not document:
+            return {}
         for token in document:
             token_attributes = [t for t in self.token_filters if getattr(token, t, False) or getattr(token._, t, False)]
             if token_attributes:
