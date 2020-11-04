@@ -42,6 +42,7 @@ class TextCleaner:
         lemmatization (bool): If True, lemmatize tokens using spaCy lookups data
         lowercase (bool): If True, convert everything to lowercase after filter and lemmatization steps
         unicode_normalization (UnicodeNormalization): Unicode normalization method (final post-processing)
+        keep_filtered_tokens (bool): If True, store filtered tokens in additional columns in the output dataframe
         output_column_descriptions (dict): Column names (key) and descriptions (value) for the output dataset
             This attribute is computed automatically based on the input dataframe to clean
 
@@ -61,6 +62,7 @@ class TextCleaner:
         lemmatization: bool = True,
         lowercase: bool = True,
         unicode_normalization: UnicodeNormalization = UnicodeNormalization.NONE,
+        keep_filtered_tokens: bool = False,
     ):
         """Initialization method for the TextCleaner class, with optional arguments
 
@@ -76,6 +78,8 @@ class TextCleaner:
                 Default is not to apply normalization. Beware that it's a more complex topic than it looks.
                 Read https://en.wikipedia.org/wiki/Unicode_equivalence if you want to understand more
                 TL;DR: human languages are a mess => Unicode is a mess too
+            keep_filtered_tokens (bool): If True, store filtered tokens in additional columns in the output dataframe
+                Default is False, adding only 1 column, which is the cleaned version of the original text
 
         """
         store_attr()
@@ -104,7 +108,7 @@ class TextCleaner:
             if k == "cleaned":
                 column_name = generate_unique(k, df.keys(), text_column)
                 self.output_column_descriptions[column_name] = v
-            elif k in self.token_filters:
+            elif k in self.token_filters and self.keep_filtered_tokens:
                 column_name = generate_unique(f"{v.lower()}s", df.keys(), text_column)
                 self.output_column_descriptions[column_name] = f"{v}s in the original text"
         self.tokenizer.tokenize_df(df, text_column, language_column, language)
@@ -158,7 +162,7 @@ class TextCleaner:
             return {}
         for token in document:
             token_attributes = [t for t in self.token_filters if getattr(token, t, False) or getattr(token._, t, False)]
-            if token_attributes:
+            if token_attributes and self.keep_filtered_tokens:
                 first_token_attribute = token_attributes[0]
                 output[first_token_attribute] += token.lower_ if self.lowercase else token.text
                 try:
@@ -216,7 +220,7 @@ class TextCleaner:
             if k == "cleaned":
                 column_name = generate_unique(k, df.keys(), text_column)
                 df[column_name] = [d.get(k, "") for d in output]
-            elif k in self.token_filters:
+            elif k in self.token_filters and self.keep_filtered_tokens:
                 column_name = generate_unique(f"{v.lower()}s", df.keys(), text_column)
                 df[column_name] = [d.get(k, "") for d in output]
         logging.info(f"Cleaning {len(df.index)} texts: Done in {time() - start:.2f} seconds.")

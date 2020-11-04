@@ -142,6 +142,13 @@
                 }
             ],
             "defaultValue": "NONE"
+        },
+        {
+            "name": "keep_filtered_tokens",
+            "label": "Keep filtered tokens",
+            "description": "Store filtered tokens in additional columns in the output dataset ",
+            "type": "BOOLEAN",
+            "defaultValue": false
         }
     ],
     "resourceKeys": []

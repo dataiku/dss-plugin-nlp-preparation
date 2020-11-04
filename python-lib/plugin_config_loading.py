@@ -299,4 +299,7 @@ def load_plugin_config_cleaning() -> Dict:
     params["unicode_normalization"] = UnicodeNormalization[recipe_config.get("unicode_normalization")]
     logging.info(f"Unicode normalization: {params['unicode_normalization']}")
 
+    params["keep_filtered_tokens"] = bool(recipe_config.get("keep_filtered_tokens"))
+    logging.info(f"Keep filtered tokens: {params['keep_filtered_tokens']}")
+
     return params

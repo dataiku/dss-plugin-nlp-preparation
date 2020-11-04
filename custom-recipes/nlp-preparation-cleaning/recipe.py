@@ -14,6 +14,7 @@ text_cleaner = TextCleaner(
     lemmatization=params["lemmatization"],
     lowercase=params["lowercase"],
     unicode_normalization=params["unicode_normalization"],
+    keep_filtered_tokens=params["keep_filtered_tokens"],
 )
 
 # Run
