@@ -162,14 +162,15 @@ class TextCleaner:
             return {}
         for token in document:
             token_attributes = [t for t in self.token_filters if getattr(token, t, False) or getattr(token._, t, False)]
-            if token_attributes and self.keep_filtered_tokens:
-                first_token_attribute = token_attributes[0]
-                output[first_token_attribute] += token.lower_ if self.lowercase else token.text
-                try:
-                    if token.whitespace_ or token.nbor().is_punct or token.nbor().is_space:
-                        output[first_token_attribute] += " "
-                except IndexError:  # when reaching the end of the document, nbor() fails
-                    pass
+            if token_attributes:
+                if self.keep_filtered_tokens:
+                    first_token_attribute = token_attributes[0]
+                    output[first_token_attribute] += token.lower_ if self.lowercase else token.text
+                    try:
+                        if token.whitespace_ or token.nbor().is_punct or token.nbor().is_space:
+                            output[first_token_attribute] += " "
+                    except IndexError:  # when reaching the end of the document, nbor() fails
+                        pass
             else:
                 cleaned_token = self.clean_token(token)
                 if cleaned_token:
