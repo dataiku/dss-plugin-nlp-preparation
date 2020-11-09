@@ -176,7 +176,7 @@ class MultilingualTokenizer:
                         nlp.vocab[word.capitalize()].is_stop = False
                 nlp.Defaults.stop_words = custom_stopwords
             except OSError as e:
-                logging.warning(f"Stopword file for language '{language}' not available because of error: '{e}'")
+                raise RuntimeError(f"Stopword file for language '{language}' not available because of error: '{e}'")
         logging.info(f"Loading tokenizer for language '{language}': Done in {time() - start:.2f} seconds.")
         return nlp
 

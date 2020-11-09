@@ -6,10 +6,10 @@
 import os
 import pandas as pd
 
-from spacy_tokenizer import MultilingualTokenizer  # noqa
-from text_cleaner import UnicodeNormalization, TextCleaner  # noqa
+from spacy_tokenizer import MultilingualTokenizer
+from text_cleaner import UnicodeNormalization, TextCleaner
 
-stopwords_folder_path = os.getenv("STOPWORDS_FOLDER_PATH")
+stopwords_folder_path = os.getenv("STOPWORDS_FOLDER_PATH", "path_is_no_good")
 
 
 def test_clean_df_english():

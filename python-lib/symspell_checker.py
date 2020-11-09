@@ -167,9 +167,6 @@ class SpellChecker:
         (is_misspelled, correction, diagnosis) = (False, word, "")
         try:
             cleaned_text = word.strip()  # re.sub(r"\W+", " ", word).strip()  # remove invisible characters
-            # if not cleaned_text:
-            #    diagnosis = "OK - Invisible characters"
-            # else:
             correction_suggestions = self._symspell_checker_dict[language].lookup(
                 cleaned_text,
                 verbosity=self.SUGGESTION_VERBOSITY,

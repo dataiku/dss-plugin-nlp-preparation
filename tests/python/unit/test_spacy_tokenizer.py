@@ -7,9 +7,9 @@ import os
 
 import pandas as pd
 
-from spacy_tokenizer import MultilingualTokenizer  # noqa
+from spacy_tokenizer import MultilingualTokenizer
 
-stopwords_folder_path = os.getenv("STOPWORDS_FOLDER_PATH")
+stopwords_folder_path = os.getenv("STOPWORDS_FOLDER_PATH", "path_is_no_good")
 
 
 def test_tokenize_df_english():

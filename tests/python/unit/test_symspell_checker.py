@@ -6,11 +6,11 @@
 import os
 import pandas as pd
 
-from spacy_tokenizer import MultilingualTokenizer  # noqa
-from symspell_checker import SpellChecker  # noqa
+from spacy_tokenizer import MultilingualTokenizer
+from symspell_checker import SpellChecker
 
-dictionary_folder_path = os.getenv("DICTIONARY_FOLDER_PATH")
-stopwords_folder_path = os.getenv("STOPWORDS_FOLDER_PATH")
+dictionary_folder_path = os.getenv("DICTIONARY_FOLDER_PATH", "path_is_no_good")
+stopwords_folder_path = os.getenv("STOPWORDS_FOLDER_PATH", "path_is_no_good")
 
 
 def test_spellcheck_df_english():
