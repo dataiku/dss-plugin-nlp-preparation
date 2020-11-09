@@ -60,7 +60,7 @@ def truncate_text_list(text_list: List[AnyStr], num_characters: int = 140) -> Li
 
 
 def clean_text_df(df: pd.DataFrame, dropna_columns: List[AnyStr] = None) -> pd.DataFrame:
-    """Clean a pandas.DataFrame containing text columns to get rid of empty strings and NaNs values
+    """Clean a pandas.DataFrame with text columns to remove empty strings and NaNs values in the dataframe
 
     Args:
         df: Input pandas.DataFrame which should contain only text
