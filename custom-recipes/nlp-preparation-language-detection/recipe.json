@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Language Detection",
-        "description": "Detect dominant languages in a text column among 114 languages",
+        "description": "Detect dominant languages among 114 languages",
         "icon": "icon-globe",
         "displayOrderRank": 1
     },
@@ -45,6 +45,14 @@
             ]
         },
         {
+            "type": "MULTISELECT",
+            "name": "language_scope",
+            "label": "Language scope",
+            "description": "Scope of languages to choose from. Leave empty to use all 114 languages.",
+            "getChoicesFromPython": true,
+            "mandatory": false
+        },
+        {
             "name": "separator_advanced",
             "label": "Advanced",
             "type": "SEPARATOR"
@@ -56,15 +64,6 @@
             "defaultValue": false
         },
         {
-            "type": "MULTISELECT",
-            "name": "language_scope",
-            "label": "Language scope",
-            "description": "Scope of languages to choose from. Leave empty to use all 114 languages.",
-            "getChoicesFromPython": true,
-            "visibilityCondition": "model.expert == true",
-            "mandatory": false
-        },
-        {
             "type": "DOUBLE",
             "name": "minimum_score",
             "label": "Minimum score",
@@ -72,7 +71,7 @@
             "minD": 0,
             "maxD": 1,
             "defaultValue": 0,
-            "visibilityCondition": "model.expert == true"
+            "visibilityCondition": "model.expert"
         },
         {
             "type": "SELECT",
@@ -80,7 +79,7 @@
             "label": "Fallback language",
             "description": "Fallback if the detected language is not within the chosen scope or below minimum score. Leave None to output an empty cell.",
             "getChoicesFromPython": true,
-            "visibilityCondition": "model.expert == true",
+            "visibilityCondition": "model.expert",
             "mandatory": false,
             "defaultValue": "None"
         }

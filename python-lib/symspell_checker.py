@@ -4,7 +4,7 @@
 import logging
 from typing import List, AnyStr, Set, Tuple, Dict, Pattern
 from concurrent.futures import ThreadPoolExecutor
-from collections import OrderedDict, Counter
+from collections import Counter
 from time import time
 from functools import lru_cache
 from threading import Lock
@@ -13,6 +13,7 @@ import pandas as pd
 from spacy.tokens import Token, Doc
 from spacy.vocab import Vocab
 from symspellpy.symspellpy import SymSpell, Verbosity
+from fastcore.utils import store_attr
 
 from plugin_io_utils import unique_list, generate_unique, truncate_text_list, clean_empty_list
 from spacy_tokenizer import MultilingualTokenizer
@@ -35,33 +36,34 @@ class SpellChecker:
         edit_distance (int): Maximum edit distance between a word and its correction
         ignore_token (Pattern): Regular expression for words not to be corrected
         transfer_casing (bool): Transfer input word case to the corrected word
-        output_column_description_dict (dict): Dictionary of column names (key) and their description (value)
+        output_column_descriptions (dict): Dictionary of column names (key) and their description (value)
         compute_diagnosis (bool): Compute spellchecker diagnosis of each word
+
     """
 
     DEFAULT_EDIT_DISTANCE = 2
     SUGGESTION_VERBOSITY = Verbosity.TOP  # returns only the closest word
     DEFAULT_NUM_THREADS = 4
-    OUTPUT_COLUMN_DESCRIPTION_DICT = OrderedDict(
-        [
-            ("corrected", "Corrected text"),
-            ("misspelling_list", "List of misspellings"),
-            ("misspelling_count", "Number of misspellings"),
-        ]
-    )
-    DIAGNOSIS_COLUMN_DESCRIPTION_DICT = OrderedDict(
-        [
-            ("language", "Language code in ISO 639-1 format"),
-            ("original_word", "Original word in the input dataset"),
-            ("is_misspelled", "Word detected as misspelling"),
-            ("corrected_word", "Correction in case of misspelling"),
-            ("spellcheck_diagnosis", "Diagnosis of the spellchecker"),
-            ("word_count", "Word count in the input dataset"),
-        ]
-    )
+    OUTPUT_COLUMN_DESCRIPTIONS = {
+        "corrected": "Corrected text",
+        "misspellings": "Misspelled text",
+        "misspelling_list": "List of unique misspellings",
+        "misspelling_count": "Number of misspellings",
+    }
+    """dict: Default column names (key) and descriptions (value) for the output dataset"""
+    DIAGNOSIS_COLUMN_DESCRIPTIONS = {
+        "language": "Language code in ISO 639-1 format",
+        "original_word": "Original word in the input dataset",
+        "is_misspelled": "Word detected as misspelling",
+        "corrected_word": "Correction in case of misspelling",
+        "spellcheck_diagnosis": "Diagnosis of the spellchecker",
+        "word_count": "Word count in the input dataset",
+    }
+    """dict: Default column names (key) and descriptions (value) for the optional diagnosis dataset"""
 
     def __init__(
         self,
+        tokenizer: MultilingualTokenizer,
         dictionary_folder_path: AnyStr,
         custom_vocabulary_set: Set[AnyStr] = set(),
         custom_corrections: Dict = {},
@@ -86,17 +88,13 @@ class SpellChecker:
                 Default is True, which works well for European languages
             compute_diagnosis (bool): If True, compute spellchecker diagnosis of each word
                 Adds ~20% processing time but allows to understand what the spellchecker did
+
         """
-        self._tokenizer = MultilingualTokenizer()
-        self.dictionary_folder_path = dictionary_folder_path
-        self.custom_vocabulary_set = custom_vocabulary_set
-        self.custom_corrections = custom_corrections
-        self.edit_distance = int(edit_distance)
-        self.ignore_token = ignore_token
-        self.transfer_casing = transfer_casing
+        store_attr()
         self._symspell_checker_dict = {}
-        self.output_column_description_dict = self.OUTPUT_COLUMN_DESCRIPTION_DICT  # may be changed by check_df
-        self.compute_diagnosis = compute_diagnosis
+        self.output_column_descriptions = (
+            self.OUTPUT_COLUMN_DESCRIPTIONS.copy()
+        )  # may be changed by `_prepare_df_for_spellchecker`
         if self.compute_diagnosis:
             self._diagnosis_lock = Lock()
             self._token_dict = {k: Counter() for k in SUPPORTED_LANGUAGES_SYMSPELL}  # may be changed by check_token
@@ -110,16 +108,17 @@ class SpellChecker:
 
         Returns:
             SymSpell checker instance loaded with the language dictionary
+
         """
         start = time()
-        logging.info("Loading spellchecker for language '{}'...".format(language))
+        logging.info(f"Loading spellchecker for language '{language}'...")
         symspell_checker = SymSpell(max_dictionary_edit_distance=self.edit_distance)
         frequency_dict_path = self.dictionary_folder_path + "/" + language + ".txt"
         symspell_checker.load_dictionary(frequency_dict_path, term_index=0, count_index=1, encoding="utf-8")
         if len(self.custom_vocabulary_set) != 0:
             for word in self.custom_vocabulary_set:
                 symspell_checker.create_dictionary_entry(key=word, count=1)
-        logging.info("Loading spellchecker for language '{}': Done in {:.2f} seconds.".format(language, time() - start))
+        logging.info(f"Loading spellchecker for language '{language}': Done in {time() - start:.2f} seconds.")
         return symspell_checker
 
     def _add_symspell_checker(self, language: AnyStr) -> bool:
@@ -137,12 +136,13 @@ class SpellChecker:
 
         Raises:
             ValueError: If the language code is missing or not in SUPPORTED_LANGUAGES_SYMSPELL
+
         """
         added_checker = False
         if pd.isnull(language) or language == "":
             raise ValueError("Missing language code")
         if language not in SUPPORTED_LANGUAGES_SYMSPELL:
-            raise ValueError("Unsupported language code: {}".format(language))
+            raise ValueError(f"Unsupported language code: {language}")
         if language not in self._symspell_checker_dict:
             self._symspell_checker_dict[language] = self._create_symspell_checker(language=language)
             added_checker = True
@@ -162,11 +162,13 @@ class SpellChecker:
                 2. Corrected word if the word is misspelled and a correction if found,
                     else keep the original word
                 3. Spellchecker diagnosis string explaining the spellchecker action
+
         """
         (is_misspelled, correction, diagnosis) = (False, word, "")
         try:
+            cleaned_text = word.strip()  # re.sub(r"\W+", " ", word).strip()  # remove invisible characters
             correction_suggestions = self._symspell_checker_dict[language].lookup(
-                word,
+                cleaned_text,
                 verbosity=self.SUGGESTION_VERBOSITY,
                 max_edit_distance=self.edit_distance,
                 ignore_token=self.ignore_token,
@@ -174,7 +176,7 @@ class SpellChecker:
             )
             if len(correction_suggestions) != 0:
                 correction_suggestion = correction_suggestions[0].term
-                if correction_suggestion.lower() != word.lower():
+                if correction_suggestion.lower() != cleaned_text.lower():
                     diagnosis = "NOK - Corrected by spellchecker"
                     (is_misspelled, correction) = (True, correction_suggestion)
                 else:
@@ -183,16 +185,14 @@ class SpellChecker:
                 diagnosis = "WARN - No correction found, keeping as-is"
                 (is_misspelled, correction) = (True, word)
         except IndexError as e:  # rare case when the spellchecker fails on some words because of a wrong language
-            logging.warning(
-                "Spellchecker failed on word '{}' in language '{}' because of error: '{}'".format(word, language, e)
-            )
-            diagnosis = "WARN - Spellchecker failed because of error: '{}', keeping as-is".format(e)
+            logging.warning(f"Spellchecker failed on word '{word}' in language '{language}' because of error: '{e}'")
+            diagnosis = f"WARN - Spellchecker failed because of error: '{e}', keeping as-is"
         return (is_misspelled, correction, diagnosis)
 
     def check_token(self, token: Token, language: AnyStr) -> Tuple[bool, AnyStr, AnyStr]:
         """Public method to check the spelling of a spaCy token for a given language
 
-        Applies pre-processing checks before checking with SymSpell:
+        Apply pre-processing checks before checking with SymSpell:
             Checks if the token is in custom_correction or custom_vocabulary_set
             Checks if the token has any attributes indicating that it shouldn't be corrected
             (see spacy_tokenizer.MultilingualTokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES)
@@ -208,6 +208,7 @@ class SpellChecker:
                 2. Corrected word if the word is misspelled and a correction if found,
                     else keep the original word
                 3. Spellchecker diagnosis string explaining the spellchecker action
+
         """
         (is_misspelled, correction, diagnosis) = (False, token.text, "")
         if token.text in self.custom_corrections:  # special case of custom corrections
@@ -219,7 +220,7 @@ class SpellChecker:
             else:
                 token_attributes = [
                     t
-                    for t in self._tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
+                    for t in self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES
                     if getattr(token, t, False) or getattr(token._, t, False)
                 ]
                 if len(token_attributes) == 0:
@@ -230,7 +231,8 @@ class SpellChecker:
                         symspell_check[2],
                     )
                 else:
-                    diagnosis = "OK - Detected as '{}', keeping as-is".format(token_attributes[0].upper())
+                    attribute_name = self.tokenizer.DEFAULT_FILTER_TOKEN_ATTRIBUTES[token_attributes[0]].lower()
+                    diagnosis = f"OK - Detected as '{attribute_name}', keeping as-is"
         if self.compute_diagnosis:
             diagnosis_tuple = (language, token.text, is_misspelled, correction, diagnosis)
             self._add_to_diagnosis(token, language, diagnosis_tuple)
@@ -248,10 +250,12 @@ class SpellChecker:
             language: Language code in ISO 639-1 format
 
         Returns:
-            Tuple of 3 elements:
+            Tuple with 4 elements:
                 1. Corrected spaCy document
-                2. List of misspellings as strings
-                3. Number of misspellings
+                2. Misspelled text
+                3. List of misspellings
+                4. Number of misspellings
+
         """
         (spelling_mistakes, corrected_word_list, whitespace_list) = ([], [], [])
         corrected_document = Doc(Vocab())
@@ -269,12 +273,12 @@ class SpellChecker:
             corrected_document = Doc(vocab=document.vocab, words=corrected_word_list, spaces=whitespace_list)
         except ValueError as e:
             logging.warning(
-                "Spellchecking error: '{}' for document: '{}' in language: '{}', output columns will be empty".format(
-                    e, truncate_text_list([document.text]), language
-                )
+                f"Spellchecking error: '{e}' for document: '{truncate_text_list([document.text])}' "
+                f"in language: '{language}', output columns will be empty"
             )
-        spelling_mistakes = unique_list(spelling_mistakes)
-        return (corrected_document.text, spelling_mistakes, len(spelling_mistakes))
+        misspellings = " ".join(spelling_mistakes).strip()
+        misspelling_list = unique_list(spelling_mistakes)
+        return (corrected_document.text, misspellings, misspelling_list, len(spelling_mistakes))
 
     def check_document_list(self, document_list: List[Doc], language: AnyStr) -> List[Tuple[AnyStr, List, int]]:
         """Public method to check the spelling of a list of documents for a given language
@@ -288,29 +292,30 @@ class SpellChecker:
             language: Language code in ISO 639-1 format
 
         Returns:
-            List of tuples with 3 elements:
+            List of tuples with 4 elements:
                 1. Corrected spaCy document
-                2. List of misspellings as strings
-                3. Number of misspellings
+                2. Misspelled text
+                3. List of misspellings
+                4. Number of misspellings
+
         """
         start = time()
-        logging.info("Spellchecking {:d} documents in language '{}'...".format(len(document_list), language))
-        tuple_list = [("", [], 0)] * len(document_list)
+        num_doc = len(document_list)
+        logging.info(f"Spellchecking {num_doc} documents in language '{language}'...")
+        tuple_list = [("", "", [], 0)] * len(document_list)
         try:
             self._add_symspell_checker(language)
             doc_lang_iterator = ((doc, language) for doc in document_list)
             with ThreadPoolExecutor(max_workers=self.DEFAULT_NUM_THREADS) as executor:
                 tuple_list = list(executor.map(lambda x: self.check_document(*x), doc_lang_iterator))
             logging.info(
-                "Spellchecking {:d} documents in language '{}': Done in {:.2f} seconds.".format(
-                    len(tuple_list), language, time() - start
-                )
+                f"Spellchecking {num_doc} documents in language '{language}': Done in {time() - start:.2f} seconds."
             )
         except ValueError as e:
+            truncated_text_list = truncate_text_list([d.text for d in document_list])
             logging.warning(
-                "Spellchecking error: '{}' for documents: '{}' in language '{}', output columns will be empty".format(
-                    e, truncate_text_list([d.text for d in document_list]), language
-                )
+                f"Spellchecking error: '{e}' for documents: '{truncated_text_list}' "
+                f"in language '{language}', output columns will be empty"
             )
         return tuple_list
 
@@ -319,8 +324,8 @@ class SpellChecker:
     ) -> None:
         """Private method to prepare a Pandas dataframe in-place before feeding it to the spellchecker
 
-        Tokenizes the content of the text column into a new column containing spaCy documents
-        Adds new columns to hold the future outputs of the spellchecker
+        Tokenize the content of the text column into a new column containing spaCy documents
+        Add new columns to hold the future outputs of the spellchecker
 
         Args:
             df: Input pandas DataFrame
@@ -328,13 +333,14 @@ class SpellChecker:
             language_column: Name of the column with language codes in ISO 639-1 format
             language: Language code in ISO 639-1 format
                 If equal to "language_column" this parameter is ignored in favor of language_column
+
         """
-        self.output_column_description_dict = OrderedDict()
-        for k, v in self.OUTPUT_COLUMN_DESCRIPTION_DICT.items():
+        self.output_column_descriptions = {}
+        for k, v in self.OUTPUT_COLUMN_DESCRIPTIONS.items():
             column_name = generate_unique(k, df.keys(), text_column)
             df[column_name] = pd.Series([""] * len(df.index))
-            self.output_column_description_dict[column_name] = v
-        self._tokenizer.tokenize_df(df, text_column, language_column, language)
+            self.output_column_descriptions[column_name] = v
+        self.tokenizer.tokenize_df(df, text_column, language_column, language)
 
     def _format_output_df(self, df: pd.DataFrame) -> None:
         """Private method to format the output dataframe after spellchecking
@@ -344,22 +350,23 @@ class SpellChecker:
 
         Args:
             df: Input pandas DataFrame
+
         """
-        df.drop(self._tokenizer.tokenized_column, axis=1, inplace=True)
-        corrected_text_column = list(self.output_column_description_dict.keys())[0]
-        spelling_mistakes_column = list(self.output_column_description_dict.keys())[1]
-        misspelling_count_column = list(self.output_column_description_dict.keys())[2]
+        df.drop(self.tokenizer.tokenized_column, axis=1, inplace=True)
+        corrected_text_column = list(self.output_column_descriptions.keys())[0]
+        spelling_mistakes_column = list(self.output_column_descriptions.keys())[2]
+        misspelling_count_column = list(self.output_column_descriptions.keys())[3]
         df[spelling_mistakes_column] = df[spelling_mistakes_column].apply(clean_empty_list)
         df.loc[df[corrected_text_column] == "", misspelling_count_column] = ""
 
     def check_df(
         self, df: pd.DataFrame, text_column: AnyStr, language_column: AnyStr = "", language: AnyStr = "language_column",
     ) -> pd.DataFrame:
-        """Public method to check the spelling of a text column in a pandas DataFrame, given a language column
+        """Public method to check the spelling of a text column in a pandas DataFrame, given language information
 
-        Prepares the dataframe with `_prepare_df_for_spellchecker`
-        Runs `check_document_list` for each language
-        Formats the output dataframe
+        Prepare the dataframe with `_prepare_df_for_spellchecker`
+        Run `check_document_list` for each language
+        Format the output dataframe
 
         Args:
             df: Input pandas DataFrame
@@ -373,22 +380,23 @@ class SpellChecker:
                 1. Corrected text
                 2. List of misspellings
                 3. Number of misspellings
+
         """
         self._prepare_df_for_spellchecker(df, text_column, language_column, language)
         if language == "language_column":
             languages = df[language_column].dropna().unique()
             for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
-                document_slice = df.loc[language_indices, self._tokenizer.tokenized_column]  # slicing df by language
+                document_slice = df.loc[language_indices, self.tokenizer.tokenized_column]  # slicing df by language
                 if len(document_slice) != 0:
                     tuple_list = self.check_document_list(document_list=document_slice, language=lang)
-                    for i, column in enumerate(self.output_column_description_dict):
+                    for i, column in enumerate(self.output_column_descriptions):
                         df.loc[language_indices, column] = pd.Series(
                             [t[i] for t in tuple_list], index=document_slice.index
                         )
         else:
-            tuple_list = self.check_document_list(document_list=df[self._tokenizer.tokenized_column], language=language)
-            for i, column in enumerate(self.output_column_description_dict):
+            tuple_list = self.check_document_list(document_list=df[self.tokenizer.tokenized_column], language=language)
+            for i, column in enumerate(self.output_column_descriptions):
                 df[column] = [t[i] for t in tuple_list]
         self._format_output_df(df)
         return df
@@ -403,7 +411,8 @@ class SpellChecker:
             token: spaCy token
             language: Language code in ISO 639-1 format
             diagnosis_tuple: Tuple of diagnosis information
-                Should be ordered as DIAGNOSIS_COLUMN_DESCRIPTION_DICT except the word_count column
+                Should be ordered as DIAGNOSIS_COLUMN_DESCRIPTIONS except the word_count column
+
         """
         with self._diagnosis_lock:
             if token.text not in self._token_dict.get(language, {}):
@@ -417,11 +426,13 @@ class SpellChecker:
         Formats the private _token_dict and _diagnosis_list attributes into a human-readable dataframe
 
         Returns:
-            Diagnosis dataframe with columns described in DIAGNOSIS_COLUMN_DESCRIPTION_DICT
+            Diagnosis dataframe with columns described in DIAGNOSIS_COLUMN_DESCRIPTIONS
+
         """
         df = pd.DataFrame()
+        start = time()
         logging.info("Computing spellchecker diagnosis...")
-        for i, column in enumerate(self.DIAGNOSIS_COLUMN_DESCRIPTION_DICT):
+        for i, column in enumerate(self.DIAGNOSIS_COLUMN_DESCRIPTIONS):
             if column != "word_count":
                 df[column] = [t[i] for t in self._diagnosis_list]
         # Retrieve word_count information
@@ -433,6 +444,7 @@ class SpellChecker:
             df.loc[language_indices, "word_count"] = df_slice.apply(lambda x: self._token_dict[lang].get(x, 0))
         # Cleaning and sorting output dataframe
         df.loc[~df["is_misspelled"], "corrected_word"] = ""
+        df = df.loc[~df["spellcheck_diagnosis"].str.contains("whitespace")]
         df = df.sort_values(by=["is_misspelled", "word_count"], ascending=False)
-        logging.info("Computing spellchecker diagnosis: Done!")
+        logging.info(f"Computing spellchecker diagnosis: Done in {time() - start:.2f} seconds.")
         return df

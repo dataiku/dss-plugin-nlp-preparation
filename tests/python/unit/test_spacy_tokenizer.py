@@ -3,9 +3,13 @@
 # pytest automatically runs all the function starting with "test_"
 # see https://docs.pytest.org for more information
 
+import os
+
 import pandas as pd
 
-from spacy_tokenizer import MultilingualTokenizer  # noqa
+from spacy_tokenizer import MultilingualTokenizer
+
+stopwords_folder_path = os.getenv("STOPWORDS_FOLDER_PATH", "path_is_no_good")
 
 
 def test_tokenize_df_english():
@@ -27,7 +31,7 @@ def test_tokenize_df_multilingual():
             "language": ["en", "fr", "zh"],
         }
     )
-    tokenizer = MultilingualTokenizer()
+    tokenizer = MultilingualTokenizer(stopwords_folder_path=stopwords_folder_path)
     output_df = tokenizer.tokenize_df(df=input_df, text_column="input_text", language_column="language")
     tokenized_documents = output_df[tokenizer.tokenized_column]
     tokenized_documents_length = [len(doc) for doc in tokenized_documents]

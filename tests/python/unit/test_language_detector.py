@@ -6,7 +6,7 @@
 import pandas as pd
 import numpy as np
 
-from language_detector import LanguageDetector  # noqa
+from language_detector import LanguageDetector
 
 
 INPUT_DF = pd.DataFrame(

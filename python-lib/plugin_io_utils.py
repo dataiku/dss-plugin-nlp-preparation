@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Module with read/write utility functions which are *not* based on the Dataiku API"""
 
+import re
 from typing import List, AnyStr, Union
 
 import pandas as pd
@@ -15,6 +16,7 @@ def clean_empty_list(sequence: List) -> Union[List, AnyStr]:
 
     Returns:
        Original list or empty string
+
     """
     output = ""
     if isinstance(sequence, list):
@@ -31,6 +33,7 @@ def unique_list(sequence: List) -> List:
 
     Returns:
        List with unique elements ordered by appearance in the original list
+
     """
     seen = set()
     return [x for x in sequence if not (x in seen or seen.add(x))]
@@ -45,6 +48,7 @@ def truncate_text_list(text_list: List[AnyStr], num_characters: int = 140) -> Li
 
     Returns:
        List with truncated strings
+
     """
     output_text_list = []
     for text in text_list:
@@ -56,7 +60,7 @@ def truncate_text_list(text_list: List[AnyStr], num_characters: int = 140) -> Li
 
 
 def clean_text_df(df: pd.DataFrame, dropna_columns: List[AnyStr] = None) -> pd.DataFrame:
-    """Clean a pandas.DataFrame containing text columns to get rid of empty strings and NaNs values
+    """Clean a pandas.DataFrame with text columns to remove empty strings and NaNs values in the dataframe
 
     Args:
         df: Input pandas.DataFrame which should contain only text
@@ -65,6 +69,7 @@ def clean_text_df(df: pd.DataFrame, dropna_columns: List[AnyStr] = None) -> pd.D
 
     Returns:
        pandas.DataFrame with rows dropped in case of empty strings or NaN values
+
     """
     for col in df.columns:
         df[col] = df[col].str.strip().replace("", np.NaN)
@@ -73,7 +78,7 @@ def clean_text_df(df: pd.DataFrame, dropna_columns: List[AnyStr] = None) -> pd.D
 
 
 def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr = None) -> AnyStr:
-    """Generate a unique name among existing ones by suffixing a number. Can also add an optional prefix.
+    """Generate a unique name among existing ones by suffixing a number and adding a prefix
 
     Args:
         name: Input name
@@ -82,19 +87,20 @@ def generate_unique(name: AnyStr, existing_names: List[AnyStr], prefix: AnyStr =
 
     Returns:
        Unique name with a number suffix in case of conflict, and an optional prefix
+
     """
-    if prefix is not None:
-        new_name = "{}_{}".format(prefix, name)
+    name = re.sub(r"[^\x00-\x7F]", "_", name).replace(
+        " ", "_"
+    )  # replace non ASCII and whitespace characters by an underscore _
+    if prefix:
+        new_name = f"{prefix}_{name}"
     else:
         new_name = name
-    for i in range(1, 1001):
+    for j in range(1, 1001):
         if new_name not in existing_names:
             return new_name
-        if prefix is not None:
-            new_name = "{}_{}_{}".format(prefix, name, i)
-        else:
-            new_name = "{}_{}".format(name, i)
-    raise RuntimeError("Failed to generated a unique name")
+        new_name = f"{new_name}_{j}"
+    raise RuntimeError(f"Failed to generated a unique name for '{name}'")
 
 
 def move_columns_after(df: pd.DataFrame, columns_to_move: List[AnyStr], after_column: AnyStr) -> pd.DataFrame:
@@ -107,6 +113,7 @@ def move_columns_after(df: pd.DataFrame, columns_to_move: List[AnyStr], after_co
 
     Returns:
        pandas.DataFrame with reordered columns
+
     """
     after_column_position = df.columns.get_loc(after_column) + 1
     reordered_columns = (

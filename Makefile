@@ -32,6 +32,7 @@ unit-tests:
 		pip3 install --no-cache-dir -r code-env/python/spec/requirements.txt; \
 		export PYTHONPATH="$(PYTHONPATH):$(PWD)/python-lib"; \
 		export DICTIONARY_FOLDER_PATH="$(PWD)/resource/dictionaries"; \
+		export STOPWORDS_FOLDER_PATH="$(PWD)/resource/stopwords"; \
 		pytest -o junit_family=xunit2 --junitxml=unit.xml tests/python/unit || true; \
 		deactivate; \
 	)

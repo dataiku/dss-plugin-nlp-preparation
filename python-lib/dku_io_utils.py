@@ -47,8 +47,8 @@ def process_dataset_chunks(
 ) -> None:
     """Read a dataset by chunks, process each dataframe chunk with a function and write back to another dataset.
 
-    Passes keyword arguments to the function, adds a tqdm progress bar and generic logging.
-    Directly writes chunks to the output_dataset, so that only one chunk needs to be processed in-memory at a time.
+    Pass keyword arguments to the function, adds a tqdm progress bar and generic logging.
+    Directly write chunks to the output_dataset, so that only one chunk needs to be processed in-memory at a time.
 
     Args:
         input_dataset: Input dataiku.Dataset instance
@@ -75,7 +75,7 @@ def process_dataset_chunks(
     with output_dataset.get_writer() as writer:
         df_iterator = input_dataset.iter_dataframes(chunksize=chunksize, infer_with_pandas=False)
         len_iterator = math.ceil(input_count_records / chunksize)
-        for i, df in tqdm(enumerate(df_iterator), total=len_iterator):
+        for i, df in tqdm(enumerate(df_iterator), total=len_iterator, unit="chunk", mininterval=1.0):
             output_df = func(df=df, **kwargs)
             if i == 0:
                 output_dataset.write_schema_from_dataframe(
@@ -87,16 +87,16 @@ def process_dataset_chunks(
     )
 
 
-def set_column_description(
-    output_dataset: dataiku.Dataset, column_description_dict: Dict, input_dataset: dataiku.Dataset = None
+def set_column_descriptions(
+    output_dataset: dataiku.Dataset, column_descriptions: Dict, input_dataset: dataiku.Dataset = None
 ) -> None:
     """Set column descriptions of the output dataset based on a dictionary of column descriptions
 
-    Retains the column descriptions from the input dataset if the column name matches.
+    Retain the column descriptions from the input dataset if the column name matches.
 
     Args:
         output_dataset: Output dataiku.Dataset instance
-        column_description_dict: Dictionary holding column descriptions (value) by column name (key)
+        column_descriptions: Dictionary holding column descriptions (value) by column name (key)
         input_dataset: Optional input dataiku.Dataset instance
             in case you want to retain input column descriptions
 
@@ -109,7 +109,7 @@ def set_column_description(
         input_columns_names = [col["name"] for col in input_dataset_schema]
     for output_col_info in output_dataset_schema:
         output_col_name = output_col_info.get("name", "")
-        output_col_info["comment"] = column_description_dict.get(output_col_name)
+        output_col_info["comment"] = column_descriptions.get(output_col_name)
         if output_col_name in input_columns_names:
             matched_comment = [
                 input_col_info.get("comment", "")
