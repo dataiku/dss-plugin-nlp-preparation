@@ -68,10 +68,11 @@ def process_dataset_chunks(
         raise ValueError("Input dataset has no records")
     logging.info(f"Processing dataset {input_dataset.name} of {input_count_records} rows by chunks of {chunksize}...")
     start = time()
-    # First, initialize output schema if not present
-    # Required to show the real error if `iter_dataframes` fails because of invalid input data
+    # First, initialize output schema if not present. Required to show the real error if `iter_dataframes` fails.
     if not output_dataset.read_schema(raise_if_empty=False):
-        output_dataset.write_schema([{"name": "dku_temp_column", "type": "string"}])
+        df = input_dataset.get_dataframe(limit=5, infer_with_pandas=False)
+        output_df = func(df=df, **kwargs)
+        output_dataset.write_schema_from_dataframe(output_df)
     with output_dataset.get_writer() as writer:
         df_iterator = input_dataset.iter_dataframes(chunksize=chunksize, infer_with_pandas=False)
         len_iterator = math.ceil(input_count_records / chunksize)
