@@ -212,7 +212,7 @@ class TextCleaner:
         """
         self._prepare_df_for_cleaning(df, text_column, language_column, language)
         start = time()
-        logging.info(f"Cleaning {len(df.index)} texts...")
+        logging.info(f"Cleaning {len(df.index)} text(s)...")
         output = [{}] * len(df.index)
         doc_iterator = (doc for doc in df[self.tokenizer.tokenized_column])
         with ThreadPoolExecutor(max_workers=self.DEFAULT_NUM_THREADS) as executor:
@@ -224,6 +224,6 @@ class TextCleaner:
             elif k in self.token_filters and self.keep_filtered_tokens:
                 column_name = generate_unique(f"{v.lower()}s", df.keys(), text_column)
                 df[column_name] = [d.get(k, "") for d in output]
-        logging.info(f"Cleaning {len(df.index)} texts: Done in {time() - start:.2f} seconds.")
+        logging.info(f"Cleaning {len(df.index)} text(s): Done in {time() - start:.2f} seconds.")
         del df[self.tokenizer.tokenized_column]
         return df

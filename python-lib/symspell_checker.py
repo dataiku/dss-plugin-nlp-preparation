@@ -301,7 +301,7 @@ class SpellChecker:
         """
         start = time()
         num_doc = len(document_list)
-        logging.info(f"Spellchecking {num_doc} documents in language '{language}'...")
+        logging.info(f"Spellchecking {num_doc} document(s) in language '{language}'...")
         tuple_list = [("", "", [], 0)] * len(document_list)
         try:
             self._add_symspell_checker(language)
@@ -309,12 +309,12 @@ class SpellChecker:
             with ThreadPoolExecutor(max_workers=self.DEFAULT_NUM_THREADS) as executor:
                 tuple_list = list(executor.map(lambda x: self.check_document(*x), doc_lang_iterator))
             logging.info(
-                f"Spellchecking {num_doc} documents in language '{language}': Done in {time() - start:.2f} seconds."
+                f"Spellchecking {num_doc} document(s) in language '{language}': Done in {time() - start:.2f} seconds."
             )
         except ValueError as e:
             truncated_text_list = truncate_text_list([d.text for d in document_list])
             logging.warning(
-                f"Spellchecking error: '{e}' for documents: '{truncated_text_list}' "
+                f"Spellchecking error: '{e}' for document(s): '{truncated_text_list}' "
                 f"in language '{language}', output columns will be empty"
             )
         return tuple_list

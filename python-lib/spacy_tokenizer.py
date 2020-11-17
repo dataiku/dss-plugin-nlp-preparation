@@ -232,7 +232,7 @@ class MultilingualTokenizer:
                 )
             )
             logging.info(
-                f"Tokenizing {len(tokenized)} texts in language '{language}': Done in {time() - start:.2f} seconds."
+                f"Tokenizing {len(tokenized)} text(s) in language '{language}': Done in {time() - start:.2f} seconds."
             )
         except ValueError as e:
             truncated_text_list = truncate_text_list(text_list)
@@ -241,7 +241,7 @@ class MultilingualTokenizer:
             )
             tokenized = list(self.spacy_nlp_dict[self.default_language].pipe(text_list, batch_size=self.batch_size))
             logging.info(
-                f"Tokenizing {len(tokenized)} texts using fallback tokenizer: Done in {time() - start:.2f} seconds."
+                f"Tokenizing {len(tokenized)} text(s) using fallback tokenizer: Done in {time() - start:.2f} seconds."
             )
         return tokenized
 
