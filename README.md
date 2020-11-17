@@ -4,7 +4,7 @@
 
 This Dataiku DSS plugin provides recipes to detect languages, clean text data and correct misspellings.
 
-Documentation: https://www.dataiku.com/dss/plugins/info/nlp-preparation.html
+Documentation: https://www.dataiku.com/product/plugins/nlp-preparation/
 
 ## License
 
