@@ -148,7 +148,8 @@
             "label": "Keep filtered tokens",
             "description": "Store filtered tokens in additional columns in the output dataset ",
             "type": "BOOLEAN",
-            "defaultValue": false
+            "defaultValue": false,
+            "visibilityCondition": "model.expert"
         }
     ],
     "resourceKeys": []
