@@ -222,7 +222,7 @@ class MultilingualTokenizer:
 
         """
         start = time()
-        logging.info(f"Tokenizing {len(text_list)} texts in language '{language}'...")
+        logging.info(f"Tokenizing {len(text_list)} text(s) in language '{language}'...")
         text_list = [str(t) if pd.notnull(t) else "" for t in text_list]
         try:
             self._add_spacy_tokenizer(language)
