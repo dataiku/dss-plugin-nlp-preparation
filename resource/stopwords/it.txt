@@ -28,6 +28,7 @@ avevano
 avevate
 avevi
 avevo
+avrà
 avrai
 avranno
 avrebbe
@@ -38,7 +39,6 @@ avremo
 avreste
 avresti
 avrete
-avrà
 avrò
 avuta
 avute
@@ -52,7 +52,6 @@ coi
 col
 come
 con
-contro
 cui
 da
 dagl
@@ -75,6 +74,7 @@ di
 dov
 dove
 e
+è
 ebbe
 ebbero
 ebbi
@@ -86,7 +86,6 @@ eravate
 eri
 ero
 essendo
-faccia
 facciamo
 facciano
 facciate
@@ -107,6 +106,7 @@ facevi
 facevo
 fai
 fanno
+farà
 farai
 faranno
 farebbe
@@ -117,11 +117,9 @@ faremo
 fareste
 faresti
 farete
-farà
 farò
 fece
 fecero
-feci
 fosse
 fossero
 fossi
@@ -173,12 +171,7 @@ nostro
 o
 per
 perché
-più
 quale
-quanta
-quante
-quanti
-quanto
 quella
 quelle
 quelli
@@ -187,6 +180,7 @@ questa
 queste
 questi
 questo
+sarà
 sarai
 saranno
 sarebbe
@@ -197,7 +191,6 @@ saremo
 sareste
 saresti
 sarete
-sarà
 sarò
 se
 sei
@@ -212,6 +205,7 @@ sta
 stai
 stando
 stanno
+starà
 starai
 staranno
 starebbe
@@ -222,7 +216,6 @@ staremo
 stareste
 staresti
 starete
-starà
 starò
 stava
 stavamo
@@ -245,7 +238,6 @@ stiamo
 stiano
 stiate
 sto
-su
 sua
 sue
 sugl
@@ -259,7 +251,6 @@ sullo
 suo
 suoi
 ti
-tra
 tu
 tua
 tue
@@ -269,11 +260,9 @@ tutti
 tutto
 un
 una
-uno
 vi
 voi
 vostra
 vostre
 vostri
 vostro
-è
