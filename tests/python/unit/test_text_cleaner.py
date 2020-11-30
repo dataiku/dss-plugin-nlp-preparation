@@ -28,7 +28,7 @@ def test_clean_df_multilingual():
         {
             "input_text": [
                 "I did a 10k run this morning at 6h34 follow me @superRunnerdu95 didn't I?",
-                "Nous cherchâmes des informations sur https://www.google.com/ le 03/11/2046",
+                "Nous cherchâmes des informations sur https://www.google.com/ le 03/11/2046 l'aventures",
                 "#Barcelona Fútbol es la vida me@me.com ℌ ①",
             ],
             "language": ["en", "fr", "es"],
@@ -47,7 +47,7 @@ def test_clean_df_multilingual():
     cleaned_texts = output_df[cleaned_text_column].values.tolist()
     expected_cleaned_texts = [
         "run morning follow not ?",
-        "chercher information",
+        "chercher information aventure",
         "Fútbol vida H 1",
     ]
     assert cleaned_texts == expected_cleaned_texts
