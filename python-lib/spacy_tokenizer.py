@@ -163,22 +163,40 @@ class MultilingualTokenizer:
                 _prefixes.remove("#")
                 nlp.tokenizer.prefix_search = spacy.util.compile_prefix_regex(_prefixes).search
         if self.stopwords_folder_path and language in SUPPORTED_LANGUAGES_SPACY:
-            try:
-                stopwords_file_path = os.path.join(self.stopwords_folder_path, f"{language}.txt")
-                with open(stopwords_file_path) as f:
-                    custom_stopwords = set(f.read().splitlines())
-                for word in custom_stopwords:
-                    nlp.vocab[word].is_stop = True
-                    nlp.vocab[word.capitalize()].is_stop = True
-                for word in nlp.Defaults.stop_words:
-                    if word not in custom_stopwords:
-                        nlp.vocab[word].is_stop = False
-                        nlp.vocab[word.capitalize()].is_stop = False
-                nlp.Defaults.stop_words = custom_stopwords
-            except OSError as e:
-                raise RuntimeError(f"Stopword file for language '{language}' not available because of error: '{e}'")
+            self._customize_stopwords(nlp, language)
         logging.info(f"Loading tokenizer for language '{language}': Done in {time() - start:.2f} seconds.")
         return nlp
+
+    def _customize_stopwords(self, nlp: Language, language: AnyStr) -> bool:
+        """Private method to customize stopwords for a given spaCy language
+
+        Args:
+            nlp: Instanciated spaCy language
+            language: Language code in ISO 639-1 format, cf. https://spacy.io/usage/models#languages
+
+        Returns:
+            True if the stopwords were customized, else False
+
+        Raises:
+            RuntimeError: If something went wrong with the stopword customization
+
+        """
+        try:
+            stopwords_file_path = os.path.join(self.stopwords_folder_path, f"{language}.txt")
+            with open(stopwords_file_path) as f:
+                custom_stopwords = set(f.read().splitlines())
+            for word in custom_stopwords:
+                nlp.vocab[word].is_stop = True
+                nlp.vocab[word.capitalize()].is_stop = True
+                nlp.vocab[word.upper()].is_stop = True
+            for word in nlp.Defaults.stop_words:
+                if word.lower() not in custom_stopwords:
+                    nlp.vocab[word].is_stop = False
+                    nlp.vocab[word.capitalize()].is_stop = False
+                    nlp.vocab[word.upper()].is_stop = False
+            nlp.Defaults.stop_words = custom_stopwords
+        except (ValueError, OSError) as e:
+            raise RuntimeError(f"Stopword file for language '{language}' not available because of error: '{e}'")
 
     def _add_spacy_tokenizer(self, language: AnyStr) -> bool:
         """Private method to add a spaCy tokenizer for a given language to the `spacy_nlp_dict` attribute

@@ -38,7 +38,7 @@ def test_clean_df_multilingual():
     text_cleaner = TextCleaner(
         tokenizer=MultilingualTokenizer(stopwords_folder_path=stopwords_folder_path),
         token_filters=token_filters,
-        lemmatization=False,
+        lemmatization=True,
         lowercase=False,
         unicode_normalization=UnicodeNormalization.NFKD,
     )
@@ -46,8 +46,8 @@ def test_clean_df_multilingual():
     cleaned_text_column = list(text_cleaner.output_column_descriptions.keys())[0]
     cleaned_texts = output_df[cleaned_text_column].values.tolist()
     expected_cleaned_texts = [
-        "run morning follow ?",
-        "cherchâmes informations",
+        "run morning follow not ?",
+        "chercher information",
         "Fútbol vida H 1",
     ]
     assert cleaned_texts == expected_cleaned_texts
