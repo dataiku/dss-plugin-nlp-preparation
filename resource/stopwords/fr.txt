@@ -47,6 +47,9 @@ ayants
 ayez
 ayons
 c
+c'
+c‘
+c’
 ça
 car
 ce
@@ -68,6 +71,9 @@ ci
 comme
 concernant
 d
+d'
+d‘
+d’
 dans
 de
 des
@@ -139,8 +145,14 @@ il
 ils
 importe
 j
+j'
+j‘
+j’
 je
 l
+l'
+l‘
+l’
 la
 là
 laquelle
@@ -153,6 +165,9 @@ leur
 leurs
 lui
 m
+m'
+m‘
+m’
 ma
 mais
 me
@@ -165,6 +180,9 @@ miens
 moi
 mon
 n
+n'
+n‘
+n’
 ne
 nos
 notre
@@ -180,6 +198,9 @@ parce
 pas
 pour
 qu
+qu'
+qu‘
+qu’
 quand
 quant
 que
@@ -193,6 +214,9 @@ quels
 qui
 quoi
 s
+s'
+s‘
+s’
 sa
 sais
 sait
@@ -226,6 +250,9 @@ soyons
 suis
 sur
 t
+t'
+t‘
+t’
 ta
 te
 tes
