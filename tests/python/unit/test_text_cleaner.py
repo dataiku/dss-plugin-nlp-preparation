@@ -47,7 +47,7 @@ def test_clean_df_multilingual():
     cleaned_texts = output_df[cleaned_text_column].values.tolist()
     expected_cleaned_texts = [
         "run morning follow not ?",
-        "chercher information aventure",
+        "chercher information aventurer",
         "Fútbol vida H 1",
     ]
     assert cleaned_texts == expected_cleaned_texts
