@@ -164,11 +164,13 @@ class TextCleaner:
             token_attributes = [t for t in self.token_filters if getattr(token, t, False) or getattr(token._, t, False)]
             if token_attributes:
                 if self.keep_filtered_tokens:
-                    first_token_attribute = token_attributes[0]
-                    output[first_token_attribute] += token.lower_ if self.lowercase else token.text
+                    token_attribute = token_attributes[0]
+                    if len(token_attributes) > 1 and "is_stop" in token_attributes:  # rare case of numbers in stopwords
+                        token_attribute = [t for t in token_attributes if t != "is_stop"][0]
+                    output[token_attribute] += token.lower_ if self.lowercase else token.text
                     try:
                         if token.whitespace_ or token.nbor().is_punct or token.nbor().is_space:
-                            output[first_token_attribute] += " "
+                            output[token_attribute] += " "
                     except IndexError:  # when reaching the end of the document, nbor() fails
                         pass
             else:
