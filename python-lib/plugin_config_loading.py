@@ -21,7 +21,7 @@ from text_cleaner import UnicodeNormalization
 
 
 class PluginParamValidationError(ValueError):
-    """Custom exception raised when the the plugin parameters chosen by the user are invalid"""
+    """Custom exception raised when the plugin parameters chosen by the user are invalid"""
 
     pass
 
