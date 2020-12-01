@@ -60,6 +60,28 @@ class SpellChecker:
         "word_count": "Word count in the input dataset",
     }
     """dict: Default column names (key) and descriptions (value) for the optional diagnosis dataset"""
+    ENGLISH_CUSTOM_CORRECTIONS = {
+        "k": "ok",
+        "K": "OK",
+        "plz": "please",
+        "Plz": "Please",
+        "thnx": "thanks",
+        "Thnx": "Thanks",
+        "thx": "thanks",
+        "Thx": "Thanks",
+        "u": "you",
+        "U": "You",
+        "ur": "your",
+        "Ur": "Your",
+        "w": "with",
+        "w/": "with",
+        "W/": "With",
+        "w/o": "without",
+        "W/o": "Without",
+        "y'": "you",
+        "Y'": "You"
+    }
+    """dict: Default custom corrections for social-media English"""
 
     def __init__(
         self,
@@ -211,6 +233,8 @@ class SpellChecker:
 
         """
         (is_misspelled, correction, diagnosis) = (False, token.text, "")
+        if language == "en":
+            self.custom_corrections.update(self.ENGLISH_CUSTOM_CORRECTIONS)
         if token.text in self.custom_corrections:  # special case of custom corrections
             diagnosis = "NOK - Corrected by custom correction"
             (is_misspelled, correction) = (True, str(self.custom_corrections[token.text]))

@@ -3,7 +3,7 @@
         "label": "Spell Checking",
         "description": "Identify and correct misspellings for 35 languages",
         "icon": "icon-strikethrough",
-        "displayOrderRank": 3
+        "displayOrderRank": 2
     },
     "selectableFromDataset": "input_dataset",
     "kind": "PYTHON",

@@ -4,7 +4,7 @@
     "meta": {
         "label": "Text preparation",
         "category": "Natural Language Processing",
-        "description": "Prepare text data with language detection, text cleaning and spell checking",
+        "description": "Prepare text data with language detection, spell checking and text cleaning",
         "author": "Dataiku (Alex COMBESSIE, Damien JACQUEMART)",
         "icon": "icon-align-justify",
         "tags": [
