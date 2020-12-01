@@ -166,7 +166,7 @@ class SpellChecker:
             True if the SymSpell spellchecker was added, else False
 
         Raises:
-            ValueError: If the language code is missing or not in SUPPORTED_LANGUAGES_SYMSPELL
+            SpellCheckingError: If the language code is missing or not in SUPPORTED_LANGUAGES_SYMSPELL
 
         """
         added_checker = False

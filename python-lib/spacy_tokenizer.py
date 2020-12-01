@@ -215,7 +215,7 @@ class MultilingualTokenizer:
             True if the tokenizer was added, else False
 
         Raises:
-            ValueError: If the language code is missing or not in SUPPORTED_LANGUAGES_SPACY
+            TokenizationError: If the language code is missing or not in SUPPORTED_LANGUAGES_SPACY
 
         """
         added_tokenizer = False
