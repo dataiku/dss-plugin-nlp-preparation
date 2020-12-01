@@ -71,7 +71,7 @@ Token.set_extension(
 
 
 class TokenizationError(RuntimeError):
-    """Custom exception raised when the MultilingualTokenizer methods fail"""
+    """Custom exception raised when one of the `MultilingualTokenizer` methods fails"""
 
     pass
 
@@ -245,7 +245,7 @@ class MultilingualTokenizer:
 
         """
         start = perf_counter()
-        logging.info(f"Tokenizing {len(text_list)} text(s) in language '{language}'...")
+        logging.info(f"Tokenizing {len(text_list)} document(s) in language '{language}'...")
         text_list = [str(t) if pd.notnull(t) else "" for t in text_list]
         try:
             self._add_spacy_tokenizer(language)
@@ -255,10 +255,10 @@ class MultilingualTokenizer:
                 )
             )
             logging.info(
-                f"Tokenizing {len(tokenized)} text(s) in language '{language}': done in {perf_counter() - start:.2f} seconds."
+                f"Tokenizing {len(tokenized)} document(s) in language '{language}': done in {perf_counter() - start:.2f} seconds"
             )
         except TokenizationError as e:
-            raise TokenizationError(f"Tokenization error: {e} for text list: '{truncate_text_list(text_list)}'")
+            raise TokenizationError(f"Tokenization error: {e} for document(s): '{truncate_text_list(text_list)}'")
         return tokenized
 
     def tokenize_df(

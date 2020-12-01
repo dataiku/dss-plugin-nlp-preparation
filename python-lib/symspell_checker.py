@@ -5,7 +5,7 @@ import logging
 from typing import List, AnyStr, Set, Tuple, Dict, Pattern
 from concurrent.futures import ThreadPoolExecutor
 from collections import Counter
-from time import time
+from time import perf_counter
 from functools import lru_cache
 from threading import Lock
 
@@ -18,10 +18,17 @@ from fastcore.utils import store_attr
 from plugin_io_utils import unique_list, generate_unique, truncate_text_list, clean_empty_list
 from spacy_tokenizer import MultilingualTokenizer
 from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
+from utils import time_logging
 
 # Setting custom spaCy token extensions to store spellchecking information
 Token.set_extension("is_misspelled", default=False, force=True)
 Token.set_extension("correction", default="", force=True)
+
+
+class SpellCheckingError(RuntimeError):
+    """Custom exception raised when one of the `SpellChecker` methods fails"""
+
+    pass
 
 
 class SpellChecker:
@@ -134,7 +141,7 @@ class SpellChecker:
             SymSpell checker instance loaded with the language dictionary
 
         """
-        start = time()
+        start = perf_counter()
         logging.info(f"Loading spellchecker for language '{language}'...")
         symspell_checker = SymSpell(max_dictionary_edit_distance=self.edit_distance)
         frequency_dict_path = self.dictionary_folder_path + "/" + language + ".txt"
@@ -142,7 +149,7 @@ class SpellChecker:
         if len(self.custom_vocabulary_set) != 0:
             for word in self.custom_vocabulary_set:
                 symspell_checker.create_dictionary_entry(key=word, count=1)
-        logging.info(f"Loading spellchecker for language '{language}': Done in {time() - start:.2f} seconds.")
+        logging.info(f"Loading spellchecker for language '{language}': done in {perf_counter() - start:.2f} seconds")
         return symspell_checker
 
     def _add_symspell_checker(self, language: AnyStr) -> bool:
@@ -164,9 +171,9 @@ class SpellChecker:
         """
         added_checker = False
         if pd.isnull(language) or language == "":
-            raise ValueError("Missing language code")
+            raise SpellCheckingError("Missing language code")
         if language not in SUPPORTED_LANGUAGES_SYMSPELL:
-            raise ValueError(f"Unsupported language code: {language}")
+            raise SpellCheckingError(f"Unsupported language code: {language}")
         if language not in self._symspell_checker_dict:
             self._symspell_checker_dict[language] = self._create_symspell_checker(language=language)
             added_checker = True
@@ -297,10 +304,10 @@ class SpellChecker:
                     whitespace_list.append(len(token.whitespace_) != 0)
                     corrected_word_list.append(token._.correction)
             corrected_document = Doc(vocab=document.vocab, words=corrected_word_list, spaces=whitespace_list)
-        except ValueError as e:
-            logging.warning(
-                f"Spellchecking error: '{e}' for document: '{truncate_text_list([document.text])}' "
-                f"in language: '{language}', output columns will be empty"
+        except SpellCheckingError as e:
+            raise SpellCheckingError(
+                f"Spellchecking error: '{e}' for document: '{truncate_text_list([document.text])[0]}' " +
+                f"in language: '{language}'"
             )
         misspellings = " ".join(spelling_mistakes).strip()
         misspelling_list = unique_list(spelling_mistakes)
@@ -325,7 +332,7 @@ class SpellChecker:
                 4. Number of misspellings
 
         """
-        start = time()
+        start = perf_counter()
         num_doc = len(document_list)
         logging.info(f"Spellchecking {num_doc} document(s) in language '{language}'...")
         tuple_list = [("", "", [], 0)] * len(document_list)
@@ -335,13 +342,13 @@ class SpellChecker:
             with ThreadPoolExecutor(max_workers=self.DEFAULT_NUM_THREADS) as executor:
                 tuple_list = list(executor.map(lambda x: self.check_document(*x), doc_lang_iterator))
             logging.info(
-                f"Spellchecking {num_doc} document(s) in language '{language}': Done in {time() - start:.2f} seconds."
+                f"Spellchecking {num_doc} document(s) in language '{language}': done in {perf_counter() - start:.2f} seconds"
             )
-        except ValueError as e:
+        except SpellCheckingError as e:
             truncated_text_list = truncate_text_list([d.text for d in document_list])
-            logging.warning(
-                f"Spellchecking error: '{e}' for document(s): '{truncated_text_list}' "
-                f"in language '{language}', output columns will be empty"
+            raise SpellCheckingError(
+                f"Spellchecking error: '{e}' for document(s): '{truncated_text_list}' " +
+                f"in language '{language}'"
             )
         return tuple_list
 
@@ -446,6 +453,7 @@ class SpellChecker:
             if language in SUPPORTED_LANGUAGES_SYMSPELL:
                 self._token_dict[language][token.text] += 1
 
+    @time_logging("Computing spellchecker diagnosis")
     def create_diagnosis_df(self) -> pd.DataFrame:
         """Public method to diagnose the spellchecker actions after running `check_df`
 
@@ -456,8 +464,6 @@ class SpellChecker:
 
         """
         df = pd.DataFrame()
-        start = time()
-        logging.info("Computing spellchecker diagnosis...")
         for i, column in enumerate(self.DIAGNOSIS_COLUMN_DESCRIPTIONS):
             if column != "word_count":
                 df[column] = [t[i] for t in self._diagnosis_list]
@@ -472,5 +478,4 @@ class SpellChecker:
         df.loc[~df["is_misspelled"], "corrected_word"] = ""
         df = df.loc[~df["spellcheck_diagnosis"].str.contains("whitespace")]
         df = df.sort_values(by=["is_misspelled", "word_count"], ascending=False)
-        logging.info(f"Computing spellchecker diagnosis: Done in {time() - start:.2f} seconds.")
         return df

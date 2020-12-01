@@ -77,11 +77,11 @@ class LanguageDetector:
 
         """
         if lang_probability < self.minimum_score or lang_id not in self.language_scope:
-            warning_msg = f"Problem encountered for text: '{truncate_text_list([doc])[0]}'.\n"
+            warning_msg = f"Problem encountered for document: '{truncate_text_list([doc])[0]}'\n"
             if lang_id not in self.language_scope:
                 warning_msg += f"Detected language: '{lang_id}' not within language scope: {self.language_scope}\n"
             else:
-                warning_msg += f"Confidence score: {lang_probability:.2f} below minimum: {self.minimum_score:.2f}.\n"
+                warning_msg += f"Confidence score: {lang_probability:.2f} below minimum: {self.minimum_score:.2f}\n"
             warning_msg += f"Replacing detected language: '{lang_id}' by fallback: '{self.fallback_language}'"
             logging.warning(warning_msg)
             lang_id, lang_probability = self.fallback_language, None
