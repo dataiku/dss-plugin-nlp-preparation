@@ -80,7 +80,8 @@ class MultilingualTokenizer:
     """Wrapper class to handle tokenization with spaCy for multiple languages
 
     Attributes:
-        default_language (str): Fallback language code in ISO 639-1 format
+        stopwords_folder_path: Path to a folder with stopword text files (one line per stopword)
+            Files should be named "{language_code}.txt" with the code in ISO 639-1 format
         use_models (bool): If True, load spaCy models for available languages.
             Slower but adds additional tagging capabilities to the pipeline.
         hashtags_as_token (bool): Treat hashtags as one token instead of two
@@ -115,7 +116,6 @@ class MultilingualTokenizer:
 
     def __init__(
         self,
-        default_language: AnyStr = None,  # Multilingual model from spaCy
         stopwords_folder_path: AnyStr = None,
         use_models: bool = False,
         hashtags_as_token: bool = True,
@@ -124,9 +124,9 @@ class MultilingualTokenizer:
         """Initialization method for the MultilingualTokenizer class, with optional arguments
 
         Args:
-            default_language (str, optional): Fallback language code in ISO 639-1 format.
-                Default is the "multilingual language code": https://spacy.io/models/xx
-            use_models: If True, loads spaCy models, which is slower but allows to retrieve
+            stopwords_folder_path (str, optional): Path to a folder with stopword text files (one line per stopword)
+                Files should be named "{language_code}.txt" with the code in ISO 639-1 format
+            use_models (bool, optional): If True (default), loads spaCy models, which is slower but allows to retrieve
                 Part-of-Speech and Entities tags for downstream tasks
             hashtags_as_token (bool, optional): Treat hashtags as one token instead of two
                 Default is True, which overrides the spaCy default behavior
@@ -136,8 +136,6 @@ class MultilingualTokenizer:
         """
         store_attr()
         self.spacy_nlp_dict = {}
-        if default_language:
-            self.spacy_nlp_dict[default_language] = self._create_spacy_tokenizer(default_language)
         self.tokenized_column = None  # may be changed by tokenize_df
 
     def _create_spacy_tokenizer(self, language: AnyStr) -> Language:
