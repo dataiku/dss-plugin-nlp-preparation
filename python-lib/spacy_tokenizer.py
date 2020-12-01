@@ -5,7 +5,7 @@ import regex as re
 import os
 import logging
 from typing import List, AnyStr
-from time import time
+from time import perf_counter
 
 import pandas as pd
 
@@ -70,6 +70,12 @@ Token.set_extension(
 )  # spaCy does not correctly detect all invisible characters so we need to add this custom attribute
 
 
+class TokenizationError(RuntimeError):
+    """Custom exception raised when the MultilingualTokenizer methods fail"""
+
+    pass
+
+
 class MultilingualTokenizer:
     """Wrapper class to handle tokenization with spaCy for multiple languages
 
@@ -109,7 +115,7 @@ class MultilingualTokenizer:
 
     def __init__(
         self,
-        default_language: AnyStr = "xx",  # Multilingual model from spaCy
+        default_language: AnyStr = None,  # Multilingual model from spaCy
         stopwords_folder_path: AnyStr = None,
         use_models: bool = False,
         hashtags_as_token: bool = True,
@@ -130,7 +136,7 @@ class MultilingualTokenizer:
         """
         store_attr()
         self.spacy_nlp_dict = {}
-        if default_language is not None:
+        if default_language:
             self.spacy_nlp_dict[default_language] = self._create_spacy_tokenizer(default_language)
         self.tokenized_column = None  # may be changed by tokenize_df
 
@@ -143,17 +149,19 @@ class MultilingualTokenizer:
         Returns:
             spaCy Language instance with the tokenizer
 
+        Raises:
+            TokenizationError: If something went wrong with the tokenizer creation
+
         """
-        start = time()
+        start = perf_counter()
         logging.info(f"Loading tokenizer for language '{language}'...")
-        if language in SPACY_LANGUAGE_MODELS and self.use_models:
-            try:
+        try:
+            if language in SPACY_LANGUAGE_MODELS and self.use_models:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
-            except OSError as e:
-                logging.warning(f"Spacy model not available for language '{language}' because of error: '{e}'")
-                nlp = spacy.blank(language)
-        else:
-            nlp = spacy.blank(language)  # spaCy language without models (https://spacy.io/usage/models)
+            else:
+                nlp = spacy.blank(language)  # spaCy language without models (https://spacy.io/usage/models)
+        except (ValueError, OSError) as e:
+            raise TokenizationError(f"SpaCy tokenization not available for language '{language}' because of error: '{e}'")
         if self.hashtags_as_token:
             re_token_match = spacy.tokenizer._get_regex_pattern(nlp.Defaults.token_match)
             re_token_match = r"""({re_token_match}|#\w+)"""
@@ -164,7 +172,7 @@ class MultilingualTokenizer:
                 nlp.tokenizer.prefix_search = spacy.util.compile_prefix_regex(_prefixes).search
         if self.stopwords_folder_path and language in SUPPORTED_LANGUAGES_SPACY:
             self._customize_stopwords(nlp, language)
-        logging.info(f"Loading tokenizer for language '{language}': Done in {time() - start:.2f} seconds.")
+        logging.info(f"Loading tokenizer for language '{language}': done in {perf_counter() - start:.2f} seconds")
         return nlp
 
     def _customize_stopwords(self, nlp: Language, language: AnyStr) -> None:
@@ -175,7 +183,7 @@ class MultilingualTokenizer:
             language: Language code in ISO 639-1 format, cf. https://spacy.io/usage/models#languages
 
         Raises:
-            RuntimeError: If something went wrong with the stopword customization
+            TokenizationError: If something went wrong with the stopword customization
 
         """
         try:
@@ -193,7 +201,7 @@ class MultilingualTokenizer:
                     nlp.vocab[word.upper()].is_stop = False
             nlp.Defaults.stop_words = custom_stopwords
         except (ValueError, OSError) as e:
-            raise RuntimeError(f"Stopword file for language '{language}' not available because of error: '{e}'")
+            raise TokenizationError(f"Stopword file for language '{language}' not available because of error: '{e}'")
 
     def _add_spacy_tokenizer(self, language: AnyStr) -> bool:
         """Private method to add a spaCy tokenizer for a given language to the `spacy_nlp_dict` attribute
@@ -214,9 +222,9 @@ class MultilingualTokenizer:
         """
         added_tokenizer = False
         if pd.isnull(language) or language == "":
-            raise ValueError("Missing language code")
+            raise TokenizationError("Missing language code")
         if language not in SUPPORTED_LANGUAGES_SPACY:
-            raise ValueError(f"Unsupported language code: '{language}'")
+            raise TokenizationError(f"Unsupported language code: '{language}'")
         if language not in self.spacy_nlp_dict:
             self.spacy_nlp_dict[language] = self._create_spacy_tokenizer(language)
             added_tokenizer = True
@@ -236,7 +244,7 @@ class MultilingualTokenizer:
             List of tokenized spaCy documents
 
         """
-        start = time()
+        start = perf_counter()
         logging.info(f"Tokenizing {len(text_list)} text(s) in language '{language}'...")
         text_list = [str(t) if pd.notnull(t) else "" for t in text_list]
         try:
@@ -247,17 +255,10 @@ class MultilingualTokenizer:
                 )
             )
             logging.info(
-                f"Tokenizing {len(tokenized)} text(s) in language '{language}': Done in {time() - start:.2f} seconds."
+                f"Tokenizing {len(tokenized)} text(s) in language '{language}': done in {perf_counter() - start:.2f} seconds."
             )
-        except ValueError as e:
-            truncated_text_list = truncate_text_list(text_list)
-            logging.warning(
-                f"Tokenization error: {e} for text list: '{truncated_text_list}', defaulting to fallback tokenizer"
-            )
-            tokenized = list(self.spacy_nlp_dict[self.default_language].pipe(text_list, batch_size=self.batch_size))
-            logging.info(
-                f"Tokenizing {len(tokenized)} text(s) using fallback tokenizer: Done in {time() - start:.2f} seconds."
-            )
+        except TokenizationError as e:
+            raise TokenizationError(f"Tokenization error: {e} for text list: '{truncate_text_list(text_list)}'")
         return tokenized
 
     def tokenize_df(
@@ -283,6 +284,9 @@ class MultilingualTokenizer:
         df[self.tokenized_column] = pd.Series([Doc(Vocab())] * len(df.index), dtype="object")
         if language == "language_column":
             languages = df[language_column].dropna().unique()
+            unsupported_languages = set(languages) - set(SUPPORTED_LANGUAGES_SPACY.keys())
+            if unsupported_languages:
+                raise TokenizationError(f"Found {len(unsupported_languages)} unsupported languages in input dataset: {unsupported_languages}")
             for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
                 text_slice = df.loc[language_indices, text_column]  # slicing input df by language
