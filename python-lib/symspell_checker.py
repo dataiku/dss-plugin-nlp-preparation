@@ -65,6 +65,8 @@ class SpellChecker:
         "K": "OK",
         "plz": "please",
         "Plz": "Please",
+        "thks": "thanks",
+        "Thks": "Thanks",
         "thnx": "thanks",
         "Thnx": "Thanks",
         "thx": "thanks",
