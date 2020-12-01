@@ -167,15 +167,12 @@ class MultilingualTokenizer:
         logging.info(f"Loading tokenizer for language '{language}': Done in {time() - start:.2f} seconds.")
         return nlp
 
-    def _customize_stopwords(self, nlp: Language, language: AnyStr) -> bool:
+    def _customize_stopwords(self, nlp: Language, language: AnyStr) -> None:
         """Private method to customize stopwords for a given spaCy language
 
         Args:
             nlp: Instanciated spaCy language
             language: Language code in ISO 639-1 format, cf. https://spacy.io/usage/models#languages
-
-        Returns:
-            True if the stopwords were customized, else False
 
         Raises:
             RuntimeError: If something went wrong with the stopword customization
