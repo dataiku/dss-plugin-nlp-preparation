@@ -182,6 +182,7 @@ SUPPORTED_LANGUAGES_SYMSPELL = {
     "sv": "Swedish",
     "th": "Thai",
     "tr": "Turkish",
+    "uk": "Ukrainian",
     "vi": "Vietnamese",
     "zh": "Chinese (simplified)",
 }
@@ -245,6 +246,7 @@ SUPPORTED_LANGUAGES_SPACY = {
     "tl": "Tagalog",
     "tr": "Turkish",
     "tt": "Tatar",
+    "uk": "Ukrainian",
     "ur": "Urdu",
     "vi": "Vietnamese",
     "yo": "Yoruba",
@@ -252,8 +254,7 @@ SUPPORTED_LANGUAGES_SPACY = {
 }
 """dict: Languages supported by spaCy: https://spacy.io/usage/models#languages
 
-Dictionary with ISO 639-1 language code (key) and language name (value).
-Ukrainian not included because it requires system-level operations
+Dictionary with ISO 639-1 language code (key) and language name (value)
 """
 
 SPACY_LANGUAGE_MODELS = {

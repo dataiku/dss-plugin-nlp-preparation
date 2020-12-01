@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Spell Checking",
-        "description": "Identify and correct misspellings for 37 languages",
+        "description": "Identify and correct misspellings for 38 languages",
         "icon": "icon-strikethrough",
         "displayOrderRank": 2
     },
