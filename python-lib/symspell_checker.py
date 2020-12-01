@@ -418,6 +418,9 @@ class SpellChecker:
         self._prepare_df_for_spellchecker(df, text_column, language_column, language)
         if language == "language_column":
             languages = df[language_column].dropna().unique()
+            unsupported_languages = set(languages) - set(SUPPORTED_LANGUAGES_SYMSPELL.keys())
+            if unsupported_languages:
+                raise SpellCheckingError(f"Found {len(unsupported_languages)} unsupported languages in input dataset: {unsupported_languages}")
             for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
                 document_slice = df.loc[language_indices, self.tokenizer.tokenized_column]  # slicing df by language
