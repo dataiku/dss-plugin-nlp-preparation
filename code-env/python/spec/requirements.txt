@@ -3,6 +3,8 @@ fastcore==1.3.1
 jieba==0.42.1
 langid==1.1.6
 pycld3==0.20
+pymorphy2-dicts-ru==2.4.417127.4579844
+pymorphy2-dicts-uk==2.4.1.1.1460299261
 pymorphy2==0.9.1
 pyvi==0.1
 regex==2020.10.28
