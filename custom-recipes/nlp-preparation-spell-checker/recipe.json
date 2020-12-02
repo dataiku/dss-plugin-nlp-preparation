@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Spell Checking",
-        "description": "Identify and correct misspellings for 35 languages",
+        "description": "Identify and correct misspellings for 36 languages",
         "icon": "icon-strikethrough",
         "displayOrderRank": 2
     },
@@ -51,7 +51,7 @@
             "acceptsDataset": true
         }
     ],
-    "paramsPythonSetup": "get_language_list.py",
+    "paramsPythonSetup": "get_spellchecking_params.py",
     "params": [
         {
             "name": "separator_input",

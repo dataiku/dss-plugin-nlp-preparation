@@ -166,6 +166,8 @@ SUPPORTED_LANGUAGES_SYMSPELL = {
     "id": "Indonesian",
     "is": "Icelandic",
     "it": "Italian",
+    "ja": "Japanese",
+    "ko": "Korean",
     "lt": "Lithuanian",
     "lv": "Latvian",
     "nl": "Dutch",
@@ -180,6 +182,7 @@ SUPPORTED_LANGUAGES_SYMSPELL = {
     "sv": "Swedish",
     "th": "Thai",
     "tr": "Turkish",
+    "uk": "Ukrainian",
     "vi": "Vietnamese",
     "zh": "Chinese (simplified)",
 }
@@ -219,10 +222,11 @@ SUPPORTED_LANGUAGES_SPACY = {
     "lb": "Luxembourgish",
     "lt": "Lithuanian",
     "lv": "Latvian",
+    "mk": "Macedonian",
     "ml": "Malayalam",
     "mr": "Marathi",
-    "ne": "Nepali",
     "nb": "Norwegian Bokmål",
+    "ne": "Nepali",
     "nl": "Dutch",
     "pl": "Polish",
     "pt": "Portuguese",
@@ -240,6 +244,7 @@ SUPPORTED_LANGUAGES_SPACY = {
     "tl": "Tagalog",
     "tr": "Turkish",
     "tt": "Tatar",
+    "uk": "Ukrainian",
     "ur": "Urdu",
     "vi": "Vietnamese",
     "yo": "Yoruba",
@@ -247,8 +252,7 @@ SUPPORTED_LANGUAGES_SPACY = {
 }
 """dict: Languages supported by spaCy: https://spacy.io/usage/models#languages
 
-Dictionary with ISO 639-1 language code (key) and language name (value).
-Japanese, Korean and Ukrainian not included because they require system-level operations
+Dictionary with ISO 639-1 language code (key) and language name (value)
 """
 
 SPACY_LANGUAGE_MODELS = {

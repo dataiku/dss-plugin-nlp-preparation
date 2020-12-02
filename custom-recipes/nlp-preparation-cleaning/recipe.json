@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Text Cleaning",
-        "description": "Tokenize, filter and lemmatize text data in 54 languages",
+        "description": "Tokenize, filter and lemmatize text data in 57 languages",
         "icon": "icon-align-justify",
         "displayOrderRank": 3
     },
@@ -27,7 +27,7 @@
             "acceptsDataset": true
         }
     ],
-    "paramsPythonSetup": "get_token_filters.py",
+    "paramsPythonSetup": "get_cleaning_params.py",
     "params": [
         {
             "name": "separator_input",

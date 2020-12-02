@@ -27,7 +27,7 @@
             "acceptsDataset": true
         }
     ],
-    "paramsPythonSetup": "get_language_list.py",
+    "paramsPythonSetup": "get_langdetect_params.py",
     "params": [
         {
             "name": "separator_input",
