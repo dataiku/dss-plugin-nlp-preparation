@@ -218,6 +218,7 @@ SUPPORTED_LANGUAGES_SPACY = {
     "id": "Indonesian",
     "is": "Icelandic",
     "it": "Italian",
+    "ja": "Japanese",
     "kn": "Kannada",
     "lb": "Luxembourgish",
     "lt": "Lithuanian",

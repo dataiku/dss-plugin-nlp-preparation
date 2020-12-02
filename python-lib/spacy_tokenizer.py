@@ -2,6 +2,7 @@
 """Module with a class to tokenize text data in multiple languages"""
 
 import regex as re
+import subprocess
 import os
 import logging
 from typing import List, AnyStr
@@ -154,12 +155,18 @@ class MultilingualTokenizer:
         start = perf_counter()
         logging.info(f"Loading tokenizer for language '{language}'...")
         try:
+            if language == "ja":  # special case of japanese dictionary which needs symbolic linking
+                # result = subprocess.run(["echo", "$VIRTUAL_ENV"], stdout=subprocess.PIPE)
+                venv = os.getenv("VIRTUAL_ENV")
+                print(f"python: {venv}")
             if language in SPACY_LANGUAGE_MODELS and self.use_models:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
             else:
                 nlp = spacy.blank(language)  # spaCy language without models (https://spacy.io/usage/models)
         except (ValueError, OSError) as e:
-            raise TokenizationError(f"SpaCy tokenization not available for language '{language}' because of error: '{e}'")
+            raise TokenizationError(
+                f"SpaCy tokenization not available for language '{language}' because of error: '{e}'"
+            )
         if self.hashtags_as_token:
             re_token_match = spacy.tokenizer._get_regex_pattern(nlp.Defaults.token_match)
             re_token_match = r"""({re_token_match}|#\w+)"""
@@ -284,7 +291,9 @@ class MultilingualTokenizer:
             languages = df[language_column].dropna().unique()
             unsupported_languages = set(languages) - set(SUPPORTED_LANGUAGES_SPACY.keys())
             if unsupported_languages:
-                raise TokenizationError(f"Found {len(unsupported_languages)} unsupported languages in input dataset: {unsupported_languages}")
+                raise TokenizationError(
+                    f"Found {len(unsupported_languages)} unsupported languages in input dataset: {unsupported_languages}"
+                )
             for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
                 text_slice = df.loc[language_indices, text_column]  # slicing input df by language
