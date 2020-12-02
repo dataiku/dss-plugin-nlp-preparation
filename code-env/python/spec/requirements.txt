@@ -8,6 +8,6 @@ pymorphy2-dicts-uk==2.4.1.1.1460299261
 pymorphy2==0.9.1
 pyvi==0.1
 regex==2020.10.28
-spacy[lookups,th]==2.3.2
+spacy[lookups,ja,th]==2.3.4
 symspellpy==6.7.0
 tqdm==4.50.2
