@@ -88,7 +88,7 @@ class SpellChecker:
         "w/o": "without",
         "W/o": "Without",
         "y'": "you",
-        "Y'": "You"
+        "Y'": "You",
     }
     """dict: Default custom corrections for social-media English"""
 
@@ -306,8 +306,8 @@ class SpellChecker:
             corrected_document = Doc(vocab=document.vocab, words=corrected_word_list, spaces=whitespace_list)
         except SpellCheckingError as e:
             raise SpellCheckingError(
-                f"Spellchecking error: '{e}' for document: '{truncate_text_list([document.text])[0]}' " +
-                f"in language: '{language}'"
+                f"Spellchecking error: '{e}' for document: '{truncate_text_list([document.text])[0]}' "
+                + f"in language: '{language}'"
             )
         misspellings = " ".join(spelling_mistakes).strip()
         misspelling_list = unique_list(spelling_mistakes)
@@ -347,8 +347,7 @@ class SpellChecker:
         except SpellCheckingError as e:
             truncated_text_list = truncate_text_list([d.text for d in document_list])
             raise SpellCheckingError(
-                f"Spellchecking error: '{e}' for document(s): '{truncated_text_list}' " +
-                f"in language '{language}'"
+                f"Spellchecking error: '{e}' for document(s): '{truncated_text_list}' " + f"in language '{language}'"
             )
         return tuple_list
 
@@ -420,7 +419,9 @@ class SpellChecker:
             languages = df[language_column].dropna().unique()
             unsupported_languages = set(languages) - set(SUPPORTED_LANGUAGES_SYMSPELL.keys())
             if unsupported_languages:
-                raise SpellCheckingError(f"Found {len(unsupported_languages)} unsupported languages in input dataset: {unsupported_languages}")
+                raise SpellCheckingError(
+                    f"Found {len(unsupported_languages)} unsupported languages in input dataset: {unsupported_languages}"
+                )
             for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
                 document_slice = df.loc[language_indices, self.tokenizer.tokenized_column]  # slicing df by language
