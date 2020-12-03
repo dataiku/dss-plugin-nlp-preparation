@@ -6,6 +6,7 @@ import os
 import logging
 from typing import List, AnyStr
 from time import perf_counter
+from tempfile import mkdtemp
 
 import pandas as pd
 
@@ -156,6 +157,8 @@ class MultilingualTokenizer:
         start = perf_counter()
         logging.info(f"Loading tokenizer for language '{language}'...")
         try:
+            if language == "th":  # PyThaiNLP requires an "data directory" even if nothing needs to be downloaded
+                os.environ["PYTHAINLP_DATA_DIR"] = mkdtemp()  # dummy temp directory
             if language in SPACY_LANGUAGE_MODELS and self.use_models:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
             else:
