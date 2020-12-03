@@ -232,6 +232,7 @@ SUPPORTED_LANGUAGES_SPACY = {
     "pt": "Portuguese",
     "ro": "Romanian",
     "ru": "Russian",
+    "sa": "Sanskrit",
     "si": "Sinhala",
     "sk": "Slovak",
     "sl": "Slovenian",
