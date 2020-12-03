@@ -254,6 +254,7 @@ SUPPORTED_LANGUAGES_SPACY = {
 """dict: Languages supported by spaCy: https://spacy.io/usage/models#languages
 
 Dictionary with ISO 639-1 language code (key) and language name (value)
+Japanese and Korean were excluded for now because of system installation issues
 """
 
 SPACY_LANGUAGE_MODELS = {
