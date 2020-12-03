@@ -58,7 +58,9 @@ Token.set_extension(
     and any([re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in ALL_UNITS]),
     force=True,
 )
-INVISIBLE_CHARS_REGEX = re.compile(r"(\p{C}|\p{Z})+")  # matches unicode categories C (control chars) and Z (separators)
+INVISIBLE_CHARS_REGEX = re.compile(
+    r"(\p{C}|\p{Z}|\p{M})+"
+)  # matches unicode categories C (control chars), Z (separators) and M (marks)
 Token.set_extension(
     "is_space",
     getter=lambda token: not getattr(token._, "is_symbol", False)  # avoid conflict with existing token attribute
