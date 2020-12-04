@@ -113,7 +113,7 @@
             "name": "ignore_word_regex",
             "label": "Ignore pattern",
             "defaultValue": "",
-            "description": "Regular expression for words not to be corrected e.g. \"\\w+\\d\" to preserve \"word42\"",
+            "description": "Regular expression for words not to be corrected e.g. \"(\\b[A-Z]{3}\\b)\" to avoid correcting three-letter acronyms like \"NYC\"",
             "visibilityCondition": "model.expert"
         }
     ],
