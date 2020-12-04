@@ -109,7 +109,7 @@
             "mandatory": true
         },
         {
-            "type": "STRING",
+            "type": "TEXTAREA",
             "name": "ignore_word_regex",
             "label": "Ignore pattern",
             "defaultValue": "",
