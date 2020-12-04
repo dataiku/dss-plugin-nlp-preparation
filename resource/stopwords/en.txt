@@ -106,6 +106,7 @@ further
 get
 give
 go
+gon
 had
 hadn
 has
@@ -164,6 +165,7 @@ my
 myself
 n‘t
 n’t
+na
 name
 namely
 needn

@@ -36,7 +36,7 @@ Token.set_extension(
     and not re.sub(SYMBOL_CHARS_REGEX, "", token.text).strip(),
     force=True,
 )
-DATETIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h|hr|min|mins|s|sec|ms|ns|y)+", flags=re.IGNORECASE)
+DATETIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|hrs|hr|h|minutes|mins|min|sec|s|ms|ns|y)+", flags=re.IGNORECASE)
 Token.set_extension(
     "is_datetime",
     getter=lambda token: not token.like_num  # avoid conflict with existing token attribute
