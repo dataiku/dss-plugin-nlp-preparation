@@ -52,7 +52,7 @@ def load_plugin_config_langdetect() -> Dict:
     # Text column
     params["text_column"] = recipe_config.get("text_column")
     if params["text_column"] not in input_dataset_columns:
-        raise PluginParamValidationError("Invalid text column selection")
+        raise PluginParamValidationError(f"Invalid text column selection: {params['text_column']}")
     logging.info(f"Text column: {params['text_column']}")
     # Language scope
     params["language_scope"] = recipe_config.get("language_scope", [])
@@ -187,14 +187,14 @@ def load_plugin_config_spellchecker() -> Dict:
     params["text_column"] = recipe_config.get("text_column")
     logging.info(f"Text column: {params['text_column']}")
     if params["text_column"] not in input_dataset_columns:
-        raise PluginParamValidationError("Invalid text column selection")
+        raise PluginParamValidationError(f"Invalid text column selection: {params['text_column']}")
 
     # Language selection
     params["language"] = recipe_config.get("language")
     if params["language"] == "language_column":
         params["language_column"] = recipe_config.get("language_column")
         if params["language_column"] not in input_dataset_columns:
-            raise PluginParamValidationError("Invalid language column selection")
+            raise PluginParamValidationError(f"Invalid language column selection: : {params['language_column']}")
         logging.info(f"Language column: {params['language_column']}")
     else:
         if not params["language"]:
@@ -263,14 +263,14 @@ def load_plugin_config_cleaning() -> Dict:
     params["text_column"] = recipe_config.get("text_column")
     logging.info(f"Text column: {params['text_column']}")
     if params["text_column"] not in input_dataset_columns:
-        raise PluginParamValidationError("Invalid text column selection")
+        raise PluginParamValidationError(f"Invalid text column selection: {params['text_column']}")
 
     # Language selection
     params["language"] = recipe_config.get("language")
     if params["language"] == "language_column":
         params["language_column"] = recipe_config.get("language_column")
         if params["language_column"] not in input_dataset_columns:
-            raise PluginParamValidationError("Invalid language column selection")
+            raise PluginParamValidationError(f"Invalid language column selection: {params['language_column']}")
         logging.info(f"Language column: {params['language_column']}")
     else:
         if not params["language"]:
