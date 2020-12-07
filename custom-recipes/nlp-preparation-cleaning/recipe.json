@@ -75,7 +75,6 @@
             "getChoicesFromPython": true,
             "defaultValue": [
                 "is_punct",
-                "is_symbol",
                 "is_stop",
                 "like_num",
                 "is_currency",
@@ -85,7 +84,8 @@
                 "like_email",
                 "is_username",
                 "is_hashtag",
-                "is_emoji"
+                "is_emoji",
+                "is_symbol"
             ]
         },
         {
