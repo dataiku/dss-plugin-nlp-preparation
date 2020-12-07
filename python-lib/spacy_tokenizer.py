@@ -25,9 +25,7 @@ from plugin_io_utils import generate_unique, truncate_text_list
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
 Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
-SYMBOL_CHARS_REGEX = re.compile(
-    r"(\p{M}|\p{S}|\p{P})+"
-)  # matches unicode categories M (marks), S (symbols) and P (punctuations)
+SYMBOL_CHARS_REGEX = re.compile(r"(\p{M}|\p{S})+")  # matches unicode categories M (marks) and S (symbols)
 Token.set_extension(
     "is_symbol",
     getter=lambda token: not token.is_punct
