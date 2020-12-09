@@ -155,7 +155,7 @@ class MultilingualTokenizer:
         start = perf_counter()
         logging.info(f"Loading tokenizer for language '{language}'...")
         try:
-            if language == "th":  # PyThaiNLP requires an "data directory" even if nothing needs to be downloaded
+            if language == "th":  # PyThaiNLP requires a "data directory" even if nothing needs to be downloaded
                 os.environ["PYTHAINLP_DATA_DIR"] = mkdtemp()  # dummy temp directory
             if language in SPACY_LANGUAGE_MODELS and self.use_models:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
@@ -211,7 +211,7 @@ class MultilingualTokenizer:
 
         This method only adds the tokenizer if the language code is valid and recognized among
         the list of supported languages (`SUPPORTED_LANGUAGES_SPACY` constant),
-        else it will raise a ValueError exception.
+        else it will raise a TokenizationError exception.
 
         Args:
             language: Language code in ISO 639-1 format, cf. https://spacy.io/usage/models#languages
