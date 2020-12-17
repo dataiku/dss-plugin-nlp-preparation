@@ -43,9 +43,9 @@ integration-tests:
 	@( \
 		python3 -m venv env/; \
 		source env/bin/activate; \
-		pip3 install --upgrade pip;\
+		pip3 install --upgrade pip; \
 		pip install --no-cache-dir -r tests/python/requirements.txt; \
-		pytest tests/python/integration/test_scenario.py --alluredir=tests/allure_report || true\
+		pytest tests/python/integration --alluredir=tests/allure_report || true \
 		deactivate; \
 	)
 	@echo "[SUCCESS] Running integration tests: Done!"
