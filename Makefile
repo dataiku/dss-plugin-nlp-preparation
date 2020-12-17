@@ -25,8 +25,8 @@ unit-tests:
 		if [ ! $$PYTHON_VERSION_IS_CORRECT ]; then echo "Python version $$PYTHON_VERSION is not in acceptedPythonInterpreters"; exit 1; fi; \
 	)
 	@( \
-		python3 -m venv env/; \
-		source env/bin/activate; \
+		python3 -m venv tests/python/unit/env/; \
+		source tests/python/unit/env/bin/activate; \
 		pip3 install --upgrade pip; \
 		pip3 install --no-cache-dir -r tests/python/unit/requirements.txt; \
 		pip3 install --no-cache-dir -r code-env/python/spec/requirements.txt; \
@@ -41,8 +41,8 @@ unit-tests:
 integration-tests:
 	@echo "[START] Running integration tests..."
 	@( \
-		python3 -m venv env/; \
-		source env/bin/activate; \
+		python3 -m venv tests/python/integration/env/; \
+		source tests/python/integration/env/bin/activate; \
 		pip3 install --upgrade pip; \
 		pip install --no-cache-dir -r tests/python/integration/requirements.txt; \
 		pytest tests/python/integration --alluredir=tests/allure_report || true \
