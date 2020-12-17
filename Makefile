@@ -40,7 +40,14 @@ unit-tests:
 
 integration-tests:
 	@echo "[START] Running integration tests..."
-	# TODO add integration tests
+	@( \
+		python3 -m venv env/; \
+		source env/bin/activate; \
+		pip3 install --upgrade pip;\
+		pip install --no-cache-dir -r tests/python/requirements.txt; \
+		pytest tests/python/integration/test_scenario.py --alluredir=tests/allure_report || true\
+		deactivate; \
+	)
 	@echo "[SUCCESS] Running integration tests: Done!"
 
 tests: unit-tests integration-tests
