@@ -33,7 +33,7 @@ unit-tests:
 		export PYTHONPATH="$(PYTHONPATH):$(PWD)/python-lib"; \
 		export DICTIONARY_FOLDER_PATH="$(PWD)/resource/dictionaries"; \
 		export STOPWORDS_FOLDER_PATH="$(PWD)/resource/stopwords"; \
-		pytest -o junit_family=xunit2 --junitxml=unit.xml tests/python/unit || true; \
+		pytest tests/python/unit --alluredir=tests/allure_report; \
 		deactivate; \
 	)
 	@echo "[SUCCESS] Running unit tests: Done!"
@@ -44,8 +44,8 @@ integration-tests:
 		python3 -m venv tests/python/integration/env/; \
 		source tests/python/integration/env/bin/activate; \
 		pip3 install --upgrade pip; \
-		pip install --no-cache-dir -r tests/python/integration/requirements.txt; \
-		pytest tests/python/integration --alluredir=tests/allure_report || true \
+		pip3 install --no-cache-dir -r tests/python/integration/requirements.txt; \
+		pytest tests/python/integration --alluredir=tests/allure_report; \
 		deactivate; \
 	)
 	@echo "[SUCCESS] Running integration tests: Done!"
