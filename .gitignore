@@ -59,6 +59,9 @@ unit.xml
 .pytest_cache/
 cover/
 
+# Integration tests reports
+tests/allure_report/
+
 # Translations
 *.mo
 *.pot
