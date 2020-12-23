@@ -2,7 +2,7 @@ pipeline {
    options { disableConcurrentBuilds() }
    agent { label 'dss-plugin-tests'}
    environment {
-        HOST = "$dss_target_host"
+        PLUGIN_INTEGRATION_TEST_INSTANCE="/home/jenkins-agent/instance_config.json"
     }
    stages {
       stage('Run Unit Tests') {
@@ -19,7 +19,6 @@ pipeline {
       stage('Run Integration Tests') {
          steps {
             sh 'echo "Running integration tests"'
-            sh 'echo "$HOST"'
             catchError(stageResult: 'FAILURE') {
             sh """
                make integration-tests
@@ -32,12 +31,12 @@ pipeline {
    post {
      always {
         script {
-           allure([
-                    includeProperties: false,
-                    jdk: '',
-                    properties: [],
-                    reportBuildPolicy: 'ALWAYS',
-                    results: [[path: 'tests/allure_report']]
+            allure([
+                     includeProperties: false,
+                     jdk: '',
+                     properties: [],
+                     reportBuildPolicy: 'ALWAYS',
+                     results: [[path: 'tests/allure_report']]
             ])
             def colorCode = '#FF0000'
             def status = currentBuild.currentResult
@@ -58,6 +57,7 @@ pipeline {
             def summary = "${subject}\n${status_info}\n\n${job_info}\n${build_url}\n${allure_report}"
             slackSend(color: colorCode, message: summary, notifyCommitters: true)
         }
+         
      }
    }
 }
