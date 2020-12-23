@@ -25,6 +25,7 @@ unit-tests:
 		if [ ! $$PYTHON_VERSION_IS_CORRECT ]; then echo "Python version $$PYTHON_VERSION is not in acceptedPythonInterpreters"; exit 1; fi; \
 	)
 	@( \
+		rm -rf tests/python/unit/env/; \
 		python3 -m venv tests/python/unit/env/; \
 		source tests/python/unit/env/bin/activate; \
 		pip3 install --upgrade pip; \
@@ -41,6 +42,7 @@ unit-tests:
 integration-tests:
 	@echo "[START] Running integration tests..."
 	@( \
+		rm -rf tests/python/integration/env/; \
 		python3 -m venv tests/python/integration/env/; \
 		source tests/python/integration/env/bin/activate; \
 		pip3 install --upgrade pip; \
