@@ -2,7 +2,7 @@
     "id": "nlp-preparation",
     "version": "1.1.1",
     "meta": {
-        "label": "Text preparation",
+        "label": "Text Preparation",
         "category": "Natural Language Processing",
         "description": "Prepare text data with language detection, spell checking and text cleaning",
         "author": "Dataiku (Alex COMBESSIE, Damien JACQUEMART)",
