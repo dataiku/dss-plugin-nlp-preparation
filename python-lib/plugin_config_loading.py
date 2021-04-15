@@ -58,8 +58,10 @@ def load_plugin_config_langdetect() -> Dict:
     params["language_scope"] = recipe_config.get("language_scope", [])
     if len(params["language_scope"]) == 0:
         params["language_scope"] = SUPPORTED_LANGUAGES_PYCLD3
-    if len(params["language_scope"]) == 0:
-        raise PluginParamValidationError(f"Invalid language scope: {params['language_scope']}")
+    if len(params["language_scope"]) == 1:
+        raise PluginParamValidationError(
+            "Please add more than one item to the language scope or leave it empty to use all 114 languages"
+        )
     logging.info(f"Scope of {len(params['language_scope'])} languages: {params['language_scope']}")
     # Minimum score
     params["minimum_score"] = float(recipe_config.get("minimum_score", 0))
