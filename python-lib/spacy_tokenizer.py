@@ -7,6 +7,7 @@ import os
 import logging
 from typing import List, AnyStr
 from time import perf_counter
+from tempfile import mkdtemp
 
 import pandas as pd
 
@@ -25,9 +26,7 @@ from plugin_io_utils import generate_unique, truncate_text_list
 Token.set_extension("is_hashtag", getter=lambda token: token.text[0] == "#", force=True)
 Token.set_extension("is_username", getter=lambda token: token.text[0] == "@", force=True)
 Token.set_extension("is_emoji", getter=lambda token: any(c in UNICODE_EMOJI for c in token.text), force=True)
-SYMBOL_CHARS_REGEX = re.compile(
-    r"(\p{M}|\p{S}|\p{P})+"
-)  # matches unicode categories M (marks), S (symbols) and P (punctuations)
+SYMBOL_CHARS_REGEX = re.compile(r"(\p{M}|\p{S})+")  # matches unicode categories M (marks) and S (symbols)
 Token.set_extension(
     "is_symbol",
     getter=lambda token: not token.is_punct
@@ -36,7 +35,7 @@ Token.set_extension(
     and not re.sub(SYMBOL_CHARS_REGEX, "", token.text).strip(),
     force=True,
 )
-DATETIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|h|hr|min|mins|s|sec|ms|ns|y)+", flags=re.IGNORECASE)
+DATETIME_REGEX = re.compile(r"(:|-|\.|\/|am|pm|hrs|hr|h|minutes|mins|min|sec|s|ms|ns|y)+", flags=re.IGNORECASE)
 Token.set_extension(
     "is_datetime",
     getter=lambda token: not token.like_num  # avoid conflict with existing token attribute
@@ -59,7 +58,9 @@ Token.set_extension(
     and any([re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in ALL_UNITS]),
     force=True,
 )
-INVISIBLE_CHARS_REGEX = re.compile(r"(\p{C}|\p{Z})+")  # matches unicode categories C (control chars) and Z (separators)
+INVISIBLE_CHARS_REGEX = re.compile(
+    r"(\p{C}|\p{Z}|\p{M})+"
+)  # matches unicode categories C (control chars), Z (separators) and M (marks)
 Token.set_extension(
     "is_space",
     getter=lambda token: not getattr(token._, "is_symbol", False)  # avoid conflict with existing token attribute
@@ -155,6 +156,8 @@ class MultilingualTokenizer:
         start = perf_counter()
         logging.info(f"Loading tokenizer for language '{language}'...")
         try:
+            if language == "th":  # PyThaiNLP requires a "data directory" even if nothing needs to be downloaded
+                os.environ["PYTHAINLP_DATA_DIR"] = mkdtemp()  # dummy temp directory
             if language in SPACY_LANGUAGE_MODELS and self.use_models:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
             else:
@@ -209,7 +212,7 @@ class MultilingualTokenizer:
 
         This method only adds the tokenizer if the language code is valid and recognized among
         the list of supported languages (`SUPPORTED_LANGUAGES_SPACY` constant),
-        else it will raise a ValueError exception.
+        else it will raise a TokenizationError exception.
 
         Args:
             language: Language code in ISO 639-1 format, cf. https://spacy.io/usage/models#languages

@@ -1,0 +1,4 @@
+pandas>=1.0,<1.1
+pytest==6.2.1
+dataiku-api-client
+git+git://github.com/dataiku/dataiku-plugin-tests-utils.git@master#egg=dataiku-plugin-tests-utils

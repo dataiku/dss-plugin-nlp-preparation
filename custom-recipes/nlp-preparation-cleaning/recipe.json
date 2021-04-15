@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Text Cleaning",
-        "description": "Tokenize, filter and lemmatize text data in 57 languages",
+        "description": "Tokenize, filter and lemmatize text data in 58 languages",
         "icon": "icon-align-justify",
         "displayOrderRank": 3
     },
@@ -75,17 +75,17 @@
             "getChoicesFromPython": true,
             "defaultValue": [
                 "is_punct",
-                "is_symbol",
                 "is_stop",
                 "like_num",
                 "is_currency",
-                "is_measure",
                 "is_datetime",
+                "is_measure",
                 "like_url",
                 "like_email",
                 "is_username",
                 "is_hashtag",
-                "is_emoji"
+                "is_emoji",
+                "is_symbol"
             ]
         },
         {

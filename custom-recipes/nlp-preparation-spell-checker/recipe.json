@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Spell Checking",
-        "description": "Identify and correct misspellings for 36 languages",
+        "description": "Identify and correct misspellings in 36 languages",
         "icon": "icon-strikethrough",
         "displayOrderRank": 2
     },
@@ -109,11 +109,11 @@
             "mandatory": true
         },
         {
-            "type": "STRING",
+            "type": "TEXTAREA",
             "name": "ignore_word_regex",
             "label": "Ignore pattern",
             "defaultValue": "",
-            "description": "Regular expression for words not to be corrected. Ex: \"\\w+\\d\" to preserve \"home1\".",
+            "description": "Regular expression for words not to be corrected e.g. \"(\\b[A-Z]{3}\\b)\" to avoid correcting three-letter acronyms like \"NYC\"",
             "visibilityCondition": "model.expert"
         }
     ],
