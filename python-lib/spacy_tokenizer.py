@@ -155,10 +155,6 @@ class MultilingualTokenizer:
         start = perf_counter()
         logging.info(f"Loading tokenizer for language '{language}'...")
         try:
-            if language == "ja":  # special case of japanese dictionary which needs symbolic linking
-                # result = subprocess.run(["echo", "$VIRTUAL_ENV"], stdout=subprocess.PIPE)
-                venv = os.getenv("VIRTUAL_ENV")
-                print(f"python: {venv}")
             if language in SPACY_LANGUAGE_MODELS and self.use_models:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
             else:
