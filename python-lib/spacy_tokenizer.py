@@ -2,7 +2,6 @@
 """Module with a class to tokenize text data in multiple languages"""
 
 import regex as re
-import subprocess
 import os
 import logging
 from typing import List, AnyStr
