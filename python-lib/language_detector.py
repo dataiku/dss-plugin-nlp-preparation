@@ -37,7 +37,7 @@ class LanguageDetector:
     COLUMN_DESCRIPTIONS = {
         "language_code": "Language code in ISO 639-1 format",
         "language_name": "Language name in ISO 639-1 format",
-        "language_score": "Confidence score from 0 to 1",
+        "language_score": "Probability score of the predicted language from 0 to 1",
     }
 
     def __init__(
