@@ -9,7 +9,7 @@ def do(payload, config, plugin_config, inputs):
         choices = sorted(
             [{"value": k, "label": v} for k, v in SUPPORTED_LANGUAGES_SPACY.items()], key=lambda x: x.get("label")
         )
-        choices.insert(0, {"label": "Detected language column", "value": "language_column"})
+        choices.insert(0, {"label": "Language column", "value": "language_column"})
     if payload["parameterName"] == "token_filters":
         choices = [
             {"value": k, "label": v}
