@@ -2,10 +2,13 @@ pipeline {
    options { disableConcurrentBuilds() }
    agent { label 'dss-plugin-tests'}
    environment {
-        PLUGIN_INTEGRATION_TEST_INSTANCE="/home/jenkins-agent/instance_config.json"
+        PLUGIN_INTEGRATION_TEST_INSTANCE="$HOME/instance_config.json"
+        UNIT_TEST_FILES_STATUS_CODE = sh(script: 'ls ./tests/*/unit/test*', returnStatus: true)
+        INTEGRATION_TEST_FILES_STATUS_CODE = sh(script: 'ls ./tests/*/integration/test*', returnStatus: true)
     }
    stages {
       stage('Run Unit Tests') {
+         when { environment name: 'UNIT_TEST_FILES_STATUS_CODE', value: "0"}
          steps {
             sh 'echo "Running unit tests"'
             catchError(stageResult: 'FAILURE') {
@@ -17,6 +20,7 @@ pipeline {
          }
       }
       stage('Run Integration Tests') {
+         when { environment name: 'INTEGRATION_TEST_FILES_STATUS_CODE', value: "0"}
          steps {
             sh 'echo "Running integration tests"'
             catchError(stageResult: 'FAILURE') {
@@ -31,33 +35,17 @@ pipeline {
    post {
      always {
         script {
-            allure([
-                     includeProperties: false,
-                     jdk: '',
-                     properties: [],
-                     reportBuildPolicy: 'ALWAYS',
-                     results: [[path: 'tests/allure_report']]
+           allure([
+                    includeProperties: false,
+                    jdk: '',
+                    properties: [],
+                    reportBuildPolicy: 'ALWAYS',
+                    results: [[path: 'tests/allure_report']]
             ])
-            def colorCode = '#FF0000'
+
             def status = currentBuild.currentResult
-            if (status == 'SUCCESS')
-            {
-               colorCode = '#00FF00'
-            }
-            if (status == 'UNSTABLE')
-            {
-               colorCode = '#FFC300'
-            }
-            
-            def subject = "*Plugin* : ${env.JOB_NAME}"
-            def job_info = "*Build number* : ${env.BUILD_NUMBER}"
-            def status_info = "*Status* : ${status}"
-            def build_url = "*Build* : ${env.BUILD_URL}"
-            def allure_report = "*Report* : ${env.BUILD_URL}/allure"
-            def summary = "${subject}\n${status_info}\n\n${job_info}\n${build_url}\n${allure_report}"
-            slackSend(color: colorCode, message: summary, notifyCommitters: true)
+            sh "file_name=\$(echo ${env.JOB_NAME} | tr '/' '-').status; touch \$file_name; echo \"${env.BUILD_URL};${env.CHANGE_TITLE};${env.CHANGE_AUTHOR};${env.CHANGE_URL};${env.BRANCH_NAME};${status};\" >> $HOME/daily-statuses/\$file_name"
         }
-         
      }
    }
 }
