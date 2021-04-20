@@ -10,7 +10,7 @@
     "inputRoles": [
         {
             "name": "input_dataset",
-            "label": "Input dataset",
+            "label": "Text dataset",
             "description": "Dataset with a raw text column",
             "arity": "UNARY",
             "required": true,
@@ -53,7 +53,7 @@
         },
         {
             "name": "language_column",
-            "label": "Language column",
+            "label": "  ↳ Language column",
             "type": "COLUMN",
             "description": "Column containing ISO 639-1 language codes",
             "columnRole": "input_dataset",
@@ -90,8 +90,8 @@
         },
         {
             "name": "lemmatization",
-            "label": "Lemmatization",
-            "description": "Simplify words to their “lemma” form e.g. going -> go, mice -> mouse",
+            "label": "Lemmatize",
+            "description": "Simplify words to their lemma form e.g., going → go, mice → mouse",
             "type": "BOOLEAN",
             "defaultValue": true
         },
