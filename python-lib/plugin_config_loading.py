@@ -15,7 +15,7 @@ from dataiku.customrecipe import (
 )
 
 from plugin_io_utils import clean_text_df
-from language_dict import SUPPORTED_LANGUAGES_PYCLD3, SUPPORTED_LANGUAGES_SYMSPELL, SUPPORTED_LANGUAGES_SPACY
+from language_support import SUPPORTED_LANGUAGES_PYCLD3, SUPPORTED_LANGUAGES_SYMSPELL, SUPPORTED_LANGUAGES_SPACY
 from spacy_tokenizer import MultilingualTokenizer
 from text_cleaner import UnicodeNormalization
 

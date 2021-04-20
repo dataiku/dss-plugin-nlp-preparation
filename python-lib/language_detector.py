@@ -10,7 +10,7 @@ import cld3
 from langid.langid import LanguageIdentifier, model
 from fastcore.utils import store_attr
 
-from language_dict import (
+from language_support import (
     SUPPORTED_LANGUAGES_PYCLD3,
     SUPPORTED_LANGUAGES_PYCLD3_NOT_LANGID,
     LANGUAGE_REMAPPING_PYCLD3_LANGID,

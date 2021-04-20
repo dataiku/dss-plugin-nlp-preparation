@@ -17,7 +17,7 @@ from fastcore.utils import store_attr
 
 from plugin_io_utils import unique_list, generate_unique, truncate_text_list, clean_empty_list
 from spacy_tokenizer import MultilingualTokenizer
-from language_dict import SUPPORTED_LANGUAGES_SYMSPELL
+from language_support import SUPPORTED_LANGUAGES_SYMSPELL
 from utils import time_logging
 
 # Setting custom spaCy token extensions to store spellchecking information

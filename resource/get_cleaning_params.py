@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from spacy_tokenizer import MultilingualTokenizer
-from language_dict import SUPPORTED_LANGUAGES_SPACY
+from language_support import SUPPORTED_LANGUAGES_SPACY
 
 
 def do(payload, config, plugin_config, inputs):
