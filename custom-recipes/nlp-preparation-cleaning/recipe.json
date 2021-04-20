@@ -70,7 +70,7 @@
         {
             "type": "MULTISELECT",
             "name": "token_filters",
-            "label": "Token filters",
+            "label": "Filter tokens",
             "description": "Remove tokens matching these attributes",
             "getChoicesFromPython": true,
             "defaultValue": [
