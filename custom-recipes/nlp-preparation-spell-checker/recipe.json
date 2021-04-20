@@ -10,7 +10,7 @@
     "inputRoles": [
         {
             "name": "input_dataset",
-            "label": "Input dataset",
+            "label": "Text dataset",
             "description": "Dataset with a text column containing misspelled words",
             "arity": "UNARY",
             "required": true,
@@ -77,7 +77,7 @@
         },
         {
             "name": "language_column",
-            "label": "Language column",
+            "label": "  ↳ Language column",
             "type": "COLUMN",
             "description": "Column containing ISO 639-1 language codes",
             "columnRole": "input_dataset",
