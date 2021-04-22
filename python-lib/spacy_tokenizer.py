@@ -127,7 +127,7 @@ class MultilingualTokenizer:
         Args:
             stopwords_folder_path (str, optional): Path to a folder with stopword text files (one line per stopword)
                 Files should be named "{language_code}.txt" with the code in ISO 639-1 format
-            use_models (bool, optional): If True (default), loads spaCy models, which is slower but allows to retrieve
+            use_models (bool, optional): If True, loads spaCy models, which is slower but allows to retrieve
                 Part-of-Speech and Entities tags for downstream tasks
             hashtags_as_token (bool, optional): Treat hashtags as one token instead of two
                 Default is True, which overrides the spaCy default behavior
