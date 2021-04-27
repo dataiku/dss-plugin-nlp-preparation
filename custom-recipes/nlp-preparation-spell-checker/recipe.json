@@ -51,7 +51,6 @@
             "acceptsDataset": true
         }
     ],
-    "paramsPythonSetup": "get_spellchecking_params.py",
     "params": [
         {
             "name": "separator_input",
@@ -72,8 +71,161 @@
             "type": "SELECT",
             "name": "language",
             "label": "Language",
-            "getChoicesFromPython": true,
-            "defaultValue": "en"
+            "defaultValue": "en",
+            "selectChoices": [
+                {
+                    "label": "Multilingual",
+                    "value": "language_column"
+                },
+                {
+                    "value": "sq",
+                    "label": "Albanian"
+                },
+                {
+                    "value": "ar",
+                    "label": "Arabic"
+                },
+                {
+                    "value": "bg",
+                    "label": "Bulgarian"
+                },
+                {
+                    "value": "ca",
+                    "label": "Catalan"
+                },
+                {
+                    "value": "zh",
+                    "label": "Chinese (simplified)"
+                },
+                {
+                    "value": "hr",
+                    "label": "Croatian"
+                },
+                {
+                    "value": "cs",
+                    "label": "Czech"
+                },
+                {
+                    "value": "da",
+                    "label": "Danish"
+                },
+                {
+                    "value": "nl",
+                    "label": "Dutch"
+                },
+                {
+                    "value": "en",
+                    "label": "English"
+                },
+                {
+                    "value": "et",
+                    "label": "Estonian"
+                },
+                {
+                    "value": "fi",
+                    "label": "Finnish"
+                },
+                {
+                    "value": "fr",
+                    "label": "French"
+                },
+                {
+                    "value": "de",
+                    "label": "German"
+                },
+                {
+                    "value": "el",
+                    "label": "Greek"
+                },
+                {
+                    "value": "he",
+                    "label": "Hebrew"
+                },
+                {
+                    "value": "hu",
+                    "label": "Hungarian"
+                },
+                {
+                    "value": "is",
+                    "label": "Icelandic"
+                },
+                {
+                    "value": "id",
+                    "label": "Indonesian"
+                },
+                {
+                    "value": "it",
+                    "label": "Italian"
+                },
+                {
+                    "value": "ja",
+                    "label": "Japanese"
+                },
+                {
+                    "value": "lv",
+                    "label": "Latvian"
+                },
+                {
+                    "value": "lt",
+                    "label": "Lithuanian"
+                },
+                {
+                    "value": "fa",
+                    "label": "Persian"
+                },
+                {
+                    "value": "pl",
+                    "label": "Polish"
+                },
+                {
+                    "value": "pt",
+                    "label": "Portuguese"
+                },
+                {
+                    "value": "ro",
+                    "label": "Romanian"
+                },
+                {
+                    "value": "ru",
+                    "label": "Russian"
+                },
+                {
+                    "value": "sr",
+                    "label": "Serbian"
+                },
+                {
+                    "value": "sk",
+                    "label": "Slovak"
+                },
+                {
+                    "value": "sl",
+                    "label": "Slovenian"
+                },
+                {
+                    "value": "es",
+                    "label": "Spanish"
+                },
+                {
+                    "value": "sv",
+                    "label": "Swedish"
+                },
+                {
+                    "value": "th",
+                    "label": "Thai"
+                },
+                {
+                    "value": "tr",
+                    "label": "Turkish"
+                },
+                {
+                    "value": "uk",
+                    "label": "Ukrainian"
+                },
+                {
+                    "value": "vi",
+                    "label": "Vietnamese"
+                }
+            ]
         },
         {
             "name": "language_column",
