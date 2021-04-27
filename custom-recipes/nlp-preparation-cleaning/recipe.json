@@ -27,7 +27,6 @@
             "acceptsDataset": true
         }
     ],
-    "paramsPythonSetup": "get_cleaning_params.py",
     "params": [
         {
             "name": "separator_input",
@@ -48,8 +47,249 @@
             "type": "SELECT",
             "name": "language",
             "label": "Language",
-            "getChoicesFromPython": true,
-            "defaultValue": "en"
+            "defaultValue": "en",
+            "selectChoices": [
+                {
+                    "label": "Multilingual",
+                    "value": "language_column"
+                },
+                {
+                    "value": "af",
+                    "label": "Afrikaans"
+                },
+                {
+                    "value": "sq",
+                    "label": "Albanian"
+                },
+                {
+                    "value": "ar",
+                    "label": "Arabic"
+                },
+                {
+                    "value": "hy",
+                    "label": "Armenian"
+                },
+                {
+                    "value": "eu",
+                    "label": "Basque"
+                },
+                {
+                    "value": "bn",
+                    "label": "Bengali"
+                },
+                {
+                    "value": "bg",
+                    "label": "Bulgarian"
+                },
+                {
+                    "value": "ca",
+                    "label": "Catalan"
+                },
+                {
+                    "value": "zh",
+                    "label": "Chinese (simplified)"
+                },
+                {
+                    "value": "hr",
+                    "label": "Croatian"
+                },
+                {
+                    "value": "cs",
+                    "label": "Czech"
+                },
+                {
+                    "value": "da",
+                    "label": "Danish"
+                },
+                {
+                    "value": "nl",
+                    "label": "Dutch"
+                },
+                {
+                    "value": "en",
+                    "label": "English"
+                },
+                {
+                    "value": "et",
+                    "label": "Estonian"
+                },
+                {
+                    "value": "fi",
+                    "label": "Finnish"
+                },
+                {
+                    "value": "fr",
+                    "label": "French"
+                },
+                {
+                    "value": "de",
+                    "label": "German"
+                },
+                {
+                    "value": "el",
+                    "label": "Greek"
+                },
+                {
+                    "value": "gu",
+                    "label": "Gujarati"
+                },
+                {
+                    "value": "he",
+                    "label": "Hebrew"
+                },
+                {
+                    "value": "hi",
+                    "label": "Hindi"
+                },
+                {
+                    "value": "hu",
+                    "label": "Hungarian"
+                },
+                {
+                    "value": "is",
+                    "label": "Icelandic"
+                },
+                {
+                    "value": "id",
+                    "label": "Indonesian"
+                },
+                {
+                    "value": "ga",
+                    "label": "Irish"
+                },
+                {
+                    "value": "it",
+                    "label": "Italian"
+                },
+                {
+                    "value": "ja",
+                    "label": "Japanese"
+                },
+                {
+                    "value": "kn",
+                    "label": "Kannada"
+                },
+                {
+                    "value": "lv",
+                    "label": "Latvian"
+                },
+                {
+                    "value": "lt",
+                    "label": "Lithuanian"
+                },
+                {
+                    "value": "lb",
+                    "label": "Luxembourgish"
+                },
+                {
+                    "value": "mk",
+                    "label": "Macedonian"
+                },
+                {
+                    "value": "ml",
+                    "label": "Malayalam"
+                },
+                {
+                    "value": "mr",
+                    "label": "Marathi"
+                },
+                {
+                    "value": "ne",
+                    "label": "Nepali"
+                },
+                {
+                    "value": "nb",
+                    "label": "Norwegian Bokmål"
+                },
+                {
+                    "value": "fa",
+                    "label": "Persian"
+                },
+                {
+                    "value": "pl",
+                    "label": "Polish"
+                },
+                {
+                    "value": "pt",
+                    "label": "Portuguese"
+                },
+                {
+                    "value": "ro",
+                    "label": "Romanian"
+                },
+                {
+                    "value": "ru",
+                    "label": "Russian"
+                },
+                {
+                    "value": "sa",
+                    "label": "Sanskrit"
+                },
+                {
+                    "value": "sr",
+                    "label": "Serbian"
+                },
+                {
+                    "value": "si",
+                    "label": "Sinhala"
+                },
+                {
+                    "value": "sk",
+                    "label": "Slovak"
+                },
+                {
+                    "value": "sl",
+                    "label": "Slovenian"
+                },
+                {
+                    "value": "es",
+                    "label": "Spanish"
+                },
+                {
+                    "value": "sv",
+                    "label": "Swedish"
+                },
+                {
+                    "value": "tl",
+                    "label": "Tagalog"
+                },
+                {
+                    "value": "ta",
+                    "label": "Tamil"
+                },
+                {
+                    "value": "tt",
+                    "label": "Tatar"
+                },
+                {
+                    "value": "te",
+                    "label": "Telugu"
+                },
+                {
+                    "value": "th",
+                    "label": "Thai"
+                },
+                {
+                    "value": "tr",
+                    "label": "Turkish"
+                },
+                {
+                    "value": "uk",
+                    "label": "Ukrainian"
+                },
+                {
+                    "value": "ur",
+                    "label": "Urdu"
+                },
+                {
+                    "value": "vi",
+                    "label": "Vietnamese"
+                },
+                {
+                    "value": "yo",
+                    "label": "Yoruba"
+                }
+            ]
         },
         {
             "name": "language_column",
@@ -72,7 +312,56 @@
             "name": "token_filters",
             "label": "Filter tokens",
             "description": "Remove tokens matching these attributes",
-            "getChoicesFromPython": true,
+            "selectChoices": [
+                {
+                    "value": "is_punct",
+                    "label": "Punctuation"
+                },
+                {
+                    "value": "is_stop",
+                    "label": "Stopword"
+                },
+                {
+                    "value": "like_num",
+                    "label": "Number"
+                },
+                {
+                    "value": "is_symbol",
+                    "label": "Symbol"
+                },
+                {
+                    "value": "is_currency",
+                    "label": "Currency sign"
+                },
+                {
+                    "value": "is_measure",
+                    "label": "Measure"
+                },
+                {
+                    "value": "is_datetime",
+                    "label": "Datetime"
+                },
+                {
+                    "value": "like_url",
+                    "label": "URL"
+                },
+                {
+                    "value": "like_email",
+                    "label": "Email"
+                },
+                {
+                    "value": "is_username",
+                    "label": "Username"
+                },
+                {
+                    "value": "is_hashtag",
+                    "label": "Hashtag"
+                },
+                {
+                    "value": "is_emoji",
+                    "label": "Emoji"
+                }
+            ],
             "defaultValue": [
                 "is_punct",
                 "is_stop",
