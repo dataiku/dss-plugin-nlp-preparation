@@ -1,5 +1,10 @@
 # Changelog
 
+## [Version 1.2.0](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.2.0) - New feature and bugfix release - 2021-04
+- ✨ Re-added Japanese support
+- 🐛 Fixed silent failure when tokenizing long text (> 1 million characters)
+- 💄 Improved recipe interface loading time, enhanced logging and column descriptions
+
 ## [Version 1.1.1](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.1.1) - Bugfix release - 2020-12
 - 🐛 Fixed macedonian support
 - 💚 Added integration tests
