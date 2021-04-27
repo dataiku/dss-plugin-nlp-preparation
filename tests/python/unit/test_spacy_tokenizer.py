@@ -5,6 +5,7 @@
 
 import os
 
+import pytest
 import pandas as pd
 
 from spacy_tokenizer import MultilingualTokenizer
@@ -45,3 +46,10 @@ def test_tokenize_df_multilingual():
     tokenized_documents = output_df[tokenizer.tokenized_column]
     tokenized_documents_length = [len(doc) for doc in tokenized_documents]
     assert tokenized_documents_length == [12, 8, 13, 9]
+
+
+def test_tokenize_df_long_text():
+    input_df = pd.DataFrame({"input_text": ["Long text"]})
+    tokenizer = MultilingualTokenizer(max_num_characters=1)
+    with pytest.raises(ValueError):
+        tokenizer.tokenize_df(df=input_df, text_column="input_text", language="en")

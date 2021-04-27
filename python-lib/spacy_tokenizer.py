@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Module with a class to tokenize text data in multiple languages"""
 
+
 import regex as re
 import os
 import logging
@@ -51,12 +52,13 @@ MISC_UNITS = {"k", "a", "v", "mol", "cd", "w", "n", "c"}
 ALL_UNITS = ORDER_UNITS | WEIGHT_UNITS | DISTANCE_SPEED_UNITS | VOLUME_UNITS | MISC_UNITS
 Token.set_extension(
     "is_measure",
-    getter=lambda token: not token.like_num  # avoid conflict with existing token attribute
+    getter=lambda token: not token.like_num
     and not getattr(token._, "is_datetime", False)
     and token.text[:1].isdigit()
-    and any([re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in ALL_UNITS]),
+    and any(re.sub(NUMERIC_SEPARATOR_REGEX, "", token.lower_).replace(unit, "").isdigit() for unit in ALL_UNITS),
     force=True,
 )
+
 INVISIBLE_CHARS_REGEX = re.compile(
     r"(\p{C}|\p{Z}|\p{M})+"
 )  # matches unicode categories C (control chars), Z (separators) and M (marks)
@@ -87,13 +89,15 @@ class MultilingualTokenizer:
             Slower but adds additional tagging capabilities to the pipeline.
         hashtags_as_token (bool): Treat hashtags as one token instead of two
         batch_size (int): Number of documents to process in spaCy pipelines
+        max_num_characters (int): Maximum number of characters in a single text
         spacy_nlp_dict (dict): Dictionary holding spaCy Language instances (value) by language code (key)
         tokenized_column (str): Name of the dataframe column storing tokenized documents
 
     """
 
     DEFAULT_BATCH_SIZE = 1000
-    DEFAULT_NUM_PROCESS = 2
+    MAX_NUM_CHARACTERS = 10 ** 7
+    DEFAULT_NUM_PROCESS = 1
     DEFAULT_FILTER_TOKEN_ATTRIBUTES = {
         "is_space": "Whitespace",
         "is_punct": "Punctuation",
@@ -121,18 +125,21 @@ class MultilingualTokenizer:
         use_models: bool = False,
         hashtags_as_token: bool = True,
         batch_size: int = DEFAULT_BATCH_SIZE,
+        max_num_characters: int = MAX_NUM_CHARACTERS,
     ):
         """Initialization method for the MultilingualTokenizer class, with optional arguments
 
         Args:
             stopwords_folder_path (str, optional): Path to a folder with stopword text files (one line per stopword)
                 Files should be named "{language_code}.txt" with the code in ISO 639-1 format
-            use_models (bool, optional): If True, loads spaCy models, which is slower but allows to retrieve
+            use_models (bool): If True (default), loads spaCy models, which is slower but allows to retrieve
                 Part-of-Speech and Entities tags for downstream tasks
-            hashtags_as_token (bool, optional): Treat hashtags as one token instead of two
+            hashtags_as_token (bool): Treat hashtags as one token instead of two
                 Default is True, which overrides the spaCy default behavior
-            batch_size (int, optional): Number of documents to process in spaCy pipelines
+            batch_size (int): Number of documents to process in spaCy pipelines
                 Default is set by the DEFAULT_BATCH_SIZE class constant
+            max_num_characters (int): Maximum number of characters in a single text
+                Default is 10 million, higher than spaCy more conservative default at 1 million
 
         """
         store_attr()
@@ -161,6 +168,7 @@ class MultilingualTokenizer:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
             else:
                 nlp = spacy.blank(language)  # spaCy language without models (https://spacy.io/usage/models)
+            nlp.max_length = self.max_num_characters
         except (ValueError, OSError) as e:
             raise TokenizationError(
                 f"SpaCy tokenization not available for language '{language}' because of error: '{e}'"
@@ -252,16 +260,17 @@ class MultilingualTokenizer:
         text_list = [str(t) if pd.notnull(t) else "" for t in text_list]
         try:
             self._add_spacy_tokenizer(language)
-            tokenized = list(
-                self.spacy_nlp_dict[language].pipe(
-                    text_list, batch_size=self.batch_size, n_process=self.DEFAULT_NUM_PROCESS
-                )
-            )
-            logging.info(
-                f"Tokenizing {len(tokenized)} document(s) in language '{language}': done in {perf_counter() - start:.2f} seconds"
-            )
         except TokenizationError as e:
             raise TokenizationError(f"Tokenization error: {e} for document(s): '{truncate_text_list(text_list)}'")
+        tokenized = list(
+            self.spacy_nlp_dict[language].pipe(
+                text_list, batch_size=self.batch_size, n_process=self.DEFAULT_NUM_PROCESS
+            )
+        )
+        logging.info(
+            f"Tokenizing {len(tokenized)} document(s) in language '{language}': "
+            + f"done in {perf_counter() - start:.2f} seconds"
+        )
         return tokenized
 
     def tokenize_df(
@@ -290,7 +299,7 @@ class MultilingualTokenizer:
             unsupported_languages = set(languages) - set(SUPPORTED_LANGUAGES_SPACY.keys())
             if unsupported_languages:
                 raise TokenizationError(
-                    f"Found {len(unsupported_languages)} unsupported languages in input dataset: {unsupported_languages}"
+                    f"Found {len(unsupported_languages)} unsupported languages in dataset: {unsupported_languages}"
                 )
             for lang in languages:  # iterate over languages
                 language_indices = df[language_column] == lang
