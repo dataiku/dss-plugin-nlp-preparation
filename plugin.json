@@ -1,6 +1,6 @@
 {
     "id": "nlp-preparation",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "meta": {
         "label": "Text Preparation",
         "category": "Natural Language Processing",
