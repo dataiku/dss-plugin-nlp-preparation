@@ -382,7 +382,16 @@
             "label": "Lemmatize",
             "description": "Simplify words to their lemma form e.g., going → go, mice → mouse",
             "type": "BOOLEAN",
-            "defaultValue": true
+            "defaultValue": true,
+            "visibilityCondition": "model.language != 'language_column' && ['es','nb','fr','de','ru','pl','ca','cs','da','hr','hu','id','it','lb','lt','pt','ro','sr','tl','tr','ur','en','mk','nl','sv','bn','el','fa'].includes(model.language)",
+        },
+        {
+            "name": "lemmatization_multilingual",
+            "label": "Lemmatize",
+            "description": "Simplify words to their lemma form e.g., going → go, mice → mouse. Available for 28 out of 59 languages.",
+            "type": "BOOLEAN",
+            "defaultValue": true,
+            "visibilityCondition": "model.language == 'language_column'",
         },
         {
             "name": "lowercase",
