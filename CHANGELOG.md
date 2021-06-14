@@ -1,5 +1,9 @@
 # Changelog
 
+## [Version 1.2.1](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.2.1) - Bugfix release - 2021-06
+- ✨ Improved Japanese stopwords
+- 🐛 Add explicit UI for languages which do not support lemmatization
+
 ## [Version 1.2.0](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.2.0) - New feature and bugfix release - 2021-04
 - ✨ Added Python 3.7 and Japanese support
 - 🐛 Fixed silent failure when tokenizing long text (> 1 million characters)
