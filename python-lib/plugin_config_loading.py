@@ -288,7 +288,10 @@ def load_plugin_config_cleaning() -> Dict:
     if not params["token_filters"] <= available_token_filters:
         raise PluginParamValidationError(f"Invalid token filters: {params['token_filters']-available_token_filters}")
     logging.info(f"Token filters: {params['token_filters']}")
-    params["lemmatization"] = bool(recipe_config.get("lemmatization"))
+    if params["language"] == "language_column":
+        params["lemmatization"] = bool(recipe_config.get("lemmatization_multilingual"))
+    else:
+        params["lemmatization"] = bool(recipe_config.get("lemmatization"))
     logging.info(f"Lemmatization: {params['lemmatization']}")
     params["lowercase"] = bool(recipe_config.get("lowercase"))
     logging.info(f"Lowercase: {params['lowercase']}")
