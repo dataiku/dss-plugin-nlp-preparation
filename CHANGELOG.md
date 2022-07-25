@@ -1,5 +1,8 @@
 # Changelog
 
+## [Version 1.2.2](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.2.2)
+- Fix sudachipy version not being compatible with Python 3.6 anymore
+
 ## [Version 1.2.1](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.2.1) - Bugfix release - 2021-06
 - ✨ Improved Japanese stopwords
 - 🐛 Add explicit UI for languages which do not support lemmatization
