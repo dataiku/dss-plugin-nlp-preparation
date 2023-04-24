@@ -1,5 +1,8 @@
 # Changelog
 
+## [Version 1.3.0](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.2.2) - New feature - 2023-04
+- ✨ Added Python 3.8 and 3.9 support
+
 ## [Version 1.2.2](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.2.2) - Bugfix release - 2022-07
 - Fix sudachipy version not being compatible with Python 3.6 anymore
 
