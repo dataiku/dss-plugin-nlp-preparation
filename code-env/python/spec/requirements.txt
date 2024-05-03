@@ -10,5 +10,5 @@ pyvi==0.1
 regex==2021.4.4
 spacy[lookups,ja,th]==2.3.5
 symspellpy==6.7.0
-tqdm==4.60.0
+tqdm==4.66.3
 sudachipy==0.6.0; python_version == '3.6'
