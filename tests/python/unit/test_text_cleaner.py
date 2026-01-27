@@ -3,13 +3,11 @@
 # pytest automatically runs all the function starting with "test_"
 # see https://docs.pytest.org for more information
 
-import os
 import pandas as pd
 
 from spacy_tokenizer import MultilingualTokenizer
 from text_cleaner import UnicodeNormalization, TextCleaner
-
-stopwords_folder_path = os.getenv("STOPWORDS_FOLDER_PATH", "path_is_no_good")
+from test_utils import STOPWORDS_FOLDER_PATH
 
 
 def test_clean_df_english():
@@ -36,7 +34,7 @@ def test_clean_df_multilingual():
     )
     token_filters = {"is_stop", "is_measure", "is_datetime", "like_url", "like_email", "is_username", "is_hashtag"}
     text_cleaner = TextCleaner(
-        tokenizer=MultilingualTokenizer(stopwords_folder_path=stopwords_folder_path),
+        tokenizer=MultilingualTokenizer(stopwords_folder_path=STOPWORDS_FOLDER_PATH),
         token_filters=token_filters,
         lemmatization=True,
         lowercase=False,

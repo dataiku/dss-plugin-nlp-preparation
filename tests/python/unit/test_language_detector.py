@@ -14,7 +14,7 @@ INPUT_DF = pd.DataFrame(
         "input_text": [
             "Comment est votre blanquette ?",
             "このオレはいずれ火影の名を受け継いで、先代のどの火影をも超えてやるんだ",
-            "Every performance is an adventure with this group. They're called Fire Saga.",
+            "Every performance is an adventure with this group. They're called Fire Saga. This is a long string more than 140 chars to make sure it works too.",
             "",
             "1",
         ],
