@@ -145,7 +145,7 @@ class LanguageDetector:
         self.column_descriptions = {}
         for k, v in self.COLUMN_DESCRIPTIONS.items():
             self.column_descriptions[generate_unique(k, df.keys(), text_column)] = v
-        doc_iterator = (doc for _, doc in df[text_column].astype(str).iteritems())
+        doc_iterator = (doc for _, doc in df[text_column].astype(str).items())
         output_df = df.copy()
         with ThreadPoolExecutor(max_workers=self.NUM_THREADS) as executor:
             lang_output_tuple_list = list(executor.map(self.detect_language_doc, doc_iterator))

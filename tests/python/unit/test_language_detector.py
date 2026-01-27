@@ -25,7 +25,7 @@ OUTPUT_DF = pd.DataFrame()
 OUTPUT_DF["input_text"] = INPUT_DF["input_text"]
 OUTPUT_DF["input_text_language_code"] = ["", "es", "fr", "en", "ja"]
 OUTPUT_DF["input_text_language_name"] = ["", "Spanish", "French", "English", "Japanese"]
-OUTPUT_DF["input_text_language_score"] = [np.NaN, np.NaN, 1.0, 1.0, 1.0]
+OUTPUT_DF["input_text_language_score"] = [np.nan, np.nan, 1.0, 1.0, 1.0]
 
 def test_language_detector():
     detector = LanguageDetector(minimum_score=0.2, fallback_language="es")

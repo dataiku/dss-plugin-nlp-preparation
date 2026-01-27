@@ -1,4 +1,6 @@
-pandas~=1.0
-numpy==1.26.4
+pandas~=1.0; python_version < '3.13'
+pandas~=2.0; python_version >= '3.13'
+numpy==1.26.4; python_version < '3.13'
+numpy==2.4.1; python_version >= '3.13'
 pytest~=6.2
 allure-pytest~=2.8
