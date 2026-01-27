@@ -12,6 +12,7 @@ from tempfile import mkdtemp
 import pandas as pd
 
 import spacy
+import spacy.about
 from spacy.language import Language
 from spacy.tokens import Doc, Token
 from spacy.vocab import Vocab
@@ -168,6 +169,16 @@ class MultilingualTokenizer:
                 nlp = spacy.load(SPACY_LANGUAGE_MODELS[language])
             else:
                 nlp = spacy.blank(language)  # spaCy language without models (https://spacy.io/usage/models)
+                # spacy 3.x requires explicit lemmatizer component for blank languages
+                # Not all languages have lookup data, so we wrap in try/except
+                if spacy.about.__version__.startswith("3"):
+                    try:
+                        nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
+                        nlp.initialize()
+                    except Exception:
+                        # Language doesn't support lookup lemmatization, continue without it
+                        if "lemmatizer" in nlp.pipe_names:
+                            nlp.remove_pipe("lemmatizer")
             nlp.max_length = self.max_num_characters
         except (ValueError, OSError) as e:
             raise TokenizationError(
