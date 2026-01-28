@@ -53,3 +53,53 @@ tests: unit-tests integration-tests
 
 dist-clean:
 	rm -rf dist
+
+# Docker-based unit tests for Linux environment
+# Uses --platform linux/amd64 to ensure consistent behavior on Apple Silicon
+
+DOCKER_IMAGE_NAME=nlp-preparation-test
+DOCKER_PLATFORM=linux/amd64
+
+define run-docker-test
+	@echo "[START] Running unit tests in Docker with Python $(1)..."
+	@docker build \
+		--platform $(DOCKER_PLATFORM) \
+		--build-arg PYTHON_VERSION=$(1) \
+		-t $(DOCKER_IMAGE_NAME):py$(1) \
+		-f tests/docker/Dockerfile \
+		. && \
+	docker run --rm --platform $(DOCKER_PLATFORM) $(DOCKER_IMAGE_NAME):py$(1)
+	@echo "[DONE] Python $(1) tests completed"
+endef
+
+docker-test-py36:
+	$(call run-docker-test,3.6)
+
+docker-test-py37:
+	$(call run-docker-test,3.7)
+
+docker-test-py38:
+	$(call run-docker-test,3.8)
+
+docker-test-py39:
+	$(call run-docker-test,3.9)
+
+docker-test-py310:
+	$(call run-docker-test,3.10)
+
+docker-test-py311:
+	$(call run-docker-test,3.11)
+
+docker-test-py312:
+	$(call run-docker-test,3.12)
+
+docker-test-py313:
+	$(call run-docker-test,3.13)
+
+docker-test-all: docker-test-py36 docker-test-py37 docker-test-py38 docker-test-py39 docker-test-py310 docker-test-py311 docker-test-py312 docker-test-py313
+	@echo "[SUCCESS] All Docker tests completed"
+
+docker-clean:
+	@echo "Removing Docker test images..."
+	@docker rmi -f $(DOCKER_IMAGE_NAME):py3.6 $(DOCKER_IMAGE_NAME):py3.7 $(DOCKER_IMAGE_NAME):py3.8 $(DOCKER_IMAGE_NAME):py3.9 $(DOCKER_IMAGE_NAME):py3.10 $(DOCKER_IMAGE_NAME):py3.11 $(DOCKER_IMAGE_NAME):py3.12 $(DOCKER_IMAGE_NAME):py3.13 2>/dev/null || true
+	@echo "Docker images cleaned"

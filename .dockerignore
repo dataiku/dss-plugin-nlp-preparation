@@ -1,0 +1,37 @@
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+.eggs
+*.egg
+.tox
+env/
+venv/
+.venv/
+.pytest_cache
+
+# Build artifacts
+dist/
+build/
+
+# Documentation
+*.md
+LICENSE
+
+# CI/CD
+Jenkinsfile
+Dockerfile
+
+# Other
+.DS_Store
+*.log
