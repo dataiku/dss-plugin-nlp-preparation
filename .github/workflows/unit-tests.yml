@@ -1,6 +1,9 @@
 name: Unit Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]  # Only run push on default branch after merge
+  pull_request:       # Run on all PRs
 
 # Cancel in-progress runs when a new commit is pushed
 concurrency:
