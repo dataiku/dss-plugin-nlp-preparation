@@ -1,5 +1,9 @@
 # Changelog
 
+## [Version 1.4.0](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.4.0) - Python support release - 2026-01
+- ✨ Added Python 3.10, 3.11, 3.12 and 3.13 support
+- 🐛 Fixed code env building on Python 3,6, 3.7, 3.8 and 3.9
+
 ## [Version 1.3.1](https://github.com/dataiku/dss-plugin-nlp-preparation/releases/tag/v1.3.1) - Bugfix release - 2025-01
 - 🐛 Fixed code env building on Python 3.7 and 3.8
 
