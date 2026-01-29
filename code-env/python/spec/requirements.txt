@@ -1,16 +1,21 @@
 emoji==0.6.0
-fastcore==1.3.1
+fastcore==1.3.1; python_version < '3.10'
+fastcore==1.12.6; python_version >= '3.10'
 jieba==0.42.1
 langid==1.1.6
-pycld3==0.22
+pycld3==0.22; python_version < '3.10'
+pycld2>=0.42; python_version >= '3.10'
 pymorphy2-dicts-ru==2.4.417127.4579844
 pymorphy2-dicts-uk==2.4.1.1.1460299261
 pymorphy2==0.9.1
 pyvi==0.1
 regex==2021.4.4
-spacy[lookups,ja,th]==2.3.5
+spacy[lookups,ja,th]==2.3.5; python_version < '3.10'
+spacy[lookups,ja,th]==3.8.11; python_version >= '3.10'
 symspellpy==6.7.0
-tqdm==4.60.0
+tqdm==4.64.1; python_version == '3.6'
+tqdm==4.66.3; python_version > '3.6'
 sudachipy==0.6.0; python_version == '3.6'
-sudachipy<0.6.10; python_version >= '3.7' and python_version < '3.9' and platform_system != "Darwin"
-sudachipy<0.6.9; python_version >= '3.7' and python_version < '3.9' and platform_system == "Darwin"
+sudachipy==0.6.7; python_version == '3.7' or python_version == '3.8'
+murmurhash==1.0.10; python_version <= '3.7'
+preshed==3.0.9; python_version <= '3.7'

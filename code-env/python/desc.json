@@ -3,7 +3,11 @@
         "PYTHON36",
         "PYTHON37",
         "PYTHON38",
-        "PYTHON39"
+        "PYTHON39",
+        "PYTHON310",
+        "PYTHON311",
+        "PYTHON312",
+        "PYTHON313"
     ],
     "forceConda": false,
     "installCorePackages": true,

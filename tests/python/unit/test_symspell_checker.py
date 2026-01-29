@@ -3,21 +3,18 @@
 # pytest automatically runs all the function starting with "test_"
 # see https://docs.pytest.org for more information
 
-import os
 import pandas as pd
 
 from spacy_tokenizer import MultilingualTokenizer
 from symspell_checker import SpellChecker
-
-dictionary_folder_path = os.getenv("DICTIONARY_FOLDER_PATH", "path_is_no_good")
-stopwords_folder_path = os.getenv("STOPWORDS_FOLDER_PATH", "path_is_no_good")
+from test_utils import DICTIONARY_FOLDER_PATH, STOPWORDS_FOLDER_PATH
 
 
 def test_spellcheck_df_english():
     input_df = pd.DataFrame(
         {"input_text": ["Can yu read tHISs message despite the horible AB1234 sppeling msitakes 😂 #OMG"]}
     )
-    spellchecker = SpellChecker(tokenizer=MultilingualTokenizer(), dictionary_folder_path=dictionary_folder_path)
+    spellchecker = SpellChecker(tokenizer=MultilingualTokenizer(), dictionary_folder_path=DICTIONARY_FOLDER_PATH)
     output_df = spellchecker.check_df(df=input_df, text_column="input_text", language="en")
     corrected_text_column = list(spellchecker.output_column_descriptions.keys())[0]
     corrected_text = output_df[corrected_text_column][0]
@@ -36,9 +33,9 @@ def test_spellcheck_df_multilingual():
             "language": ["en", "fr", "es"],
         }
     )
-    tokenizer = MultilingualTokenizer(stopwords_folder_path=stopwords_folder_path)
+    tokenizer = MultilingualTokenizer(stopwords_folder_path=STOPWORDS_FOLDER_PATH)
     spellchecker = SpellChecker(
-        tokenizer=tokenizer, dictionary_folder_path=dictionary_folder_path, custom_vocabulary_set={"PTDR"}
+        tokenizer=tokenizer, dictionary_folder_path=DICTIONARY_FOLDER_PATH, custom_vocabulary_set={"PTDR"}
     )
     output_df = spellchecker.check_df(df=input_df, text_column="input_text", language_column="language")
     corrected_text_column = list(spellchecker.output_column_descriptions.keys())[0]

@@ -1,0 +1,44 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [main]  # Only run push on default branch after merge
+  pull_request:       # Run on all PRs
+
+# Cancel in-progress runs when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.6 and 3.7 not supported on free runners Ubuntu >= 24.04
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          tests/python/unit/requirements.txt
+          code-env/python/spec/requirements.txt
+
+    - name: Install dependencies
+      run: |
+        pip install -r tests/python/unit/requirements.txt
+        pip install -r code-env/python/spec/requirements.txt
+
+    - name: Run tests
+      env:
+        PYTHONPATH: python-lib
+        DICTIONARY_FOLDER_PATH: resource/dictionaries
+        STOPWORDS_FOLDER_PATH: resource/stopwords
+      run: pytest tests/python/unit -v

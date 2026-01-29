@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Module with constants defining the language support of underlying NLP libraries"""
 
-SUPPORTED_LANGUAGES_PYCLD3 = {
+# Supported by both pycld2 (Python >=3.10) and pycld3 (Python <3.10)
+SUPPORTED_LANGUAGES_CLD = {
     "af": "Afrikaans",
     "sq": "Albanian",
     "am": "Amharic",
@@ -117,12 +118,12 @@ SUPPORTED_LANGUAGES_PYCLD3 = {
     "yo": "Yoruba",
     "zu": "Zulu",
 }
-"""dict: Languages supported by pycld3
+"""dict: Languages supported by pycld2 and pycld3
 
 Dictionary with ISO 639-1 language code (key) and language name (value)
 """
 
-SUPPORTED_LANGUAGES_PYCLD3_NOT_LANGID = [
+SUPPORTED_LANGUAGES_CLD_NOT_LANGID = [
     "fy",
     "gd",
     "ha",
@@ -141,10 +142,10 @@ SUPPORTED_LANGUAGES_PYCLD3_NOT_LANGID = [
     "yi",
     "yo",
 ]
-"""list: Subset of languages codes supported by pycld3 but not langid"""
+"""list: Subset of languages codes supported by pycld2/pycld3 but not langid"""
 
-LANGUAGE_REMAPPING_PYCLD3_LANGID = {"iw": "he", "co": "it", "ji": "yi", "in": "id"}
-"""dict: Rare cases of inconsistent language codes between pycld3 and langid"""
+LANGUAGE_REMAPPING_CLD_LANGID = {"iw": "he", "co": "it", "ji": "yi", "in": "id"}
+"""dict: Rare cases of inconsistent language codes between pycld2/pycld3 and langid"""
 
 SUPPORTED_LANGUAGES_SYMSPELL = {
     "ar": "Arabic",

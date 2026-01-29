@@ -15,7 +15,7 @@ from dataiku.customrecipe import (
 )
 
 from plugin_io_utils import clean_text_df
-from language_support import SUPPORTED_LANGUAGES_PYCLD3, SUPPORTED_LANGUAGES_SYMSPELL, SUPPORTED_LANGUAGES_SPACY
+from language_support import SUPPORTED_LANGUAGES_CLD, SUPPORTED_LANGUAGES_SYMSPELL, SUPPORTED_LANGUAGES_SPACY
 from spacy_tokenizer import MultilingualTokenizer
 from text_cleaner import UnicodeNormalization
 
@@ -57,7 +57,7 @@ def load_plugin_config_langdetect() -> Dict:
     # Language scope
     params["language_scope"] = recipe_config.get("language_scope", [])
     if len(params["language_scope"]) == 0:
-        params["language_scope"] = SUPPORTED_LANGUAGES_PYCLD3
+        params["language_scope"] = SUPPORTED_LANGUAGES_CLD
     if len(params["language_scope"]) == 1:
         raise PluginParamValidationError(
             "Please add more than one item to the language scope or leave it empty to use all 114 languages"
